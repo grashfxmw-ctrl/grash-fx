@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRASH FX - Trading & Investment Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Telegram Mini App Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            yellow: '#EAB308',
+                            hover: '#CA8A04',
+                            dark: '#0B0F19',
+                            card: '#111827',
+                            sidebar: '#070A11',
+                            input: '#1F2937'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #070A11;
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #0b0f19; }
+        ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #eab308; }
+        .glow-yellow { box-shadow: 0 0 20px rgba(234, 179, 8, 0.2); }
+    </style>
+</head>
+<body class="bg-[#070A11] min-h-screen flex flex-col font-sans antialiased text-slate-200">
+
+    <!-- DIRECT COMMUNICATION BAR -->
+    <div class="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex flex-wrap justify-between items-center text-xs text-slate-300 gap-2">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="font-bold text-white">Support & Contact:</span>
+            <span class="text-slate-400">Available 24/7</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="https://t.me/grashfxmw" target="_blank" class="hover:text-amber-400 font-medium flex items-center gap-1">
+                <i class="fa-brands fa-telegram text-sky-400"></i> Telegram Chat
+            </a>
+            <span class="text-slate-700">|</span>
+            <a href="https://wa.me/27721526863" target="_blank" class="hover:text-amber-400 font-medium flex items-center gap-1">
+                <i class="fa-brands fa-whatsapp text-emerald-400"></i> WhatsApp
+            </a>
+            <span class="text-slate-700">|</span>
+            <a href="mailto:grashfxmw@gmail.com" class="hover:text-amber-400 font-medium flex items-center gap-1">
+                <i class="fa-solid fa-envelope text-amber-400"></i> grashfxmw@gmail.com
+            </a>
+            <span class="text-slate-700">|</span>
+            <a href="tel:+27721526863" class="hover:text-amber-400 font-medium flex items-center gap-1">
+                <i class="fa-solid fa-phone text-slate-400"></i> +27 72 152 6863
+            </a>
+        </div>
+    </div>
+
+    <!-- Mode Switcher Header -->
+    <header class="bg-brand-sidebar border-b border-slate-800 px-4 py-2 flex justify-between items-center text-xs z-40">
+        <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-200">GRASH FX</span>
+            <span class="text-slate-500">| Telegram Platform</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="viewClientBtn" onclick="switchView('client')" class="px-3 py-1 rounded-md font-bold transition bg-brand-yellow text-slate-950">
+                Client Portal
+            </button>
+            <button id="viewAdminBtn" onclick="switchView('admin')" class="px-3 py-1 rounded-md font-bold transition bg-slate-800 text-slate-300 hover:bg-slate-700">
+                Admin Panel (<span id="adminPendingBadge" class="text-yellow-400">0</span>)
+            </button>
+        </div>
+    </header>
+
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 bg-brand-sidebar border-r border-slate-800 flex flex-col justify-between shrink-0">
+            <div>
+                <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-brand-yellow flex items-center justify-center font-black text-slate-950 text-xl glow-yellow">
+                            <i class="fa-bold fa-bitcoin"></i>
+                        </div>
+                        <div>
+                            <h1 class="font-bold text-lg text-white">GRASH <span class="text-brand-yellow">FX</span></h1>
+                            <p class="text-[10px] text-slate-400 uppercase tracking-widest">Durban, South Africa</p>
+                        </div>
+                    </div>
+                </div>
+                <nav id="sidebarNav" class="p-3 space-y-1"></nav>
+            </div>
+            <div class="p-4 border-t border-slate-800 bg-slate-900/40">
+                <p id="navUserName" class="text-xs font-medium text-slate-200 truncate">sasi.narayan@gmail.com</p>
+                <p id="navUserRole" class="text-[10px] text-yellow-500">Verified Trader</p>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="flex-1 flex flex-col overflow-y-auto bg-[#070A11]">
+            <div id="contentContainer" class="p-4 md:p-6 space-y-6 max-w-6xl w-full mx-auto"></div>
+        </main>
+    </div>
+
+    <!-- Notifications Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 border-l-4 border-brand-yellow text-slate-100 px-4 py-3 rounded-lg shadow-xl translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-brand-yellow"></i>
+        <div>
+            <h4 id="toastTitle" class="font-bold text-sm">Notification</h4>
+            <p id="toastMessage" class="text-xs text-slate-300">Success</p>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT_STATE = {
+            currentView: 'client',
+            currentTab: 'dashboard',
+            user: {
+                name: 'Standard Trader',
+                email: 'sasi.narayan@gmail.com',
+                balance: 1250.00,
+                investmentProfit: 340.50,
+                referralEarnings: 45.00,
+                activePlan: 'Starter Plan (10%/day - 5 Days)'
+            },
+            deposits: [
+                { id: 'DEP-9812', user: 'sasi.narayan@gmail.com', amount: 500, method: 'USDC (TRC20)', ref: '0x98a7f6e512a', date: '2026-10-24 14:20', status: 'Approved' }
+            ],
+            withdrawals: [
+                { id: 'WTH-4410', user: 'sasi.narayan@gmail.com', amount: 100, method: 'Local Bank Transfer', details: 'First National Bank - Acc: 628910245', date: '2026-10-23 18:00', status: 'Approved' }
+            ],
+            tickets: [
+                { id: 'TCK-102', subject: 'Deposit inquiry', message: 'Sent deposit via USDC.', status: 'Open', date: '2026-10-25 11:30' }
+            ]
+        };
+
+        let appState = JSON.parse(localStorage.getItem('GRASH_FX_TELEGRAM_STATE')) || DEFAULT_STATE;
+
+        function saveState() {
+            localStorage.setItem('GRASH_FX_TELEGRAM_STATE', JSON.stringify(appState));
+            updateBadges();
+        }
+
+        function showToast(title, message, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastTitle').innerText = title;
+            document.getElementById('toastMessage').innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3500);
+        }
+
+        function updateBadges() {
+            const pendingCount = appState.deposits.filter(d => d.status === 'Pending').length + appState.withdrawals.filter(w => w.status === 'Pending').length;
+            const badge = document.getElementById('adminPendingBadge');
+            if(badge) badge.innerText = pendingCount;
+        }
+
+        function switchView(mode) {
+            appState.currentView = mode;
+            appState.currentTab = mode === 'client' ? 'dashboard' : 'admin-dashboard';
+            document.getElementById('viewClientBtn').className = mode === 'client' ? 'px-3 py-1 rounded-md font-bold bg-brand-yellow text-slate-950' : 'px-3 py-1 rounded-md font-bold bg-slate-800 text-slate-300';
+            document.getElementById('viewAdminBtn').className = mode === 'admin' ? 'px-3 py-1 rounded-md font-bold bg-brand-yellow text-slate-950' : 'px-3 py-1 rounded-md font-bold bg-slate-800 text-slate-300';
+            renderSidebar();
+            renderContent();
+            saveState();
+        }
+
+        function switchTab(tabId) {
+            appState.currentTab = tabId;
+            renderSidebar();
+            renderContent();
+            saveState();
+        }
+
+        function renderSidebar() {
+            const nav = document.getElementById('sidebarNav');
+            if (appState.currentView === 'client') {
+                nav.innerHTML = `
+                    <button onclick="switchTab('dashboard')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm ${appState.currentTab === 'dashboard' ? 'bg-amber-500/10 text-brand-yellow border-l-4 border-brand-yellow' : 'text-slate-400'}"><i class="fa-solid fa-gauge w-5"></i> Dashboard</button>
+                    <button onclick="switchTab('plans')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm ${appState.currentTab === 'plans' ? 'bg-amber-500/10 text-brand-yellow border-l-4 border-brand-yellow' : 'text-slate-400'}"><i class="fa-solid fa-chart-line w-5"></i> Investment Plans</button>
+                    <button onclick="switchTab('deposit')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm ${appState.currentTab === 'deposit' ? 'bg-amber-500/10 text-brand-yellow border-l-4 border-brand-yellow' : 'text-slate-400'}"><i class="fa-solid fa-wallet w-5"></i> Deposit (Manual)</button>
+                    <button onclick="switchTab('withdraw')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm ${appState.currentTab === 'withdraw' ? 'bg-amber-500/10 text-brand-yellow border-l-4 border-brand-yellow' : 'text-slate-400'}"><i class="fa-solid fa-money-bill-transfer w-5"></i> Withdraw (Manual)</button>
+                `;
+            } else {
+                nav.innerHTML = `
+                    <button onclick="switchTab('admin-dashboard')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm ${appState.currentTab === 'admin-dashboard' ? 'bg-amber-500/10 text-brand-yellow border-l-4 border-brand-yellow' : 'text-slate-400'}"><i class="fa-solid fa-user-shield w-5"></i> Admin Overview</button>
+                    <button onclick="switchTab('admin-deposits')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm ${appState.currentTab === 'admin-deposits' ? 'bg-amber-500/10 text-brand-yellow border-l-4 border-brand-yellow' : 'text-slate-400'}"><i class="fa-solid fa-money-bill-wave w-5"></i> Approve Deposits</button>
+                    <button onclick="switchTab('admin-withdrawals')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm ${appState.currentTab === 'admin-withdrawals' ? 'bg-amber-500/10 text-brand-yellow border-l-4 border-brand-yellow' : 'text-slate-400'}"><i class="fa-solid fa-hand-holding-dollar w-5"></i> Approve Withdrawals</button>
+                `;
+            }
+        }
+
+        function renderContent() {
+            const container = document.getElementById('contentContainer');
+            if (appState.currentView === 'client') {
+                if (appState.currentTab === 'dashboard') container.innerHTML = renderDashboard();
+                else if (appState.currentTab === 'plans') container.innerHTML = renderPlans();
+                else if (appState.currentTab === 'deposit') container.innerHTML = renderDeposit();
+                else if (appState.currentTab === 'withdraw') container.innerHTML = renderWithdraw();
+            } else {
+                if (appState.currentTab === 'admin-dashboard') container.innerHTML = renderAdminDashboard();
+                else if (appState.currentTab === 'admin-deposits') container.innerHTML = renderAdminDeposits();
+                else if (appState.currentTab === 'admin-withdrawals') container.innerHTML = renderAdminWithdrawals();
+            }
+        }
+
+        function renderDashboard() {
+            return `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-brand-card border border-slate-800 rounded-2xl p-5">
+                        <p class="text-xs text-slate-400 uppercase">Available Balance</p>
+                        <h2 class="text-3xl font-black text-brand-yellow mt-1">$${appState.user.balance.toFixed(2)}</h2>
+                    </div>
+                    <div class="bg-brand-card border border-slate-800 rounded-2xl p-5">
+                        <p class="text-xs text-slate-400 uppercase">Total Profit Earned</p>
+                        <h2 class="text-3xl font-black text-emerald-400 mt-1">$${appState.user.investmentProfit.toFixed(2)}</h2>
+                    </div>
+                    <div class="bg-brand-card border border-slate-800 rounded-2xl p-5">
+                        <p class="text-xs text-slate-400 uppercase">Active Package</p>
+                        <h2 class="text-lg font-bold text-slate-200 mt-1">${appState.user.activePlan}</h2>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPlans() {
+            return `
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-black text-white">Investment Plans (5-Day Cycles)</h2>
+                    <p class="text-xs text-slate-400">Yields are calculated daily and paid upon completion of the 5-day lock duration.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-brand-card border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs text-slate-400 uppercase">Starter</span>
+                            <h3 class="text-xl font-bold text-white">10% / Daily</h3>
+                            <p class="text-xs text-amber-400 font-semibold mt-1">Duration: 5 Days (Total 50%)</p>
+                            <p class="text-xs text-slate-400 mt-3">Min: $50 | Max: $500</p>
+                        </div>
+                        <button onclick="activatePlan('Starter Plan (10%/day - 5 Days)')" class="w-full mt-4 py-2 bg-brand-yellow text-slate-950 font-bold text-xs rounded-xl">Select Starter</button>
+                    </div>
+
+                    <div class="bg-brand-card border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs text-slate-400 uppercase">Basic</span>
+                            <h3 class="text-xl font-bold text-white">20% / Daily</h3>
+                            <p class="text-xs text-amber-400 font-semibold mt-1">Duration: 5 Days (Total 100%)</p>
+                            <p class="text-xs text-slate-400 mt-3">Min: $501 | Max: $2,000</p>
+                        </div>
+                        <button onclick="activatePlan('Basic Plan (20%/day - 5 Days)')" class="w-full mt-4 py-2 bg-brand-yellow text-slate-950 font-bold text-xs rounded-xl">Select Basic</button>
+                    </div>
+
+                    <div class="bg-brand-card border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs text-slate-400 uppercase">Premium</span>
+                            <h3 class="text-xl font-bold text-white">30% / Daily</h3>
+                            <p class="text-xs text-amber-400 font-semibold mt-1">Duration: 5 Days (Total 150%)</p>
+                            <p class="text-xs text-slate-400 mt-3">Min: $2,001 | Max: $5,000</p>
+                        </div>
+                        <button onclick="activatePlan('Premium Plan (30%/day - 5 Days)')" class="w-full mt-4 py-2 bg-brand-yellow text-slate-950 font-bold text-xs rounded-xl">Select Premium</button>
+                    </div>
+
+                    <div class="bg-brand-card border-2 border-brand-yellow rounded-2xl p-5 flex flex-col justify-between glow-yellow">
+                        <div>
+                            <span class="text-xs text-amber-400 font-bold uppercase">VIP Tier</span>
+                            <h3 class="text-xl font-bold text-white">40% / Daily</h3>
+                            <p class="text-xs text-amber-400 font-semibold mt-1">Duration: 5 Days (Total 200%)</p>
+                            <p class="text-xs text-slate-400 mt-3">Min: $5,001+</p>
+                        </div>
+                        <button onclick="activatePlan('Gold Plan (40%/day - 5 Days)')" class="w-full mt-4 py-2 bg-brand-yellow text-slate-950 font-bold text-xs rounded-xl">Select Gold</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDeposit() {
+            return `
+                <div class="max-w-lg mx-auto bg-brand-card border border-slate-800 rounded-2xl p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Manual Deposit Request</h2>
+                    <form onsubmit="submitDeposit(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Select Gateway</label>
+                            <select id="depMethod" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs">
+                                <option value="Bitcoin (BTC)">Bitcoin (BTC)</option>
+                                <option value="USDC (TRC-20)">USDC (TRC-20)</option>
+                                <option value="CashSend / Cardless Cash">CashSend / Cardless Cash</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Amount ($USD)</label>
+                            <input type="number" id="depAmount" min="10" placeholder="e.g. 500" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">TXID / Reference Proof</label>
+                            <input type="text" id="depRef" placeholder="Paste TXID or reference code" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono">
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-brand-yellow text-slate-950 font-bold rounded-xl text-xs">Submit Deposit for Review</button>
+                    </form>
+                </div>
+            `;
+        }
+
+        function renderWithdraw() {
+            return `
+                <div class="max-w-lg mx-auto bg-brand-card border border-slate-800 rounded-2xl p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Manual Withdrawal Request</h2>
+                    <form onsubmit="submitWithdraw(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Withdrawal Method</label>
+                            <select id="wthMethod" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs">
+                                <option value="Local Bank Transfer">Local Bank Transfer</option>
+                                <option value="Mobile Money">Mobile Money (Airtel, Mpamba, MTN)</option>
+                                <option value="Crypto Payout">Crypto Payout (BTC / USDC TRC-20)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Amount ($USD)</label>
+                            <input type="number" id="wthAmount" max="${appState.user.balance}" min="10" placeholder="e.g. 100" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Payout Account Details</label>
+                            <textarea id="wthDetails" rows="3" placeholder="Enter Bank Name, Account # OR Mobile Money Number" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs"></textarea>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-brand-yellow text-slate-950 font-bold rounded-xl text-xs">Request Withdrawal</button>
+                    </form>
+                </div>
+            `;
+        }
+
+        function renderAdminDashboard() {
+            const pendingDep = appState.deposits.filter(d => d.status === 'Pending').length;
+            const pendingWth = appState.withdrawals.filter(w => w.status === 'Pending').length;
+            return `
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-brand-card border border-slate-800 rounded-2xl p-5">
+                        <p class="text-xs text-slate-400">Pending Deposits</p>
+                        <h3 class="text-3xl font-black text-amber-400">${pendingDep}</h3>
+                    </div>
+                    <div class="bg-brand-card border border-slate-800 rounded-2xl p-5">
+                        <p class="text-xs text-slate-400">Pending Withdrawals</p>
+                        <h3 class="text-3xl font-black text-yellow-400">${pendingWth}</h3>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAdminDeposits() {
+            return `
+                <div class="bg-brand-card border border-slate-800 rounded-2xl p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Pending Deposits Approval</h2>
+                    <div class="space-y-3">
+                        ${appState.deposits.map(d => `
+                            <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
+                                <div>
+                                    <p class="font-bold text-white">${d.user} - <span class="text-brand-yellow">$${d.amount}</span></p>
+                                    <p class="text-slate-400">${d.method} | Ref: ${d.ref}</p>
+                                </div>
+                                ${d.status === 'Pending' ? `
+                                    <div class="flex gap-2">
+                                        <button onclick="approveDep('${d.id}')" class="px-3 py-1 bg-emerald-500 text-slate-950 font-bold rounded">Approve</button>
+                                        <button onclick="declineDep('${d.id}')" class="px-3 py-1 bg-red-500/20 text-red-400 font-bold rounded">Decline</button>
+                                    </div>
+                                ` : `<span class="text-slate-500">${d.status}</span>`}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAdminWithdrawals() {
+            return `
+                <div class="bg-brand-card border border-slate-800 rounded-2xl p-6">
+                    <h2 class="text-xl font-bold text-white mb-4">Pending Withdrawals Approval</h2>
+                    <div class="space-y-3">
+                        ${appState.withdrawals.map(w => `
+                            <div class="p-4 bg-slate-900 border border-slate-800 rounded-xl flex justify-between items-center text-xs">
+                                <div>
+                                    <p class="font-bold text-white">${w.user} - <span class="text-slate-200">$${w.amount}</span></p>
+                                    <p class="text-slate-400">${w.method} | Details: ${w.details}</p>
+                                </div>
+                                ${w.status === 'Pending' ? `
+                                    <div class="flex gap-2">
+                                        <button onclick="approveWth('${w.id}')" class="px-3 py-1 bg-emerald-500 text-slate-950 font-bold rounded">Approve Payout</button>
+                                        <button onclick="declineWth('${w.id}')" class="px-3 py-1 bg-red-500/20 text-red-400 font-bold rounded">Decline</button>
+                                    </div>
+                                ` : `<span class="text-slate-500">${w.status}</span>`}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function submitDeposit(e) {
+            e.preventDefault();
+            const method = document.getElementById('depMethod').value;
+            const amount = parseFloat(document.getElementById('depAmount').value);
+            const ref = document.getElementById('depRef').value;
+            appState.deposits.unshift({ id: 'DEP-' + Date.now(), user: appState.user.email, amount, method, ref, date: new Date().toISOString().substring(0,10), status: 'Pending' });
+            saveState();
+            showToast('Deposit Submitted', 'Awaiting manual admin review.');
+            renderContent();
+        }
+
+        function submitWithdraw(e) {
+            e.preventDefault();
+            const method = document.getElementById('wthMethod').value;
+            const amount = parseFloat(document.getElementById('wthAmount').value);
+            const details = document.getElementById('wthDetails').value;
+            if(amount > appState.user.balance) return showToast('Error', 'Insufficient balance.', true);
+            appState.withdrawals.unshift({ id: 'WTH-' + Date.now(), user: appState.user.email, amount, method, details, date: new Date().toISOString().substring(0,10), status: 'Pending' });
+            saveState();
+            showToast('Withdrawal Requested', 'Awaiting manual admin payout approval.');
+            renderContent();
+        }
+
+        function approveDep(id) {
+            const dep = appState.deposits.find(d => d.id === id);
+            if(dep) { dep.status = 'Approved'; appState.user.balance += dep.amount; saveState(); renderContent(); showToast('Approved', 'Client balance credited.'); }
+        }
+        function declineDep(id) {
+            const dep = appState.deposits.find(d => d.id === id);
+            if(dep) { dep.status = 'Declined'; saveState(); renderContent(); }
+        }
+        function approveWth(id) {
+            const wth = appState.withdrawals.find(w => w.id === id);
+            if(wth) { wth.status = 'Approved'; appState.user.balance -= wth.amount; saveState(); renderContent(); showToast('Payout Approved', 'Processed payout.'); }
+        }
+        function declineWth(id) {
+            const wth = appState.withdrawals.find(w => w.id === id);
+            if(wth) { wth.status = 'Declined'; saveState(); renderContent(); }
+        }
+        function activatePlan(name) {
+            appState.user.activePlan = name;
+            saveState();
+            showToast('Plan Activated', name);
+        }
+
+        window.onload = function() {
+            if(window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
+            }
+            renderSidebar();
+            renderContent();
+            updateBadges();
+        };
+    </script>
+</body>
+</html>
