@@ -16,6 +16,9 @@
   <!-- Firebase App & Realtime Database SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+  <script src="./frontend/secure-client.js"></script>
 
   <script>
     tailwind.config = {
@@ -1034,6 +1037,10 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // Secure backend client is initialized but not yet used by legacy login/data flows.
+    // The UI cutover will happen only after existing account data is safely mapped.
+    window.grashSecureClient = window.createGrashSecureClient(firebase);
 
     const DEFAULT_ADMIN_PIN = "5978";
     const ADMIN_EMAIL = "grashfxmw@gmail.com";
