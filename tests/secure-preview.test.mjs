@@ -27,4 +27,6 @@ test("secure preview does not write legacy shared platform data", () => {
   assert.doesNotMatch(html, /ref\\(['"]platform_data['"]\\)\\.set/);
   assert.doesNotMatch(html, /localStorage\\.setItem/);
   assert.match(html, /Staging only/);
+  assert.match(html, /REPLACE_WITH_STAGING_PROJECT/);
+  assert.doesNotMatch(html, /grashfx\\.firebaseapp\\.com/);
 });
