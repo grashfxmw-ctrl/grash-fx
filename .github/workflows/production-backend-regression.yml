@@ -1,0 +1,24 @@
+name: Production branch backend regression checks
+
+on:
+  push:
+    branches: [production-backend-integration]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check secure client syntax
+        run: node --check frontend/secure-client.js
+      - name: Check Cloud Functions syntax
+        run: node --check functions/index.js
+      - name: Test backend security invariants
+        run: node --test tests/functions-security.test.mjs
