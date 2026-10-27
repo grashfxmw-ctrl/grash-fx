@@ -10,6 +10,7 @@ This folder is a **staged backend foundation**, not a deployed or production-rea
 - `requestTransaction`: records a pending deposit or withdrawal request; it does not move funds.
 - `getMyAccountData`: returns the signed-in user's limited profile and up to 100 of their own transaction records.
 - `reviewTransaction`: administrator-only approval/rejection for records in the new `secure_transactions` tree.
+- `adminListTransactions`: administrator-only, bounded queue for pending and interrupted transaction reviews.
 - `adminGetUserProfile`: returns a limited profile view to the administrator.
 
 ## Important safety status
@@ -20,6 +21,10 @@ This folder is a **staged backend foundation**, not a deployed or production-rea
 - Do not enable broad client read/write access to the `secure_*` paths. A matching restrictive Realtime Database rules file and emulator tests are required before deployment.
 - The admin check uses the verified Firebase Auth email `grashfxmw@gmail.com`. Confirm the account is protected with a strong password and multi-factor authentication where available before production.
 - Scheduled ROI credits and referral bonuses are deliberately not implemented here. Confirm the business rules, funding model, and compliance requirements first; never treat client-side profit calculations as authoritative.
+
+## Staging setup
+
+See [`STAGING_SETUP.md`](../STAGING_SETUP.md) for the isolated Firebase project checklist, safe local preview configuration, and staging-only test plan. The committed preview files intentionally contain placeholders; do not replace them with production config or commit real project configuration.
 
 ## Local checks
 
