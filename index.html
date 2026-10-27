@@ -13,9 +13,6 @@
   <!-- Telegram Web App Script -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Firebase App & Realtime Database SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script>
     tailwind.config = {
@@ -1021,88 +1018,72 @@
 
   <!-- APPLICATION JAVASCRIPT LOGIC -->
   <script>
-    // --- 1. FIREBASE & CLOUD DATA SYNC INITIALIZATION ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyCS-JePIUTBnGu--6oYpMH7KhRqtFFbjkw",
-      authDomain: "grashfx.firebaseapp.com",
-      databaseURL: "https://grashfx-default-rtdb.firebaseio.com",
-      projectId: "grashfx",
-      storageBucket: "grashfx.firebasestorage.app",
-      messagingSenderId: "420001022752",
-      appId: "1:420001022752:web:db9851dbaeddca247e8d45"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
+    // --- LOCAL-ONLY DATA INITIALIZATION (Firebase disconnected for now) ---
     const DEFAULT_ADMIN_PIN = "5978";
     const ADMIN_EMAIL = "grashfxmw@gmail.com";
 
-    // Application state initialization from cloud
-    let users = [];
-    let transactions = [];
-    let messages = [];
-    let activityLogs = [];
-    let currentUser = JSON.parse(localStorage.getItem('grash_current_user')) || null;
-
-    // Real-time listener for ALL global users & data from Firebase cloud database
-    db.ref('platform_data').on('value', (snapshot) => {
-      const data = snapshot.val() || {};
-      
-      users = data.users || [
-        {
-          id: "usr_default",
-          name: "Investor",
-          email: "investor@grashfx.com",
-          password: "password123",
-          balance: 0.00,
-          profit: 0.00,
-          refBonus: 0.00,
-          referredBy: null,
-          referralCode: "GRASH" + Math.floor(1000 + Math.random() * 9000),
-          activePlan: "None",
-          planAmount: 0,
-          planRate: 0,
-          planStartTime: null,
-          lastProfitTime: null,
-          isBlocked: false,
-          warningMsg: ""
-        }
-      ];
-
-      transactions = data.transactions || [
-        {
-          id: "TX-90123",
-          userId: "usr_default",
-          userName: "Investor",
-          type: "Deposit",
-          amount: 100.00,
-          method: "Bitcoin (BTC)",
-          ref: "bc1quwnaggzrjrku8haz95cqycc3t8d8allkm9vurj",
-          date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-          status: "Completed"
-        }
-      ];
-
-      messages = data.messages || [
-        {
-          id: "msg_1",
-          targetUserId: "ALL",
-          sender: "GRASH FX Support",
-          subject: "Welcome to GRASH FX Platform",
-          body: "Welcome to the official GRASH FX portal. Activate a 7-day investment package to enjoy daily 24h yields or invite friends to earn $5 fixed bonuses per referral.",
-          date: new Date().toLocaleDateString(),
-          readBy: []
-        }
-      ];
-
-      activityLogs = data.activityLogs || [];
-
-      renderApp();
-      if (document.getElementById('adminPanelModal') && !document.getElementById('adminPanelModal').classList.contains('hidden')) {
-        renderAdminPanel();
+    const defaultUsers = [
+      {
+        id: "usr_default",
+        name: "Investor",
+        email: "investor@grashfx.com",
+        password: "password123",
+        balance: 0.00,
+        profit: 0.00,
+        refBonus: 0.00,
+        referredBy: null,
+        referralCode: "GRASH" + Math.floor(1000 + Math.random() * 9000),
+        activePlan: "None",
+        planAmount: 0,
+        planRate: 0,
+        planStartTime: null,
+        lastProfitTime: null,
+        isBlocked: false,
+        warningMsg: ""
       }
-    });
+    ];
+
+    const defaultTransactions = [
+      {
+        id: "TX-90123",
+        userId: "usr_default",
+        userName: "Investor",
+        type: "Deposit",
+        amount: 100.00,
+        method: "Bitcoin (BTC)",
+        ref: "bc1quwnaggzrjrku8haz95cqycc3t8d8allkm9vurj",
+        date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        status: "Completed"
+      }
+    ];
+
+    const defaultMessages = [
+      {
+        id: "msg_1",
+        targetUserId: "ALL",
+        sender: "GRASH FX Support",
+        subject: "Welcome to GRASH FX Platform",
+        body: "Welcome to the official GRASH FX portal. Activate a 7-day investment package to enjoy daily 24h yields or invite friends to earn $5 fixed bonuses per referral.",
+        date: new Date().toLocaleDateString(),
+        readBy: []
+      }
+    ];
+
+    function readLocalData(key, fallback) {
+      try {
+        const saved = localStorage.getItem(key);
+        return saved ? JSON.parse(saved) : fallback;
+      } catch (error) {
+        console.warn("Could not read saved local data:", error);
+        return fallback;
+      }
+    }
+
+    let users = readLocalData("grash_users", defaultUsers);
+    let transactions = readLocalData("grash_transactions", defaultTransactions);
+    let messages = readLocalData("grash_messages", defaultMessages);
+    let activityLogs = readLocalData("grash_activity_logs", []);
+    let currentUser = readLocalData("grash_current_user", null);
 
     // Initialize Telegram Mini App
     if (window.Telegram && window.Telegram.WebApp) {
@@ -1110,19 +1091,18 @@
       window.Telegram.WebApp.expand();
     }
 
-    // Save State to Central Cloud Database
+    // Save application state locally in this browser only.
+    // This is temporary until a replacement backend is configured.
     function saveData() {
-      db.ref('platform_data').set({
-        users: users,
-        transactions: transactions,
-        messages: messages,
-        activityLogs: activityLogs
-      });
+      localStorage.setItem("grash_users", JSON.stringify(users));
+      localStorage.setItem("grash_transactions", JSON.stringify(transactions));
+      localStorage.setItem("grash_messages", JSON.stringify(messages));
+      localStorage.setItem("grash_activity_logs", JSON.stringify(activityLogs));
 
       if (currentUser) {
-        localStorage.setItem('grash_current_user', JSON.stringify(currentUser));
+        localStorage.setItem("grash_current_user", JSON.stringify(currentUser));
       } else {
-        localStorage.removeItem('grash_current_user');
+        localStorage.removeItem("grash_current_user");
       }
       renderApp();
     }
