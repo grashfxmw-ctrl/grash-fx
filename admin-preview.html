@@ -49,7 +49,7 @@ const $ = (id) => document.getElementById(id);
 const configured = !Object.values(firebaseConfig).some((value) => value.startsWith("REPLACE_WITH_"));
 let client = null, busy = false;
 function message(id, value, error = false) { const node=$(id); node.textContent=value; node.style.color=error?"var(--red)":"var(--gold)"; }
-function setBusy(value) { busy=value; document.querySelectorAll("button").forEach((button)=>{button.disabled=value||!configured;}); }
+function setBusy(value) { busy=value; document.querySelectorAll("button").forEach((button)=>{button.disabled=value||!configured||button.dataset.locked==="true";}); }
 function money(value) { return "$"+Number(value||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function date(value) { return value ? new Date(value).toLocaleString() : "—"; }
 function cell(value) { const node=document.createElement("td"); node.textContent=value==null?"":String(value); return node; }
@@ -65,7 +65,7 @@ function renderQueue(items) {
     const actionCell=document.createElement("td"), actions=document.createElement("div"); actions.className="actions";
     const approve=makeButton(tx.status==="Processing"?"Retry approval":"Approve","",()=>review(tx,"approve",note.value));
     const reject=makeButton("Reject","reject",()=>review(tx,"reject",note.value));
-    if (tx.status==="Processing") { reject.disabled=true; reject.title="Processing requests can only be retried by approval."; }
+    if (tx.status==="Processing") { reject.dataset.locked="true"; reject.disabled=true; reject.title="Processing requests can only be retried by approval."; }
     actions.append(approve,reject); actionCell.append(actions); row.append(actionCell); body.append(row);
   });
 }
