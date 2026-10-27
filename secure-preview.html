@@ -77,19 +77,27 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
   <script src="frontend/secure-client.js"></script>
   <script>
-    // Public Firebase web-app configuration. Never place service-account credentials here.
+    // Configure these with a DEDICATED staging Firebase project before testing.
+    // Do not point this preview at the live GRASH FX project.
     const firebaseConfig = {
-      apiKey: "AIzaSyCS-JePIUTBnGu--6oYpMH7KhRqtFFbjkw",
-      authDomain: "grashfx.firebaseapp.com",
-      projectId: "grashfx",
-      storageBucket: "grashfx.firebasestorage.app",
-      messagingSenderId: "420001022752",
-      appId: "1:420001022752:web:db9851dbaeddca247e8d45"
+      apiKey: "REPLACE_WITH_STAGING_API_KEY",
+      authDomain: "REPLACE_WITH_STAGING_PROJECT.firebaseapp.com",
+      projectId: "REPLACE_WITH_STAGING_PROJECT",
+      storageBucket: "REPLACE_WITH_STAGING_PROJECT.firebasestorage.app",
+      messagingSenderId: "REPLACE_WITH_STAGING_SENDER_ID",
+      appId: "REPLACE_WITH_STAGING_APP_ID"
     };
-    firebase.initializeApp(firebaseConfig);
-    const secureClient = createGrashSecureClient(firebase);
     const $ = (id) => document.getElementById(id);
+    const isConfigured = !Object.values(firebaseConfig).some((value) => value.startsWith("REPLACE_WITH_"));
+    let secureClient = null;
     let busy = false;
+    if (isConfigured) {
+      firebase.initializeApp(firebaseConfig);
+      secureClient = createGrashSecureClient(firebase);
+    } else {
+      document.querySelectorAll("#authCard input, #authCard button").forEach((element) => { element.disabled = true; });
+      showMessage("authMessage", "Preview UI is ready. Add a separate staging Firebase project config to enable sign-in.", true);
+    }
 
     function setBusy(value) {
       busy = value;
@@ -178,7 +186,7 @@
         renderAccount(await secureClient.loadAccount());
       }, "txMessage");
     });
-    secureClient.onAuthStateChanged((user) => {
+    if (secureClient) secureClient.onAuthStateChanged((user) => {
       if (!user || busy || !user.emailVerified) return;
       runAction(async () => {
         const data = await secureClient.loadAccount();
