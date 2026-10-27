@@ -217,6 +217,56 @@ exports.reviewTransaction = onCall(async (request) => {
 });
 
 /**
+ * Returns the signed-in user's own profile and transaction history. The
+ * Admin SDK reads the protected paths, but the callable returns only this
+ * caller's records and explicitly selected fields.
+ */
+exports.getMyAccountData = onCall(async (request) => {
+  const actor = requireUser(request);
+  const profileSnap = await db.ref(`secure_users/${actor.uid}`).get();
+  if (!profileSnap.exists()) {
+    throw new HttpsError("failed-precondition", "Create your account profile first.");
+  }
+
+  const p = profileSnap.val();
+  const txSnap = await db.ref("secure_transactions")
+    .orderByChild("userId")
+    .equalTo(actor.uid)
+    .limitToLast(100)
+    .get();
+  const transactions = [];
+  txSnap.forEach((child) => {
+    const tx = child.val() || {};
+    transactions.push({
+      id: String(tx.id || child.key),
+      type: tx.type || "",
+      amount: Number(tx.amount || 0),
+      method: tx.method || "",
+      status: tx.status || "Pending",
+      createdAt: tx.createdAt || null,
+      updatedAt: tx.updatedAt || null
+    });
+  });
+  transactions.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+
+  return {
+    profile: {
+      uid: p.uid,
+      email: p.email,
+      displayName: p.displayName,
+      balance: Number(p.balance || 0),
+      profit: Number(p.profit || 0),
+      referralBonus: Number(p.referralBonus || 0),
+      role: p.role || "user",
+      isBlocked: p.isBlocked === true,
+      createdAt: p.createdAt || null,
+      updatedAt: p.updatedAt || null
+    },
+    transactions
+  };
+});
+
+/**
  * Admin can inspect a single user's safe public profile fields. This is
  * intentionally narrow; do not expose a global all-users endpoint.
  */
