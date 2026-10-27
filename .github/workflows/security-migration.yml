@@ -21,6 +21,8 @@ jobs:
       - name: Install Functions dependencies
         working-directory: functions
         run: npm install
+      - name: Check staged frontend adapter syntax
+        run: node --check frontend/secure-client.js
       - name: Check backend JavaScript syntax
         working-directory: functions
         run: npm run check
