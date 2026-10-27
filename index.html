@@ -73,7 +73,7 @@
     <div class="max-w-7xl mx-auto flex justify-between items-center">
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync Online
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Global Cloud Sync Online
         </span>
       </div>
       <!-- ADMIN ACCESS BUTTON: Only visible when admin email (grashfxmw@gmail.com) is logged in -->
@@ -688,7 +688,7 @@
   </div>
 
 
-  <!-- MODAL: DEPOSIT SYSTEM -->
+  <!-- MODAL: DEPOSIT SYSTEM (NO BANK ACCOUNT DETAILS, ONLY CASHSEND) -->
   <div id="depositModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
     <div class="bg-[#111827] border border-gray-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative my-8">
       <button onclick="closeModal('depositModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
@@ -703,6 +703,8 @@
       </div>
 
       <form onsubmit="handleDepositSubmit(event)" class="space-y-5">
+        
+        <!-- Step 1: Gateway Selection -->
         <div>
           <label class="block text-xs font-medium text-gray-300 mb-2">1. Select Payment Method</label>
           <select id="depositMethod" onchange="updateDepositDetails()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
@@ -713,13 +715,18 @@
           </select>
         </div>
 
-        <div id="depositDetailsBox" class="bg-gray-900/90 border border-gray-700 rounded-xl p-4 space-y-3"></div>
+        <!-- Step 2: Display Detailed Payment Destination Info -->
+        <div id="depositDetailsBox" class="bg-gray-900/90 border border-gray-700 rounded-xl p-4 space-y-3">
+          <!-- Dynamic details filled by JS -->
+        </div>
 
+        <!-- Step 3: Deposit Amount -->
         <div>
           <label class="block text-xs font-medium text-gray-300 mb-1">2. Enter Deposit Amount ($ USD)</label>
           <input type="number" id="depositAmount" min="10" step="any" required placeholder="50.00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
         </div>
 
+        <!-- Step 4: Transaction ID / Proof -->
         <div>
           <label class="block text-xs font-medium text-gray-300 mb-1">3. Payment Reference / TXID / Sender Name / Voucher Details</label>
           <input type="text" id="depositTxid" required placeholder="Paste TxHash, CashSend Voucher & PIN, or Mobile Reference No." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
@@ -733,7 +740,7 @@
   </div>
 
 
-  <!-- MODAL: WITHDRAWAL SYSTEM -->
+  <!-- MODAL: WITHDRAWAL SYSTEM (MTN & AIRTEL MOBILE MONEY) -->
   <div id="withdrawModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-[#111827] border border-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
       <button onclick="closeModal('withdrawModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
@@ -744,6 +751,7 @@
         <h3 class="text-xl font-bold text-white flex items-center gap-2">
           <i class="fas fa-arrow-up-from-bracket text-yellow-400"></i> Request Withdrawal
         </h3>
+        <p class="text-xs text-gray-400 mt-1">Withdraw accumulated earnings directly to your wallet or mobile account.</p>
       </div>
 
       <form onsubmit="handleWithdrawSubmit(event)" class="space-y-4">
@@ -754,6 +762,7 @@
             <option value="USDT (TRC20)">USDT (TRC20)</option>
             <option value="Airtel Money">Airtel Money</option>
             <option value="MTN Mobile Money">MTN Mobile Money</option>
+            <option value="Bank Account">Bank Transfer</option>
           </select>
         </div>
 
@@ -765,7 +774,7 @@
 
         <div>
           <label class="block text-xs font-medium text-gray-300 mb-1">Destination Address / Account Details</label>
-          <textarea id="withdrawDetails" required rows="3" placeholder="Enter Wallet Address or Phone Number" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-yellow-500 focus:outline-none"></textarea>
+          <textarea id="withdrawDetails" required rows="3" placeholder="Enter Wallet Address, Mobile Money Phone Number, or Account Details" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-yellow-500 focus:outline-none"></textarea>
         </div>
 
         <button type="submit" class="w-full gold-gradient text-gray-950 font-extrabold py-3.5 rounded-xl text-sm hover:opacity-90 transition shadow-lg">
@@ -813,13 +822,20 @@
       <button onclick="closeModal('adminAuthModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
         <i class="fas fa-times"></i>
       </button>
+
       <div class="w-12 h-12 bg-yellow-500/10 text-yellow-400 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
         <i class="fas fa-user-shield"></i>
       </div>
       <h3 class="text-lg font-bold text-white mb-1">Admin Security Access</h3>
+      <p class="text-xs text-gray-400 mb-6">Enter official operator security PIN</p>
+
       <form onsubmit="handleAdminAuth(event)" class="space-y-4">
-        <input type="password" id="adminPin" maxlength="6" required placeholder="Enter PIN" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-center text-lg tracking-widest text-white focus:border-yellow-500 focus:outline-none">
-        <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-gray-950 font-bold py-3 rounded-xl text-xs transition">Unlock Control Panel</button>
+        <div>
+          <input type="password" id="adminPin" maxlength="6" required placeholder="Enter 4-digit PIN" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-center text-lg tracking-widest text-white focus:border-yellow-500 focus:outline-none">
+        </div>
+        <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-gray-950 font-bold py-3 rounded-xl text-xs transition">
+          Unlock Control Panel
+        </button>
       </form>
     </div>
   </div>
@@ -828,13 +844,64 @@
   <!-- MODAL: MANUAL BONUS TRANSFER BY ADMIN -->
   <div id="adminBonusModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
     <div class="bg-[#111827] border border-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-      <button onclick="closeModal('adminBonusModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">&times;</button>
-      <h3 class="text-lg font-bold text-white mb-1">Transfer Bonus to <span id="adminBonusTargetName" class="text-yellow-400"></span></h3>
+      <button onclick="closeModal('adminBonusModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+        <i class="fas fa-gift text-yellow-400"></i> Transfer Bonus to Client
+      </h3>
+      <p class="text-xs text-gray-400 mb-4">Target User: <span id="adminBonusTargetName" class="text-yellow-400 font-bold"></span></p>
+
       <form onsubmit="handleAdminSendBonus(event)" class="space-y-4">
-        <input type="hidden" id="adminBonusTargetKey">
-        <input type="number" id="adminBonusAmount" step="any" required placeholder="Amount ($)" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white">
-        <input type="text" id="adminBonusNote" placeholder="Reason / Note" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white">
-        <button type="submit" class="w-full gold-gradient text-gray-950 font-extrabold py-3 rounded-xl text-xs">Confirm Transfer</button>
+        <input type="hidden" id="adminBonusTargetId">
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Bonus Amount ($ USD)</label>
+          <input type="number" id="adminBonusAmount" step="any" required placeholder="50.00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Reason / Note</label>
+          <input type="text" id="adminBonusNote" placeholder="Welcome bonus / Promotional grant" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 outline-none">
+        </div>
+        <button type="submit" class="w-full gold-gradient text-gray-950 font-extrabold py-3 rounded-xl text-xs hover:opacity-90 transition">
+          Confirm Bonus Transfer
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- MODAL: ADMIN BROADCAST & DIRECT MESSAGE CENTER -->
+  <div id="adminMsgModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-[#111827] border border-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeModal('adminMsgModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2">
+        <i class="fas fa-paper-plane text-blue-400"></i> Send Message / User Guide
+      </h3>
+      <p class="text-xs text-gray-400 mb-4">Send inbox notification or platform instructions.</p>
+
+      <form onsubmit="handleAdminSendMessage(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Target Recipient</label>
+          <select id="adminMsgTarget" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 outline-none">
+            <option value="ALL">ALL USERS (Global Broadcast)</option>
+            <!-- Dynamic Users Populated by JS -->
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Subject / Header</label>
+          <input type="text" id="adminMsgSubject" required placeholder="Platform Update / Trading Guide" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Message Content</label>
+          <textarea id="adminMsgBody" required rows="4" placeholder="Enter full instructions or message for client(s)..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 outline-none"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl text-xs transition">
+          Dispatch Message
+        </button>
       </form>
     </div>
   </div>
@@ -846,73 +913,123 @@
       <div class="flex justify-between items-center border-b border-gray-800 pb-4 mb-6">
         <div class="flex items-center gap-3">
           <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
-          <h2 class="text-xl font-black text-white">GRASH FX Global Master Control Panel</h2>
+          <h2 class="text-xl font-black text-white">GRASH FX Master Control Panel</h2>
         </div>
-        <button onclick="closeModal('adminPanelModal')" class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-xs">Close Panel</button>
+        <div class="flex items-center gap-2">
+          <button onclick="openAdminMsgModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1">
+            <i class="fas fa-paper-plane"></i> Broadcast / Guide
+          </button>
+          <button onclick="closeModal('adminPanelModal')" class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-xs">
+            Close Admin Panel
+          </button>
+        </div>
       </div>
 
+      <!-- Admin Actions Grid -->
       <div class="space-y-8">
-        <!-- Section 1: Manage User Balances Worldwide -->
+        
+        <!-- Live Admin Activity Log / Feed Section -->
         <div class="bg-gray-900/60 border border-gray-800 p-5 rounded-xl">
-          <h3 class="text-sm font-bold text-yellow-400 mb-3 flex items-center gap-2"><i class="fas fa-users-cog"></i> Worldwide Registered Users & Balances</h3>
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-sm font-bold text-yellow-400 flex items-center gap-2">
+              <i class="fas fa-bell"></i> Live Investor Activity Log & Notifications
+            </h3>
+            <button onclick="clearActivityLogs()" class="text-[11px] bg-gray-800 text-gray-300 hover:bg-gray-700 px-2.5 py-1 rounded">Clear Logs</button>
+          </div>
+          <div id="adminActivityLogBox" class="max-h-40 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+            <!-- Dynamic Activity Logs Populated Here -->
+          </div>
+        </div>
+
+        <!-- Section 1: Manage User Balances & Status & Moderation -->
+        <div class="bg-gray-900/60 border border-gray-800 p-5 rounded-xl">
+          <h3 class="text-sm font-bold text-yellow-400 mb-3 flex items-center gap-2">
+            <i class="fas fa-users-cog"></i> Client Balance Control & Moderation
+          </h3>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs text-gray-300">
               <thead class="bg-gray-950 text-gray-400 uppercase font-semibold">
                 <tr>
-                  <th class="py-2.5 px-3">Name</th>
+                  <th class="py-2.5 px-3">User</th>
                   <th class="py-2.5 px-3">Email</th>
-                  <th class="py-2.5 px-3">Balance ($)</th>
+                  <th class="py-2.5 px-3">Available ($)</th>
                   <th class="py-2.5 px-3">Profit ($)</th>
+                  <th class="py-2.5 px-3">Ref Bonus ($)</th>
+                  <th class="py-2.5 px-3">Status</th>
                   <th class="py-2.5 px-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody id="adminUserTable" class="divide-y divide-gray-800"></tbody>
+              <tbody id="adminUserTable" class="divide-y divide-gray-800">
+                <!-- Dynamic Populated -->
+              </tbody>
             </table>
           </div>
         </div>
 
-        <!-- Section 2: Pending Deposits -->
+        <!-- Section 2: Manage Pending Deposits -->
         <div class="bg-gray-900/60 border border-gray-800 p-5 rounded-xl">
-          <h3 class="text-sm font-bold text-emerald-400 mb-3"><i class="fas fa-arrow-down-to-bracket"></i> Pending Client Deposits</h3>
+          <h3 class="text-sm font-bold text-emerald-400 mb-3 flex items-center gap-2">
+            <i class="fas fa-arrow-down-to-bracket"></i> Pending Client Deposits
+          </h3>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs text-gray-300">
-              <thead class="bg-gray-950 text-gray-400 uppercase">
-                <tr><th class="py-2.5 px-3">Client</th><th class="py-2.5 px-3">Amount</th><th class="py-2.5 px-3">Reference</th><th class="py-2.5 px-3 text-right">Action</th></tr>
+              <thead class="bg-gray-950 text-gray-400 uppercase font-semibold">
+                <tr>
+                  <th class="py-2.5 px-3">Client</th>
+                  <th class="py-2.5 px-3">Method</th>
+                  <th class="py-2.5 px-3">Amount</th>
+                  <th class="py-2.5 px-3">Reference / TXID</th>
+                  <th class="py-2.5 px-3">Date</th>
+                  <th class="py-2.5 px-3 text-right">Action</th>
+                </tr>
               </thead>
-              <tbody id="adminDepositTable" class="divide-y divide-gray-800"></tbody>
+              <tbody id="adminDepositTable" class="divide-y divide-gray-800">
+                <!-- Dynamic Populated -->
+              </tbody>
             </table>
           </div>
         </div>
 
-        <!-- Section 3: Pending Withdrawals -->
+        <!-- Section 3: Manage Pending Withdrawals -->
         <div class="bg-gray-900/60 border border-gray-800 p-5 rounded-xl">
-          <h3 class="text-sm font-bold text-yellow-500 mb-3"><i class="fas fa-arrow-up-from-bracket"></i> Pending Client Withdrawals</h3>
+          <h3 class="text-sm font-bold text-yellow-500 mb-3 flex items-center gap-2">
+            <i class="fas fa-arrow-up-from-bracket"></i> Pending Client Withdrawals
+          </h3>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs text-gray-300">
-              <thead class="bg-gray-950 text-gray-400 uppercase">
-                <tr><th class="py-2.5 px-3">Client</th><th class="py-2.5 px-3">Amount</th><th class="py-2.5 px-3">Details</th><th class="py-2.5 px-3 text-right">Action</th></tr>
+              <thead class="bg-gray-950 text-gray-400 uppercase font-semibold">
+                <tr>
+                  <th class="py-2.5 px-3">Client</th>
+                  <th class="py-2.5 px-3">Method</th>
+                  <th class="py-2.5 px-3">Amount</th>
+                  <th class="py-2.5 px-3">Payout Account Details</th>
+                  <th class="py-2.5 px-3">Date</th>
+                  <th class="py-2.5 px-3 text-right">Action</th>
+                </tr>
               </thead>
-              <tbody id="adminWithdrawTable" class="divide-y divide-gray-800"></tbody>
+              <tbody id="adminWithdrawTable" class="divide-y divide-gray-800">
+                <!-- Dynamic Populated -->
+              </tbody>
             </table>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 
 
-  <!-- APPLICATION JAVASCRIPT LOGIC (FIREBASE CLOUD SYNC) -->
+  <!-- APPLICATION JAVASCRIPT LOGIC -->
   <script>
-    // --- FIREBASE CONFIGURATION ---
-    // (Create a free project at firebase.google.com -> Realtime Database, and paste your credentials below)
+    // --- 1. FIREBASE & CLOUD DATA SYNC INITIALIZATION ---
     const firebaseConfig = {
-      apiKey: "YOUR_FIREBASE_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-      projectId: "YOUR_PROJECT",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyCS-JePIUTBnGu--6oYpMH7KhRqtFFbjkw",
+      authDomain: "grashfx.firebaseapp.com",
+      databaseURL: "https://grashfx-default-rtdb.firebaseio.com",
+      projectId: "grashfx",
+      storageBucket: "grashfx.firebasestorage.app",
+      messagingSenderId: "420001022752",
+      appId: "1:420001022752:web:db9851dbaeddca247e8d45"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -921,31 +1038,120 @@
     const DEFAULT_ADMIN_PIN = "5978";
     const ADMIN_EMAIL = "grashfxmw@gmail.com";
 
-    let globalUsers = {};
-    let globalTxs = {};
-    let globalMsgs = {};
+    // Application state initialization from cloud
+    let users = [];
+    let transactions = [];
+    let messages = [];
+    let activityLogs = [];
     let currentUser = JSON.parse(localStorage.getItem('grash_current_user')) || null;
 
-    // Real-time synchronization listeners across all phones and devices worldwide
-    db.ref('users').on('value', (snapshot) => {
-      globalUsers = snapshot.val() || {};
+    // Real-time listener for ALL global users & data from Firebase cloud database
+    db.ref('platform_data').on('value', (snapshot) => {
+      const data = snapshot.val() || {};
+      
+      users = data.users || [
+        {
+          id: "usr_default",
+          name: "Investor",
+          email: "investor@grashfx.com",
+          password: "password123",
+          balance: 0.00,
+          profit: 0.00,
+          refBonus: 0.00,
+          referredBy: null,
+          referralCode: "GRASH" + Math.floor(1000 + Math.random() * 9000),
+          activePlan: "None",
+          planAmount: 0,
+          planRate: 0,
+          planStartTime: null,
+          lastProfitTime: null,
+          isBlocked: false,
+          warningMsg: ""
+        }
+      ];
+
+      transactions = data.transactions || [
+        {
+          id: "TX-90123",
+          userId: "usr_default",
+          userName: "Investor",
+          type: "Deposit",
+          amount: 100.00,
+          method: "Bitcoin (BTC)",
+          ref: "bc1quwnaggzrjrku8haz95cqycc3t8d8allkm9vurj",
+          date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+          status: "Completed"
+        }
+      ];
+
+      messages = data.messages || [
+        {
+          id: "msg_1",
+          targetUserId: "ALL",
+          sender: "GRASH FX Support",
+          subject: "Welcome to GRASH FX Platform",
+          body: "Welcome to the official GRASH FX portal. Activate a 7-day investment package to enjoy daily 24h yields or invite friends to earn $5 fixed bonuses per referral.",
+          date: new Date().toLocaleDateString(),
+          readBy: []
+        }
+      ];
+
+      activityLogs = data.activityLogs || [];
+
       renderApp();
+      if (document.getElementById('adminPanelModal') && !document.getElementById('adminPanelModal').classList.contains('hidden')) {
+        renderAdminPanel();
+      }
     });
 
-    db.ref('transactions').on('value', (snapshot) => {
-      globalTxs = snapshot.val() || {};
-      renderApp();
-    });
-
-    db.ref('messages').on('value', (snapshot) => {
-      globalMsgs = snapshot.val() || {};
-      renderApp();
-    });
-
-    // Telegram Mini App Init
+    // Initialize Telegram Mini App
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
+    }
+
+    // Save State to Central Cloud Database
+    function saveData() {
+      db.ref('platform_data').set({
+        users: users,
+        transactions: transactions,
+        messages: messages,
+        activityLogs: activityLogs
+      });
+
+      if (currentUser) {
+        localStorage.setItem('grash_current_user', JSON.stringify(currentUser));
+      } else {
+        localStorage.removeItem('grash_current_user');
+      }
+      renderApp();
+    }
+
+    // --- REAL-TIME ADMIN ACTIVITY LOGGING & POPUP ---
+    function logAdminActivity(title, desc) {
+      const logEntry = {
+        id: "LOG_" + Date.now(),
+        title: title,
+        desc: desc,
+        date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        read: false
+      };
+
+      activityLogs.push(logEntry);
+      saveData();
+
+      // Trigger pop-up alert for admin if logged in
+      if (currentUser && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+        notify(`[ADMIN ALERT] ${title}: ${desc}`, 'success');
+        document.getElementById('adminLiveBadge').classList.remove('hidden');
+      }
+    }
+
+    function clearActivityLogs() {
+      activityLogs = [];
+      saveData();
+      renderAdminPanel();
+      notify('Activity logs cleared.', 'info');
     }
 
     // Check URL parameters for Referral Link
@@ -957,119 +1163,260 @@
       }
     }
 
-    // --- NOTIFICATIONS ---
+    // --- 2. NOTIFICATIONS SYSTEM ---
     function notify(message, type = 'info') {
       const container = document.getElementById('notificationArea');
       const toast = document.createElement('div');
-      let borderCol = type === 'success' ? 'border-emerald-500' : type === 'error' ? 'border-red-500' : 'border-yellow-500';
-      toast.className = `bg-gray-900 text-white text-xs p-3.5 rounded-xl border-l-4 ${borderCol} shadow-xl flex items-center justify-between gap-3`;
-      toast.innerHTML = `<span>${message}</span><button onclick="this.parentElement.remove()" class="text-gray-400">&times;</button>`;
+      
+      let borderCol = 'border-yellow-500';
+      if(type === 'success') borderCol = 'border-emerald-500';
+      if(type === 'error') borderCol = 'border-red-500';
+
+      toast.className = `bg-gray-900 text-white text-xs p-3.5 rounded-xl border-l-4 ${borderCol} shadow-xl flex items-center justify-between gap-3 transition-all transform duration-300 translate-x-10`;
+      toast.innerHTML = `
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-white">&times;</button>
+      `;
       container.appendChild(toast);
-      setTimeout(() => toast.remove(), 5000);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-x-10');
+      }, 10);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 5000);
     }
 
-    // --- RENDERING & UI SYNC ---
+    // --- 3. RENDERING & UI SYNC ---
     function renderApp() {
+      // Sync currentUser reference from users array
       if (currentUser) {
-        const userKey = currentUser.email.replace(/[.#$[\]]/g, '_');
-        if (globalUsers[userKey]) {
-          currentUser = globalUsers[userKey];
-          localStorage.setItem('grash_current_user', JSON.stringify(currentUser));
-        }
+        const found = users.find(u => u.id === currentUser.id);
+        if (found) currentUser = found;
+      }
 
-        document.getElementById('userHeaderName').innerHTML = `<span>${currentUser.name}</span> <i class="fas fa-user-gear text-yellow-500 text-[10px]"></i>`;
-        document.getElementById('userHeaderBalance').textContent = `$${parseFloat(currentUser.balance || 0).toFixed(2)}`;
-        document.getElementById('userInfoHeader').classList.remove('hidden');
-        document.getElementById('authBtnNav').classList.add('hidden');
+      // Check user block status
+      if (currentUser && currentUser.isBlocked) {
+        notify('Your account is currently suspended/blocked by Admin.', 'error');
+      }
 
+      // Sync Header
+      const userHeaderName = document.getElementById('userHeaderName');
+      const userHeaderBalance = document.getElementById('userHeaderBalance');
+      const authBtnNav = document.getElementById('authBtnNav');
+      const userInfoHeader = document.getElementById('userInfoHeader');
+      const adminNavBtn = document.getElementById('adminNavBtn');
+
+      if (currentUser) {
+        userHeaderName.innerHTML = `<span>${currentUser.name}</span> <i class="fas fa-user-gear text-yellow-500 text-[10px]"></i>`;
+        userHeaderBalance.textContent = `$${parseFloat(currentUser.balance).toFixed(2)}`;
+        userInfoHeader.classList.remove('hidden');
+        authBtnNav.classList.add('hidden');
+
+        // Show Admin access button ONLY when website email is logged in
         if (currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-          document.getElementById('adminNavBtn').classList.remove('hidden');
+          adminNavBtn.classList.remove('hidden');
+          if (activityLogs.some(l => !l.read)) {
+            document.getElementById('adminLiveBadge').classList.remove('hidden');
+          } else {
+            document.getElementById('adminLiveBadge').classList.add('hidden');
+          }
         } else {
-          document.getElementById('adminNavBtn').classList.add('hidden');
+          adminNavBtn.classList.add('hidden');
         }
 
-        // Profile & Ref link sync
+        // Warning banner check
+        const warningBanner = document.getElementById('warningBanner');
+        if (currentUser.warningMsg && currentUser.warningMsg.trim() !== "") {
+          document.getElementById('warningMsgText').textContent = currentUser.warningMsg;
+          warningBanner.classList.remove('hidden');
+        } else {
+          warningBanner.classList.add('hidden');
+        }
+
+        // Fill Profile fields
         document.getElementById('profName').value = currentUser.name;
         document.getElementById('profEmail').value = currentUser.email;
+
+        // Fill Referral Link
+        if (!currentUser.referralCode) {
+          currentUser.referralCode = "GRASH" + Math.floor(1000 + Math.random() * 9000);
+        }
         const refUrl = `${window.location.origin}${window.location.pathname}?ref=${currentUser.referralCode}`;
         document.getElementById('refLinkInput').value = refUrl;
 
-        // Referral stats
-        const referredList = Object.values(globalUsers).filter(u => u.referredBy === currentUser.referralCode);
+        // Calculate Referrals Count & Earnings
+        const referredList = users.filter(u => u.referredBy === currentUser.referralCode);
         document.getElementById('refCount').textContent = referredList.length;
         document.getElementById('refEarnings').textContent = `$${parseFloat(currentUser.refBonus || 0).toFixed(2)}`;
 
-        // Dashboard stats
-        document.getElementById('dashUserName').textContent = currentUser.name;
-        document.getElementById('dashBalance').textContent = `$${parseFloat(currentUser.balance || 0).toFixed(2)}`;
-        document.getElementById('dashProfit').textContent = `$${parseFloat(currentUser.profit || 0).toFixed(2)}`;
-        document.getElementById('dashRefBonus').textContent = `$${parseFloat(currentUser.refBonus || 0).toFixed(2)}`;
-        document.getElementById('dashPlan').textContent = currentUser.activePlan || "No Active Plan";
-
-        // Render Transactions
-        renderTransactions();
-        renderInbox();
       } else {
-        document.getElementById('userInfoHeader').classList.add('hidden');
-        document.getElementById('authBtnNav').classList.remove('hidden');
-        document.getElementById('adminNavBtn').classList.add('hidden');
+        userInfoHeader.classList.add('hidden');
+        authBtnNav.classList.remove('hidden');
+        adminNavBtn.classList.add('hidden');
+        document.getElementById('warningBanner').classList.add('hidden');
       }
-    }
 
-    function renderTransactions() {
+      // Sync Dashboard
+      document.getElementById('dashUserName').textContent = currentUser ? currentUser.name : "Investor";
+      document.getElementById('dashBalance').textContent = `$${currentUser ? parseFloat(currentUser.balance).toFixed(2) : "0.00"}`;
+      document.getElementById('dashProfit').textContent = `$${currentUser ? parseFloat(currentUser.profit).toFixed(2) : "0.00"}`;
+      document.getElementById('dashRefBonus').textContent = `$${currentUser ? parseFloat(currentUser.refBonus || 0).toFixed(2) : "0.00"}`;
+      document.getElementById('dashPlan').textContent = currentUser ? currentUser.activePlan : "No Active Plan";
+
+      // Sync Inbox & Unread Messages Count
+      renderInbox();
+
+      // Render Transaction Table
       const txBody = document.getElementById('txHistoryBody');
-      if (!txBody || !currentUser) return;
       txBody.innerHTML = '';
 
-      const userTxs = Object.values(globalTxs).filter(t => t.email === currentUser.email);
+      const userTxs = currentUser 
+        ? transactions.filter(t => t.userId === currentUser.id)
+        : [];
+
       if (userTxs.length === 0) {
         txBody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-gray-500 text-xs">No transactions recorded yet.</td></tr>`;
       } else {
         [...userTxs].reverse().forEach(tx => {
-          let badge = tx.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30';
+          let badgeClass = 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30';
+          if (tx.status === 'Completed' || tx.status === 'Approved') badgeClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+          if (tx.status === 'Rejected') badgeClass = 'bg-red-500/10 text-red-400 border-red-500/30';
+
           const row = document.createElement('tr');
           row.className = 'hover:bg-gray-900/40 transition';
           row.innerHTML = `
             <td class="py-3 px-4 font-mono text-[11px] text-gray-400">${tx.id}</td>
-            <td class="py-3 px-4 font-semibold text-emerald-400">${tx.type}</td>
+            <td class="py-3 px-4 font-semibold ${tx.type === 'Deposit' ? 'text-emerald-400' : tx.type === 'Withdrawal' ? 'text-yellow-400' : 'text-blue-400'}">${tx.type}</td>
             <td class="py-3 px-4 font-bold text-white">$${parseFloat(tx.amount).toFixed(2)}</td>
             <td class="py-3 px-4 text-gray-300">${tx.method}</td>
             <td class="py-3 px-4 text-gray-400">${tx.date}</td>
-            <td class="py-3 px-4 text-right"><span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${badge}">${tx.status}</span></td>
+            <td class="py-3 px-4 text-right">
+              <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${badgeClass}">${tx.status}</span>
+            </td>
           `;
           txBody.appendChild(row);
         });
       }
     }
 
-    // --- NAVIGATION ---
+    // --- 4. NAVIGATION TABS & DRAWER MENU ---
     function switchTab(tabName) {
-      ['dashboard', 'plans', 'referral', 'profile', 'inbox', 'about', 'faq'].forEach(t => {
+      const tabs = ['dashboard', 'plans', 'referral', 'profile', 'inbox', 'about', 'faq'];
+      tabs.forEach(t => {
         const el = document.getElementById(t + 'Tab');
         if (el) el.classList.add('hidden');
       });
+
       const target = document.getElementById(tabName + 'Tab');
       if (target) target.classList.remove('hidden');
     }
 
     function toggleMobileMenu() {
-      document.getElementById('mobileDrawer').classList.toggle('hidden');
+      const drawer = document.getElementById('mobileDrawer');
+      drawer.classList.toggle('hidden');
     }
 
-    // --- AUTHENTICATION ---
-    function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    // --- 5. AUTOMATED 24-HOUR PROFIT ENGINE (STANDARDIZED 7 DAYS) ---
+    function checkAutomatedProfits() {
+      let updated = false;
+      const now = Date.now();
+      const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+
+      users.forEach(u => {
+        if (u.activePlan && u.activePlan !== "None" && u.planStartTime && u.planRate > 0 && u.planAmount > 0) {
+          const lastCalc = u.lastProfitTime || u.planStartTime;
+          if (now - lastCalc >= TWENTY_FOUR_HOURS) {
+            const profitEarned = u.planAmount * (u.planRate / 100);
+            u.profit = (u.profit || 0) + profitEarned;
+            u.balance = (u.balance || 0) + profitEarned;
+            u.lastProfitTime = now;
+
+            // Log Profit Transaction
+            transactions.push({
+              id: "ROI-" + Math.floor(100000 + Math.random() * 900000),
+              userId: u.id,
+              userName: u.name,
+              type: "ROI Yield",
+              amount: profitEarned,
+              method: u.activePlan,
+              ref: "24h Yield Engine Credit (7-Day Plan)",
+              date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+              status: "Completed"
+            });
+
+            // Send Inbox Notification
+            messages.push({
+              id: "msg_" + Date.now() + Math.random(),
+              targetUserId: u.id,
+              sender: "Automated Profit Engine",
+              subject: "Daily 24-Hour Profit Credited!",
+              body: `Congratulations! Your active 7-day ${u.activePlan} package has generated a 24-hour profit return of $${profitEarned.toFixed(2)}, which has been added directly to your available balance.`,
+              date: new Date().toLocaleDateString(),
+              readBy: []
+            });
+
+            updated = true;
+          }
+        }
+      });
+
+      if (updated) {
+        saveData();
+      }
+    }
+
+    // --- 6. AUTHENTICATION LOGIC ---
+    function openAuthModal() {
+      document.getElementById('authModal').classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
 
     function switchAuthTab(type) {
       const loginForm = document.getElementById('loginForm');
       const signupForm = document.getElementById('signupForm');
+      const tabBtnLogin = document.getElementById('tabBtnLogin');
+      const tabBtnSignup = document.getElementById('tabBtnSignup');
+
       if (type === 'login') {
         loginForm.classList.remove('hidden');
         signupForm.classList.add('hidden');
+        tabBtnLogin.className = "w-1/2 py-3 text-sm font-bold text-yellow-400 border-b-2 border-yellow-400 text-center";
+        tabBtnSignup.className = "w-1/2 py-3 text-sm font-bold text-gray-400 hover:text-white text-center";
       } else {
         signupForm.classList.remove('hidden');
         loginForm.classList.add('hidden');
+        tabBtnSignup.className = "w-1/2 py-3 text-sm font-bold text-yellow-400 border-b-2 border-yellow-400 text-center";
+        tabBtnLogin.className = "w-1/2 py-3 text-sm font-bold text-gray-400 hover:text-white text-center";
       }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+
+      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      
+      if (!user) {
+        notify('Invalid login credentials.', 'error');
+        return;
+      }
+
+      if (user.isBlocked) {
+        notify('Your account is blocked by Admin. Contact support.', 'error');
+        return;
+      }
+
+      currentUser = user;
+      saveData();
+      closeModal('authModal');
+      logAdminActivity("User Logged In", `${user.name} (${user.email}) logged into the platform.`);
+      notify(`Welcome back, ${user.name}!`, 'success');
     }
 
     function handleSignup(e) {
@@ -1078,14 +1425,14 @@
       const email = document.getElementById('signupEmail').value.trim();
       const password = document.getElementById('signupPassword').value.trim();
       const refBy = document.getElementById('signupRefBy').value.trim();
-      const userKey = email.replace(/[.#$[\]]/g, '_');
 
-      if (globalUsers[userKey]) {
+      if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
         notify('An account with this email already exists.', 'error');
         return;
       }
 
       const newUser = {
+        id: "usr_" + Date.now(),
         name: name,
         email: email,
         password: password,
@@ -1094,239 +1441,756 @@
         refBonus: 0.00,
         referredBy: refBy || null,
         referralCode: "GRASH" + Math.floor(1000 + Math.random() * 9000),
-        activePlan: "None"
+        activePlan: "None",
+        planAmount: 0,
+        planRate: 0,
+        planStartTime: null,
+        lastProfitTime: null,
+        isBlocked: false,
+        warningMsg: ""
       };
 
-      // Save globally to Firebase Cloud Database
-      db.ref('users/' + userKey).set(newUser, (err) => {
-        if (!err) {
-          currentUser = newUser;
-          localStorage.setItem('grash_current_user', JSON.stringify(currentUser));
-          closeModal('authModal');
-          notify('Account registered successfully worldwide!', 'success');
-          renderApp();
-        } else {
-          notify('Registration failed. Check database connection.', 'error');
-        }
-      });
-    }
-
-    function handleLogin(e) {
-      e.preventDefault();
-      const email = document.getElementById('loginEmail').value.trim();
-      const password = document.getElementById('loginPassword').value.trim();
-      const userKey = email.replace(/[.#$[\]]/g, '_');
-
-      const user = globalUsers[userKey];
-      if (user && user.password === password) {
-        currentUser = user;
-        localStorage.setItem('grash_current_user', JSON.stringify(currentUser));
-        closeModal('authModal');
-        notify(`Welcome back, ${user.name}!`, 'success');
-        renderApp();
-      } else {
-        notify('Invalid login credentials or user not found.', 'error');
-      }
+      users.push(newUser);
+      currentUser = newUser;
+      saveData();
+      closeModal('authModal');
+      logAdminActivity("New User Registered", `${name} (${email}) created a new account.`);
+      notify('Account created successfully!', 'success');
     }
 
     function logoutUser() {
+      if (currentUser) {
+        logAdminActivity("User Logged Out", `${currentUser.name} logged out.`);
+      }
       currentUser = null;
-      localStorage.removeItem('grash_current_user');
-      renderApp();
+      saveData();
       notify('Logged out successfully.');
     }
 
-    // --- DEPOSIT & WITHDRAWAL ---
+    // --- 7. DEPOSIT SYSTEM (CASHSEND ONLY, NO BANK) ---
     function openDepositModal() {
-      if (!currentUser) { openAuthModal(); return; }
+      if (!currentUser) {
+        openAuthModal();
+        notify('Please log in or sign up to deposit funds.', 'info');
+        return;
+      }
+      if (currentUser.isBlocked) {
+        notify('Account suspended. Deposits disabled.', 'error');
+        return;
+      }
       updateDepositDetails();
       document.getElementById('depositModal').classList.remove('hidden');
     }
 
     function updateDepositDetails() {
       const method = document.getElementById('depositMethod').value;
-      const box = document.getElementById('depositDetailsBox');
-      if (method === 'BTC') box.innerHTML = `<p class="text-xs text-yellow-400">BTC Wallet: bc1quwnaggzrjrku8haz95cqycc3t8d8allkm9vurj</p>`;
-      else if (method === 'USDT') box.innerHTML = `<p class="text-xs text-emerald-400">USDT (TRC20): 0x1f330420F780fe2c72eF77032295faAc71D46B80</p>`;
-      else if (method === 'CASHSEND') box.innerHTML = `<p class="text-xs text-yellow-400">CashSend Recipient Phone: +27 72 152 6863</p>`;
-      else box.innerHTML = `<p class="text-xs text-yellow-400">Airtel Money: +265 982 98 84 92</p>`;
+      const detailsBox = document.getElementById('depositDetailsBox');
+
+      if (method === 'BTC') {
+        detailsBox.innerHTML = `
+          <div class="text-xs text-gray-300 space-y-2">
+            <div class="font-bold text-yellow-400 flex justify-between">
+              <span>Bitcoin (BTC) Payment Gateway</span>
+              <span>Network: BTC Mainnet</span>
+            </div>
+            <p class="text-gray-400">Send exact deposit amount to the Bitcoin wallet address below:</p>
+            <div class="flex items-center gap-2 bg-gray-950 p-2.5 rounded-lg border border-gray-800">
+              <input id="btcAddr" type="text" readonly value="bc1quwnaggzrjrku8haz95cqycc3t8d8allkm9vurj" class="bg-transparent font-mono text-yellow-300 text-xs w-full outline-none">
+              <button type="button" onclick="copyToClipboard('btcAddr')" class="bg-yellow-500 hover:bg-yellow-600 text-gray-950 font-bold px-3 py-1 rounded text-[11px] flex-shrink-0">
+                <i class="fas fa-copy"></i> COPY
+              </button>
+            </div>
+          </div>
+        `;
+      } else if (method === 'USDT') {
+        detailsBox.innerHTML = `
+          <div class="text-xs text-gray-300 space-y-2">
+            <div class="font-bold text-emerald-400 flex justify-between">
+              <span>USDT / USDC (TRC20)</span>
+              <span>Network: TRON (TRC-20)</span>
+            </div>
+            <p class="text-gray-400">Send USDT strictly via TRON (TRC20) network to address below:</p>
+            <div class="flex items-center gap-2 bg-gray-950 p-2.5 rounded-lg border border-gray-800">
+              <input id="usdtAddr" type="text" readonly value="0x1f330420F780fe2c72eF77032295faAc71D46B80" class="bg-transparent font-mono text-emerald-300 text-xs w-full outline-none">
+              <button type="button" onclick="copyToClipboard('usdtAddr')" class="bg-emerald-500 hover:bg-emerald-600 text-gray-950 font-bold px-3 py-1 rounded text-[11px] flex-shrink-0">
+                <i class="fas fa-copy"></i> COPY
+              </button>
+            </div>
+          </div>
+        `;
+      } else if (method === 'CASHSEND') {
+        detailsBox.innerHTML = `
+          <div class="text-xs text-gray-300 space-y-1.5">
+            <div class="font-bold text-yellow-400">CashSend / Cardless Cash Payout</div>
+            <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 space-y-2">
+              <p class="text-emerald-400 font-bold">CashSend Deposit Instructions:</p>
+              <p class="text-gray-300">Generate a voucher code from your ATM or mobile banking app and send to recipient below. Provide your <strong class="text-yellow-400">Voucher Number & PIN</strong> in the input field below.</p>
+              <div class="border-t border-gray-800 pt-1.5 mt-1.5">
+                <p><strong class="text-gray-400">CashSend Recipient Phone:</strong> +27 72 152 6863</p>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (method === 'MOBILE') {
+        detailsBox.innerHTML = `
+          <div class="text-xs text-gray-300 space-y-1.5">
+            <div class="font-bold text-yellow-400">Airtel Money Mobile Transfer</div>
+            <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 space-y-2">
+              <div>
+                <strong class="text-emerald-400">Airtel Money Number:</strong>
+                <p class="font-mono text-white mt-0.5 text-sm">+265 982 98 84 92</p>
+              </div>
+              <div class="border-t border-gray-800 pt-1.5">
+                <p class="text-gray-400 text-[11px]">Send mobile money to number above and enter sender phone or TXID confirmation below.</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function copyToClipboard(inputId) {
+      const input = document.getElementById(inputId);
+      input.select();
+      document.execCommand('copy');
+      notify('Address copied to clipboard!', 'success');
     }
 
     function handleDepositSubmit(e) {
       e.preventDefault();
-      const txId = "TX-" + Math.floor(100000 + Math.random() * 900000);
-      const txData = {
-        id: txId,
-        email: currentUser.email,
-        name: currentUser.name,
+      if (!currentUser) return;
+
+      const method = document.getElementById('depositMethod').value;
+      const amount = parseFloat(document.getElementById('depositAmount').value);
+      const txid = document.getElementById('depositTxid').value.trim();
+
+      const newTx = {
+        id: "TX-" + Math.floor(100000 + Math.random() * 900000),
+        userId: currentUser.id,
+        userName: currentUser.name,
         type: "Deposit",
-        amount: parseFloat(document.getElementById('depositAmount').value),
-        method: document.getElementById('depositMethod').value,
-        ref: document.getElementById('depositTxid').value.trim(),
-        date: new Date().toLocaleDateString(),
+        amount: amount,
+        method: method,
+        ref: txid,
+        date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
         status: "Pending"
       };
-      db.ref('transactions/' + txId).set(txData);
+
+      transactions.push(newTx);
+      saveData();
       closeModal('depositModal');
-      notify('Deposit submitted for admin approval!', 'success');
+      document.getElementById('depositAmount').value = '';
+      document.getElementById('depositTxid').value = '';
+      logAdminActivity("New Deposit Submitted", `${currentUser.name} submitted a deposit of $${amount} via ${method}.`);
+      notify('Deposit submitted! Awaiting admin approval.', 'success');
     }
 
+    // --- 8. WITHDRAWAL SYSTEM (MTN & AIRTEL) ---
     function openWithdrawModal() {
-      if (!currentUser) { openAuthModal(); return; }
-      document.getElementById('withdrawAvailBalance').textContent = `$${parseFloat(currentUser.balance || 0).toFixed(2)}`;
+      if (!currentUser) {
+        openAuthModal();
+        notify('Please log in to make a withdrawal.', 'info');
+        return;
+      }
+      if (currentUser.isBlocked) {
+        notify('Account suspended. Withdrawals disabled.', 'error');
+        return;
+      }
+      document.getElementById('withdrawAvailBalance').textContent = `$${parseFloat(currentUser.balance).toFixed(2)}`;
       document.getElementById('withdrawModal').classList.remove('hidden');
     }
 
     function handleWithdrawSubmit(e) {
       e.preventDefault();
+      if (!currentUser) return;
+
+      const method = document.getElementById('withdrawMethod').value;
       const amount = parseFloat(document.getElementById('withdrawAmount').value);
-      if (amount > (currentUser.balance || 0)) { notify('Insufficient balance.', 'error'); return; }
-      const txId = "WD-" + Math.floor(100000 + Math.random() * 900000);
-      db.ref('transactions/' + txId).set({
-        id: txId,
-        email: currentUser.email,
-        name: currentUser.name,
+      const details = document.getElementById('withdrawDetails').value.trim();
+
+      if (amount > currentUser.balance) {
+        notify('Insufficient available balance for this withdrawal.', 'error');
+        return;
+      }
+
+      const newTx = {
+        id: "WD-" + Math.floor(100000 + Math.random() * 900000),
+        userId: currentUser.id,
+        userName: currentUser.name,
         type: "Withdrawal",
         amount: amount,
-        method: document.getElementById('withdrawMethod').value,
-        ref: document.getElementById('withdrawDetails').value.trim(),
-        date: new Date().toLocaleDateString(),
+        method: method,
+        ref: details,
+        date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
         status: "Pending"
-      });
+      };
+
+      transactions.push(newTx);
+      saveData();
       closeModal('withdrawModal');
-      notify('Withdrawal requested successfully.', 'success');
+      document.getElementById('withdrawAmount').value = '';
+      document.getElementById('withdrawDetails').value = '';
+      logAdminActivity("Withdrawal Requested", `${currentUser.name} requested a withdrawal of $${amount} via ${method}.`);
+      notify('Withdrawal request submitted for processing.', 'success');
     }
 
-    // --- PLANS & REFERRALS ---
-    function openSelectPlanModal(name, roi, min, max) {
-      if (!currentUser) { openAuthModal(); return; }
-      document.getElementById('modalPlanName').textContent = name;
-      document.getElementById('modalPlanMin').value = min;
-      document.getElementById('modalPlanMax').value = max;
-      document.getElementById('investAvailBalance').textContent = `$${parseFloat(currentUser.balance || 0).toFixed(2)}`;
+    // --- 9. PLAN INVESTMENT SYSTEM ---
+    function openSelectPlanModal(planName, dailyRoi, minAmount, maxAmount) {
+      if (!currentUser) {
+        openAuthModal();
+        notify('Please log in to activate an investment plan.', 'info');
+        return;
+      }
+      if (currentUser.isBlocked) {
+        notify('Account suspended.', 'error');
+        return;
+      }
+
+      document.getElementById('modalPlanName').textContent = planName;
+      document.getElementById('modalPlanDesc').textContent = `${dailyRoi}% Daily 24-Hour Return Credited Automatically (7 Days Cycle)`;
+      document.getElementById('modalPlanMin').value = minAmount;
+      document.getElementById('modalPlanMax').value = maxAmount;
+      document.getElementById('investAmount').placeholder = `Min $${minAmount} - Max $${maxAmount}`;
+      document.getElementById('investAvailBalance').textContent = `$${parseFloat(currentUser.balance).toFixed(2)}`;
+
       document.getElementById('selectPlanModal').classList.remove('hidden');
     }
 
     function handleInvestSubmit(e) {
       e.preventDefault();
-      const name = document.getElementById('modalPlanName').textContent;
+      if (!currentUser) return;
+
+      const planName = document.getElementById('modalPlanName').textContent;
       const amount = parseFloat(document.getElementById('investAmount').value);
-      const min = parseFloat(document.getElementById('modalPlanMin').value);
-      const max = parseFloat(document.getElementById('modalPlanMax').value);
-      if (amount < min || amount > max) { notify(`Amount must be between $${min} and $${max}`, 'error'); return; }
-      if (amount > currentUser.balance) { notify('Insufficient balance.', 'error'); return; }
+      const minAmount = parseFloat(document.getElementById('modalPlanMin').value);
+      const maxAmount = parseFloat(document.getElementById('modalPlanMax').value);
 
-      const userKey = currentUser.email.replace(/[.#$[\]]/g, '_');
+      if (amount < minAmount || amount > maxAmount) {
+        notify(`Amount must be between $${minAmount} and $${maxAmount} for this plan.`, 'error');
+        return;
+      }
+
+      if (amount > currentUser.balance) {
+        notify('Insufficient account balance. Please deposit funds first.', 'error');
+        return;
+      }
+
+      // Extract Rate from Plan
+      let rate = 10;
+      if (planName.includes('Basic')) rate = 20;
+      if (planName.includes('Premium')) rate = 30;
+      if (planName.includes('VIP')) rate = 40;
+
+      // Deduct investment amount from available balance & initialize yield timestamps
       currentUser.balance -= amount;
-      currentUser.activePlan = `${name} ($${amount})`;
+      currentUser.activePlan = `${planName} ($${amount.toFixed(2)})`;
+      currentUser.planAmount = amount;
+      currentUser.planRate = rate;
+      currentUser.planStartTime = Date.now();
+      currentUser.lastProfitTime = Date.now();
 
-      db.ref('users/' + userKey).update(currentUser);
+      transactions.push({
+        id: "INV-" + Math.floor(100000 + Math.random() * 900000),
+        userId: currentUser.id,
+        userName: currentUser.name,
+        type: "Investment",
+        amount: amount,
+        method: planName,
+        ref: "Activated - 7-Day Engine Running",
+        date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        status: "Completed"
+      });
+
+      saveData();
       closeModal('selectPlanModal');
-      notify(`Successfully invested in ${name}!`, 'success');
+      document.getElementById('investAmount').value = '';
+      logAdminActivity("New Plan Activated", `${currentUser.name} invested $${amount} into ${planName}.`);
+      notify(`Successfully invested $${amount} into ${planName}!`, 'success');
     }
 
+    // --- 10. REFERRAL LINK LOGIC ---
     function copyRefLink() {
-      navigator.clipboard.writeText(document.getElementById('refLinkInput').value);
-      notify('Referral link copied!', 'success');
+      const input = document.getElementById('refLinkInput');
+      input.select();
+      document.execCommand('copy');
+      notify('Referral link copied to clipboard!', 'success');
     }
 
     function shareTelegramRef() {
-      window.open(`https://t.me/share/url?url=${encodeURIComponent(document.getElementById('refLinkInput').value)}`, '_blank');
+      const link = document.getElementById('refLinkInput').value;
+      const text = encodeURIComponent(`Join GRASH FX Trading platform and grow your capital with up to 40% returns! Register using my link: ${link}`);
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`, '_blank');
     }
 
-    // --- ADMIN PANEL ---
-    function openAdminModal() {
-      if (currentUser && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-        document.getElementById('adminAuthModal').classList.remove('hidden');
-      } else {
-        notify('Access denied.', 'error');
+    // --- 11. PROFILE EDITING & ACCOUNT DELETION ---
+    function handleProfileUpdate(e) {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const newName = document.getElementById('profName').value.trim();
+      const newPass = document.getElementById('profPassword').value.trim();
+
+      currentUser.name = newName;
+      if (newPass !== "") {
+        currentUser.password = newPass;
       }
+
+      saveData();
+      logAdminActivity("Profile Updated", `${currentUser.name} updated their profile settings.`);
+      notify('Profile updated successfully!', 'success');
+    }
+
+    function handleDeleteAccount() {
+      if (!currentUser) return;
+
+      const confirmDelete = prompt("To confirm permanent account deletion, type 'DELETE':");
+      if (confirmDelete === 'DELETE') {
+        logAdminActivity("Account Deleted", `${currentUser.name} (${currentUser.email}) deleted their account.`);
+        users = users.filter(u => u.id !== currentUser.id);
+        currentUser = null;
+        saveData();
+        notify('Your account has been permanently deleted.', 'info');
+      } else {
+        notify('Account deletion canceled.');
+      }
+    }
+
+    // --- 12. INBOX & TWO-WAY MESSAGING CENTER ---
+    function renderInbox() {
+      const container = document.getElementById('inboxContainer');
+      const badge = document.getElementById('unreadBadge');
+      if (!container) return;
+
+      if (!currentUser) {
+        container.innerHTML = `<p class="text-xs text-gray-500">Please log in to view inbox messages and contact operator.</p>`;
+        badge.classList.add('hidden');
+        return;
+      }
+
+      const userMsgs = messages.filter(m => m.targetUserId === 'ALL' || m.targetUserId === currentUser.id || m.senderId === currentUser.id);
+      const unreadCount = userMsgs.filter(m => !m.readBy.includes(currentUser.id) && m.senderId !== currentUser.id).length;
+
+      if (unreadCount > 0) {
+        badge.textContent = unreadCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      if (userMsgs.length === 0) {
+        container.innerHTML = `<p class="text-xs text-gray-500">Your inbox is empty.</p>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      [...userMsgs].reverse().forEach(m => {
+        const isRead = m.readBy.includes(currentUser.id) || m.senderId === currentUser.id;
+        const isSelf = m.senderId === currentUser.id;
+
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-xl border transition ${isSelf ? 'bg-blue-950/20 border-blue-800/40' : isRead ? 'bg-gray-900/40 border-gray-800' : 'bg-gray-900 border-yellow-500/40'}`;
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <span class="text-xs font-bold ${isSelf ? 'text-blue-400' : isRead ? 'text-gray-300' : 'text-yellow-400'}">${m.subject}</span>
+              <span class="block text-[10px] text-gray-500">From: ${m.sender} &bull; ${m.date}</span>
+            </div>
+            ${(!isRead && !isSelf) ? `<button onclick="markMsgRead('${m.id}')" class="text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded hover:bg-yellow-500/30">Mark Read</button>` : ''}
+          </div>
+          <p class="text-xs text-gray-300 leading-relaxed">${m.body}</p>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function handleClientSendMessage(e) {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const subject = document.getElementById('clientMsgSubject').value.trim();
+      const body = document.getElementById('clientMsgBody').value.trim();
+
+      messages.push({
+        id: "msg_" + Date.now(),
+        targetUserId: "ADMIN",
+        senderId: currentUser.id,
+        sender: `${currentUser.name} (${currentUser.email})`,
+        subject: subject,
+        body: body,
+        date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        readBy: [currentUser.id]
+      });
+
+      saveData();
+      document.getElementById('clientMsgSubject').value = '';
+      document.getElementById('clientMsgBody').value = '';
+      logAdminActivity("New Client Support Message", `${currentUser.name} sent a message: "${subject}"`);
+      notify('Message sent directly to Admin support!', 'success');
+    }
+
+    function markMsgRead(msgId) {
+      if (!currentUser) return;
+      const msg = messages.find(m => m.id === msgId);
+      if (msg && !msg.readBy.includes(currentUser.id)) {
+        msg.readBy.push(currentUser.id);
+        saveData();
+      }
+    }
+
+    // --- 13. FAQ ACCORDION TOGGLE ---
+    function toggleFaq(num) {
+      const ans = document.getElementById(`faqAns-${num}`);
+      const icon = document.getElementById(`faqIcon-${num}`);
+      ans.classList.toggle('hidden');
+      icon.classList.toggle('fa-chevron-up');
+      icon.classList.toggle('fa-chevron-down');
+    }
+
+    // --- 14. ADMIN PANEL (PIN: 5978) & DIRECT EDITING ---
+    function openAdminModal() {
+      if (!currentUser || currentUser.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+        notify('Access denied. Log in with admin account.', 'error');
+        return;
+      }
+      document.getElementById('adminAuthModal').classList.remove('hidden');
     }
 
     function handleAdminAuth(e) {
       e.preventDefault();
-      if (document.getElementById('adminPin').value === DEFAULT_ADMIN_PIN) {
+      const pin = document.getElementById('adminPin').value;
+      if (pin === DEFAULT_ADMIN_PIN) {
         closeModal('adminAuthModal');
         document.getElementById('adminPin').value = '';
         renderAdminPanel();
         document.getElementById('adminPanelModal').classList.remove('hidden');
-        notify('Admin panel unlocked.', 'success');
+        document.getElementById('adminLiveBadge').classList.add('hidden');
+        activityLogs.forEach(l => l.read = true);
+        saveData();
+        notify('Admin control panel unlocked.', 'success');
       } else {
-        notify('Incorrect PIN.', 'error');
+        notify('Incorrect Admin PIN.', 'error');
       }
     }
 
     function renderAdminPanel() {
-      // 1. Render All Worldwide Users Table
+      // 0. Render Activity Log Box
+      const logBox = document.getElementById('adminActivityLogBox');
+      logBox.innerHTML = '';
+      if (activityLogs.length === 0) {
+        logBox.innerHTML = `<p class="text-xs text-gray-500 text-center py-2">No recent activity logs.</p>`;
+      } else {
+        [...activityLogs].reverse().forEach(log => {
+          const div = document.createElement('div');
+          div.className = "bg-gray-950 p-2.5 rounded-lg border border-gray-800 text-xs flex justify-between items-start gap-2";
+          div.innerHTML = `
+            <div>
+              <span class="font-bold text-yellow-400 block">${log.title}</span>
+              <span class="text-gray-300 text-[11px]">${log.desc}</span>
+            </div>
+            <span class="text-[10px] text-gray-500 whitespace-nowrap">${log.date}</span>
+          `;
+          logBox.appendChild(div);
+        });
+      }
+
+      // 1. Render Users Override Table
       const userTbody = document.getElementById('adminUserTable');
       userTbody.innerHTML = '';
-      Object.entries(globalUsers).forEach(([key, u]) => {
-        userTbody.innerHTML += `
-          <tr class="hover:bg-gray-900">
-            <td class="py-2.5 px-3 font-bold text-white">${u.name}</td>
-            <td class="py-2.5 px-3 text-gray-400">${u.email}</td>
-            <td class="py-2.5 px-3"><input type="number" id="admBal_${key}" value="${u.balance || 0}" class="w-20 bg-gray-950 border border-yellow-500 px-2 py-1 rounded text-yellow-400 font-bold"></td>
-            <td class="py-2.5 px-3"><input type="number" id="admProf_${key}" value="${u.profit || 0}" class="w-20 bg-gray-950 border border-emerald-500 px-2 py-1 rounded text-emerald-400 font-bold"></td>
-            <td class="py-2.5 px-3 text-right"><button onclick="saveAdminUser('${key}')" class="bg-blue-600 text-white px-2 py-1 rounded text-xs">Save</button></td>
-          </tr>
+      users.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-900/80';
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-bold text-white">${u.name}</td>
+          <td class="py-2.5 px-3 text-gray-400 text-xs">${u.email}</td>
+          <td class="py-2.5 px-3">
+            <input type="number" id="admBal_${u.id}" value="${u.balance}" class="w-20 bg-gray-950 border border-yellow-500/50 px-2 py-1 rounded text-yellow-400 font-bold text-xs focus:outline-none">
+          </td>
+          <td class="py-2.5 px-3">
+            <input type="number" id="admProf_${u.id}" value="${u.profit}" class="w-20 bg-gray-950 border border-emerald-500/50 px-2 py-1 rounded text-emerald-400 font-bold text-xs focus:outline-none">
+          </td>
+          <td class="py-2.5 px-3">
+            <input type="number" id="admRef_${u.id}" value="${u.refBonus || 0}" class="w-20 bg-gray-950 border border-gray-700 px-2 py-1 rounded text-yellow-500 font-bold text-xs focus:outline-none">
+          </td>
+          <td class="py-2.5 px-3">
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded ${u.isBlocked ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
+              ${u.isBlocked ? 'Blocked' : 'Active'}
+            </span>
+          </td>
+          <td class="py-2.5 px-3 text-right space-x-1 flex justify-end items-center">
+            <button onclick="saveAdminUser('${u.id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded text-[11px] font-bold" title="Save Balances">Save</button>
+            <button onclick="openBonusModal('${u.id}', '${u.name}')" class="bg-yellow-500 hover:bg-yellow-600 text-gray-950 font-bold px-2 py-1 rounded text-[11px]">+ Bonus</button>
+            <button onclick="toggleBlockUser('${u.id}')" class="${u.isBlocked ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500'} text-white px-2 py-1 rounded text-[11px]">
+              ${u.isBlocked ? 'Unblock' : 'Block'}
+            </button>
+            <button onclick="sendWarningPrompt('${u.id}')" class="bg-gray-800 hover:bg-gray-700 text-yellow-400 px-2 py-1 rounded text-[11px]" title="Issue Warning"><i class="fas fa-exclamation-triangle"></i></button>
+          </td>
         `;
+        userTbody.appendChild(tr);
       });
 
-      // 2. Render Pending Deposits
+      // 2. Render Pending Deposits Table
       const depTbody = document.getElementById('adminDepositTable');
       depTbody.innerHTML = '';
-      const pendingDeps = Object.entries(globalTxs).filter(([k, t]) => t.type === 'Deposit' && t.status === 'Pending');
-      pendingDeps.forEach(([k, t]) => {
-        depTbody.innerHTML += `
-          <tr class="hover:bg-gray-900"><td class="p-2">${t.name}</td><td class="p-2 text-emerald-400">$${t.amount}</td><td class="p-2 font-mono">${t.ref}</td><td class="p-2 text-right"><button onclick="approveTx('${k}', '${t.email}', ${t.amount})" class="bg-emerald-600 text-white px-2 py-1 rounded text-xs">Approve</button></td></tr>
-        `;
-      });
+      const pendingDeposits = transactions.filter(t => t.type === 'Deposit' && t.status === 'Pending');
 
-      // 3. Render Pending Withdrawals
+      if (pendingDeposits.length === 0) {
+        depTbody.innerHTML = `<tr><td colspan="6" class="py-3 text-center text-gray-500">No pending deposits.</td></tr>`;
+      } else {
+        pendingDeposits.forEach(t => {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-gray-900/80';
+          tr.innerHTML = `
+            <td class="py-2.5 px-3 font-bold text-white">${t.userName}</td>
+            <td class="py-2.5 px-3 text-gray-300">${t.method}</td>
+            <td class="py-2.5 px-3 font-bold text-emerald-400">$${parseFloat(t.amount).toFixed(2)}</td>
+            <td class="py-2.5 px-3 font-mono text-[11px] text-gray-400">${t.ref}</td>
+            <td class="py-2.5 px-3 text-gray-400">${t.date}</td>
+            <td class="py-2.5 px-3 text-right space-x-1">
+              <button onclick="approveDeposit('${t.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded text-xs font-bold">Approve</button>
+              <button onclick="rejectTx('${t.id}')" class="bg-red-600 hover:bg-red-500 text-white px-2.5 py-1 rounded text-xs">Reject</button>
+            </td>
+          `;
+          depTbody.appendChild(tr);
+        });
+      }
+
+      // 3. Render Pending Withdrawals Table
       const wdTbody = document.getElementById('adminWithdrawTable');
       wdTbody.innerHTML = '';
-      const pendingWds = Object.entries(globalTxs).filter(([k, t]) => t.type === 'Withdrawal' && t.status === 'Pending');
-      pendingWds.forEach(([k, t]) => {
-        wdTbody.innerHTML += `
-          <tr class="hover:bg-gray-900"><td class="p-2">${t.name}</td><td class="p-2 text-yellow-400">$${t.amount}</td><td class="p-2">${t.ref}</td><td class="p-2 text-right"><button onclick="approveWd('${k}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-xs">Approve</button></td></tr>
-        `;
-      });
-    }
+      const pendingWithdrawals = transactions.filter(t => t.type === 'Withdrawal' && t.status === 'Pending');
 
-    function saveAdminUser(key) {
-      const newBal = parseFloat(document.getElementById(`admBal_${key}`).value);
-      const newProf = parseFloat(document.getElementById(`admProf_${key}`).value);
-      db.ref('users/' + key).update({ balance: newBal, profit: newProf }, () => {
-        notify('User balances updated globally!', 'success');
-        renderAdminPanel();
-      });
-    }
-
-    function approveTx(txKey, email, amount) {
-      const userKey = email.replace(/[.#$[\]]/g, '_');
-      if (globalUsers[userKey]) {
-        const newBal = (globalUsers[userKey].balance || 0) + amount;
-        db.ref('users/' + userKey).update({ balance: newBal });
+      if (pendingWithdrawals.length === 0) {
+        wdTbody.innerHTML = `<tr><td colspan="6" class="py-3 text-center text-gray-500">No pending withdrawals.</td></tr>`;
+      } else {
+        pendingWithdrawals.forEach(t => {
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-gray-900/80';
+          tr.innerHTML = `
+            <td class="py-2.5 px-3 font-bold text-white">${t.userName}</td>
+            <td class="py-2.5 px-3 text-gray-300">${t.method}</td>
+            <td class="py-2.5 px-3 font-bold text-yellow-400">$${parseFloat(t.amount).toFixed(2)}</td>
+            <td class="py-2.5 px-3 text-gray-400 text-xs">${t.ref}</td>
+            <td class="py-2.5 px-3 text-gray-400">${t.date}</td>
+            <td class="py-2.5 px-3 text-right space-x-1">
+              <button onclick="approveWithdrawal('${t.id}')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded text-xs font-bold">Approve</button>
+              <button onclick="rejectTx('${t.id}')" class="bg-red-600 hover:bg-red-500 text-white px-2.5 py-1 rounded text-xs">Reject</button>
+            </td>
+          `;
+          wdTbody.appendChild(tr);
+        });
       }
-      db.ref(`transactions/${txKey}`).update({ status: 'Completed' }, () => {
-        notify('Deposit approved and credited!', 'success');
-        renderAdminPanel();
+    }
+
+    // DIRECT ADMIN USER BALANCE EDIT FUNCTION
+    function saveAdminUser(userId) {
+      const user = users.find(u => u.id === userId);
+      if (!user) return;
+
+      const newBal = parseFloat(document.getElementById(`admBal_${userId}`).value);
+      const newProf = parseFloat(document.getElementById(`admProf_${userId}`).value);
+      const newRef = parseFloat(document.getElementById(`admRef_${userId}`).value);
+
+      user.balance = isNaN(newBal) ? user.balance : newBal;
+      user.profit = isNaN(newProf) ? user.profit : newProf;
+      user.refBonus = isNaN(newRef) ? user.refBonus : newRef;
+
+      saveData();
+      renderAdminPanel();
+      notify(`Updated account balances for ${user.name}!`, 'success');
+    }
+
+    // Manual Bonus Transfer Modal Trigger
+    function openBonusModal(userId, userName) {
+      document.getElementById('adminBonusTargetId').value = userId;
+      document.getElementById('adminBonusTargetName').textContent = userName;
+      document.getElementById('adminBonusModal').classList.remove('hidden');
+    }
+
+    function handleAdminSendBonus(e) {
+      e.preventDefault();
+      const userId = document.getElementById('adminBonusTargetId').value;
+      const amount = parseFloat(document.getElementById('adminBonusAmount').value);
+      const note = document.getElementById('adminBonusNote').value.trim();
+
+      const targetUser = users.find(u => u.id === userId);
+      if (!targetUser) return;
+
+      targetUser.balance += amount;
+      targetUser.refBonus = (targetUser.refBonus || 0) + amount;
+
+      transactions.push({
+        id: "BONUS-" + Math.floor(100000 + Math.random() * 900000),
+        userId: targetUser.id,
+        userName: targetUser.name,
+        type: "Bonus Grant",
+        amount: amount,
+        method: "Admin Manual Transfer",
+        ref: note || "Promotional Cash Grant",
+        date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        status: "Completed"
       });
-    }
 
-    function approveWd(txKey) {
-      db.ref(`transactions/${txKey}`).update({ status: 'Completed' }, () => {
-        notify('Withdrawal approved!', 'success');
-        renderAdminPanel();
+      messages.push({
+        id: "msg_" + Date.now(),
+        targetUserId: targetUser.id,
+        sender: "GRASH FX Operator",
+        subject: "Bonus Balance Credited!",
+        body: `An official bonus transfer of $${amount.toFixed(2)} has been credited to your available balance. Note: ${note || 'Welcome Bonus'}`,
+        date: new Date().toLocaleDateString(),
+        readBy: []
       });
+
+      saveData();
+      closeModal('adminBonusModal');
+      document.getElementById('adminBonusAmount').value = '';
+      renderAdminPanel();
+      notify(`Successfully credited $${amount} bonus to ${targetUser.name}!`, 'success');
     }
 
-    function toggleFaq(num) {
-      document.getElementById(`faqAns-${num}`).classList.toggle('hidden');
+    // Toggle Block User
+    function toggleBlockUser(userId) {
+      const targetUser = users.find(u => u.id === userId);
+      if (!targetUser) return;
+
+      targetUser.isBlocked = !targetUser.isBlocked;
+      saveData();
+      renderAdminPanel();
+      notify(`User ${targetUser.name} is now ${targetUser.isBlocked ? 'BLOCKED' : 'UNBLOCKED'}.`, targetUser.isBlocked ? 'error' : 'success');
     }
 
+    // Issue Warning Prompt
+    function sendWarningPrompt(userId) {
+      const targetUser = users.find(u => u.id === userId);
+      if (!targetUser) return;
+
+      const warning = prompt(`Enter Warning Message for ${targetUser.name}:`, targetUser.warningMsg || "");
+      if (warning !== null) {
+        targetUser.warningMsg = warning.trim();
+        saveData();
+        renderAdminPanel();
+        notify(`Updated warning message for ${targetUser.name}`, 'info');
+      }
+    }
+
+    // Admin Open Direct Message Modal
+    function openAdminMsgModal() {
+      const select = document.getElementById('adminMsgTarget');
+      select.innerHTML = `<option value="ALL">ALL USERS (Global Broadcast)</option>`;
+      users.forEach(u => {
+        select.innerHTML += `<option value="${u.id}">${u.name} (${u.email})</option>`;
+      });
+      document.getElementById('adminMsgModal').classList.remove('hidden');
+    }
+
+    function handleAdminSendMessage(e) {
+      e.preventDefault();
+      const target = document.getElementById('adminMsgTarget').value;
+      const subject = document.getElementById('adminMsgSubject').value.trim();
+      const body = document.getElementById('adminMsgBody').value.trim();
+
+      messages.push({
+        id: "msg_" + Date.now(),
+        targetUserId: target,
+        sender: "GRASH FX Official Operator",
+        subject: subject,
+        body: body,
+        date: new Date().toLocaleDateString(),
+        readBy: []
+      });
+
+      saveData();
+      closeModal('adminMsgModal');
+      document.getElementById('adminMsgSubject').value = '';
+      document.getElementById('adminMsgBody').value = '';
+      notify('Message dispatched successfully!', 'success');
+    }
+
+    function approveDeposit(txId) {
+      const tx = transactions.find(t => t.id === txId);
+      if (!tx) return;
+
+      const user = users.find(u => u.id === tx.userId);
+      if (user) {
+        user.balance += parseFloat(tx.amount);
+
+        // Check if user was referred by someone and reward referrer $5 fixed bonus
+        if (user.referredBy) {
+          const referrer = users.find(u => u.referralCode === user.referredBy);
+          if (referrer) {
+            referrer.balance += 5.00;
+            referrer.refBonus = (referrer.refBonus || 0) + 5.00;
+
+            transactions.push({
+              id: "REF-" + Math.floor(100000 + Math.random() * 900000),
+              userId: referrer.id,
+              userName: referrer.name,
+              type: "Referral Bonus",
+              amount: 5.00,
+              method: "$5 Referral Reward",
+              ref: `Referred user deposit: ${user.name}`,
+              date: new Date().toLocaleDateString(),
+              status: "Completed"
+            });
+
+            messages.push({
+              id: "msg_" + Date.now() + Math.random(),
+              targetUserId: referrer.id,
+              sender: "Referral Program",
+              subject: "Referral Bonus Received!",
+              body: `Your referred client (${user.name}) completed a deposit! A $5.00 fixed cash bonus has been credited to your balance.`,
+              date: new Date().toLocaleDateString(),
+              readBy: []
+            });
+          }
+        }
+      }
+      tx.status = 'Completed';
+
+      saveData();
+      renderAdminPanel();
+      notify(`Approved deposit of $${tx.amount}`, 'success');
+    }
+
+    function approveWithdrawal(txId) {
+      const tx = transactions.find(t => t.id === txId);
+      if (!tx) return;
+
+      const user = users.find(u => u.id === tx.userId);
+      if (user) {
+        if (user.balance >= tx.amount) {
+          user.balance -= parseFloat(tx.amount);
+        }
+      }
+      tx.status = 'Completed';
+
+      saveData();
+      renderAdminPanel();
+      notify(`Approved withdrawal of $${tx.amount}`, 'success');
+    }
+
+    function rejectTx(txId) {
+      const tx = transactions.find(t => t.id === txId);
+      if (!tx) return;
+      tx.status = 'Rejected';
+
+      saveData();
+      renderAdminPanel();
+      notify(`Transaction ${txId} rejected.`);
+    }
+
+    // --- 15. APP INITIALIZATION ON WINDOW LOAD ---
     window.onload = function() {
       checkUrlRefCode();
+      checkAutomatedProfits();
+      renderApp();
+
+      // Log platform visit activity
+      logAdminActivity("Platform Visit", "A visitor opened the GRASH FX platform.");
+
+      // Set up periodic check for 24-hour yield engine every 1 minute
+      setInterval(() => {
+        checkAutomatedProfits();
+      }, 60000);
     };
   </script>
 </body>
