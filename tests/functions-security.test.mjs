@@ -53,3 +53,19 @@ test("admin list endpoints are bounded and return explicit field allowlists", ()
   }
   assert.doesNotMatch(directoryBody, /processedTransactions|authToken|paymentCredentials/);
 });
+
+
+test("legacy account inspection is verified-user-only and never migrates untrusted financial fields", () => {
+  const start = source.indexOf("exports.inspectLegacyAccount = onCall(async (request) => {");
+  assert.ok(start >= 0, "Missing read-only legacy inspection endpoint");
+  const end = source.indexOf("\n});", start);
+  assert.ok(end > start, "Could not isolate legacy inspection endpoint");
+  const body = source.slice(start, end + 4);
+  assert.match(body, /requireUser\(request\)/);
+  assert.match(body, /platform_data\/users/);
+  assert.match(body, /status = "ambiguous"/);
+  assert.match(body, /status = "blocked"/);
+  assert.match(body, /migrationCompleted: false/);
+  assert.doesNotMatch(body, /secure_users\/\$\{actor\.uid\}.*\.set|balance:\s*Number|password\s*:/s);
+  assert.doesNotMatch(body, /return\s*\{[^}]*balance\s*:/s);
+});
