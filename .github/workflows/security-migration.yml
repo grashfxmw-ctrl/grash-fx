@@ -23,6 +23,8 @@ jobs:
         run: npm install
       - name: Check staged frontend adapter syntax
         run: node --check frontend/secure-client.js
+      - name: Test secure frontend adapter flows
+        run: node --test tests/secure-client.test.mjs
       - name: Check backend JavaScript syntax
         working-directory: functions
         run: npm run check
