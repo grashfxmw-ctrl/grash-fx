@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GRASH FX — Admin Review Preview</title>
+<meta name="description" content="Staging-only administrator transaction review preview.">
+<style>
+:root{color-scheme:dark;--bg:#070a11;--panel:#111827;--line:#263244;--gold:#eab308;--muted:#9ca3af;--text:#f3f4f6;--green:#34d399;--red:#f87171}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#182235 0,var(--bg) 58%);color:var(--text);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}.wrap{max-width:1120px;margin:auto;padding:28px 18px 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}.brand{font-weight:900;letter-spacing:.09em;font-size:1.2rem}.brand span{color:var(--gold)}.pill{font-size:.72rem;color:#fcd34d;border:1px solid #854d0e;background:#42200666;padding:5px 9px;border-radius:999px}h1{font-size:clamp(1.8rem,4vw,2.7rem);margin:30px 0 8px}.muted{color:var(--muted);font-size:.85rem}.notice{border:1px solid #854d0e;background:#42200655;border-radius:12px;padding:13px 15px;color:#fde68a;margin:18px 0}.card{background:#111827ef;border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:16px}label{display:block;font-size:.82rem;color:#cbd5e1;margin:12px 0 6px}input{width:100%;background:#080d17;color:var(--text);border:1px solid #374151;border-radius:10px;padding:12px;font:inherit}button{border:0;border-radius:9px;padding:10px 13px;font:inherit;font-weight:750;cursor:pointer;background:var(--gold);color:#111827}button.secondary{background:#1f2937;color:#e5e7eb;border:1px solid #374151}button.reject{background:#7f1d1d;color:#fee2e2}button:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.message{min-height:22px;margin-top:12px;color:#fde68a;font-size:.88rem}.table-wrap{overflow:auto;margin-top:12px}table{width:100%;border-collapse:collapse;min-width:760px;font-size:.84rem}th,td{text-align:left;padding:12px 9px;border-bottom:1px solid var(--line);vertical-align:middle}th{color:var(--muted);font-weight:600}.status{color:#fcd34d}.status.processing{color:#93c5fd}.empty{text-align:center;padding:28px;color:var(--muted)}.review-note{min-width:150px;background:#080d17;color:var(--text);border:1px solid #374151;border-radius:8px;padding:8px}.hidden{display:none!important}.session{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.footer{margin-top:24px;color:var(--muted);font-size:.78rem}@media(max-width:600px){.wrap{padding:20px 12px 40px}.card{padding:15px}}
+</style>
+</head>
+<body><main class="wrap">
+<header class="top"><div class="brand">GRASH <span>FX</span></div><div class="pill">ADMIN REVIEW · STAGING ONLY</div></header>
+<h1>Transaction review</h1>
+<p class="muted">Review pending deposit and withdrawal requests using server-authorized actions. The server—not this page—decides whether your account is an administrator.</p>
+<div class="notice"><strong>Staging only.</strong> This page uses placeholder Firebase settings and remains disabled until configured for a dedicated test project. Never connect it to the production GRASH FX Firebase project or use it to process real funds.</div>
+<section id="authCard" class="card">
+<h2>Administrator sign in</h2>
+<form id="loginForm">
+<label for="email">Verified administrator email</label><input id="email" type="email" autocomplete="username" required>
+<label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required>
+<div class="actions"><button id="loginBtn" type="submit">Sign in and load queue</button></div>
+</form><div id="authMessage" class="message" role="status" aria-live="polite"></div>
+</section>
+<section id="queueArea" class="card hidden">
+<div class="session"><div><h2 style="margin:0">Review queue</h2><div id="sessionEmail" class="muted"></div></div><div class="actions"><button id="refreshBtn" type="button">Refresh queue</button><button id="logoutBtn" type="button" class="secondary">Sign out</button></div></div>
+<p class="muted">Pending requests can be approved or rejected. A Processing request may be an interrupted approval: only retry approval is offered, because the backend does not allow rejection from that state. Check payment evidence outside this preview before approving.</p>
+<div id="queueMessage" class="message" role="status" aria-live="polite"></div>
+<div class="table-wrap"><table><thead><tr><th>Request</th><th>User ID</th><th>Type</th><th>Amount</th><th>Method</th><th>Status</th><th>Requested</th><th>Review note</th><th>Action</th></tr></thead><tbody id="queueRows"><tr><td colspan="9" class="empty">Sign in to load the queue.</td></tr></tbody></table></div>
+</section>
+<p class="footer">GRASH FX secure migration preview. Approving a transaction may change the user's server-side balance. Use test accounts and test data only.</p>
+</main>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+<script src="frontend/secure-client.js"></script>
+<script>
+"use strict";
+// Configure ONLY with a dedicated staging Firebase project. Never use production.
+const firebaseConfig = {
+  apiKey: "REPLACE_WITH_STAGING_API_KEY",
+  authDomain: "REPLACE_WITH_STAGING_PROJECT.firebaseapp.com",
+  projectId: "REPLACE_WITH_STAGING_PROJECT",
+  storageBucket: "REPLACE_WITH_STAGING_PROJECT.firebasestorage.app",
+  messagingSenderId: "REPLACE_WITH_STAGING_SENDER_ID",
+  appId: "REPLACE_WITH_STAGING_APP_ID"
+};
+const $ = (id) => document.getElementById(id);
+const configured = !Object.values(firebaseConfig).some((value) => value.startsWith("REPLACE_WITH_"));
+let client = null, busy = false;
+function message(id, value, error = false) { const node=$(id); node.textContent=value; node.style.color=error?"var(--red)":"var(--gold)"; }
+function setBusy(value) { busy=value; document.querySelectorAll("button").forEach((button)=>{button.disabled=value||!configured;}); }
+function money(value) { return "$"+Number(value||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function date(value) { return value ? new Date(value).toLocaleString() : "—"; }
+function cell(value) { const node=document.createElement("td"); node.textContent=value==null?"":String(value); return node; }
+function makeButton(label, className, action) { const button=document.createElement("button"); button.type="button"; button.textContent=label; if(className) button.className=className; button.addEventListener("click",action); return button; }
+function renderQueue(items) {
+  const body=$("queueRows"); body.replaceChildren();
+  if (!Array.isArray(items) || !items.length) { const row=document.createElement("tr"), td=cell("No pending or interrupted requests."); td.colSpan=9; td.className="empty"; row.append(td); body.append(row); return; }
+  items.forEach((tx)=>{
+    const row=document.createElement("tr");
+    row.append(cell(tx.id),cell(tx.userId),cell(tx.type),cell(money(tx.amount)),cell(tx.method));
+    const status=cell(tx.status); status.className="status "+String(tx.status||"").toLowerCase(); row.append(status,cell(date(tx.createdAt)));
+    const noteCell=document.createElement("td"), note=document.createElement("input"); note.className="review-note"; note.maxLength=240; note.placeholder="Optional note"; note.setAttribute("aria-label","Review note for "+tx.id); noteCell.append(note); row.append(noteCell);
+    const actionCell=document.createElement("td"), actions=document.createElement("div"); actions.className="actions";
+    const approve=makeButton(tx.status==="Processing"?"Retry approval":"Approve","",()=>review(tx,"approve",note.value));
+    const reject=makeButton("Reject","reject",()=>review(tx,"reject",note.value));
+    if (tx.status==="Processing") { reject.disabled=true; reject.title="Processing requests can only be retried by approval."; }
+    actions.append(approve,reject); actionCell.append(actions); row.append(actionCell); body.append(row);
+  });
+}
+async function loadQueue() {
+  const result=await client.listAdminTransactions({limit:100});
+  if (!result || result.ok===false) throw new Error("Could not load the admin queue.");
+  const items=Array.isArray(result.transactions)?result.transactions:(Array.isArray(result.items)?result.items:[]);
+  renderQueue(items);
+  message("queueMessage","Loaded "+items.length+" request(s).");
+}
+async function review(tx, decision, note) {
+  if (busy) return;
+  const verb=decision==="approve"?"approve":"reject";
+  if (!window.confirm("Are you sure you want to "+verb+" request "+tx.id+" ("+money(tx.amount)+")? This action is sent to the server.")) return;
+  setBusy(true);
+  try {
+    const result=await client.reviewTransaction({transactionId:tx.id,decision,note:String(note||"").trim()});
+    message("queueMessage",result.message||("Request "+tx.id+" review submitted."));
+    await loadQueue();
+  } catch(error) {
+    message("queueMessage",error.message||"Review failed. Refresh the queue and check the request status.",true);
+  } finally { setBusy(false); }
+}
+$("loginForm").addEventListener("submit",async(event)=>{
+  event.preventDefault(); if(!client||busy)return; setBusy(true);
+  try {
+    const credential=await firebase.auth().signInWithEmailAndPassword($("email").value.trim().toLowerCase(),$("password").value);
+    await credential.user.reload();
+    if(!firebase.auth().currentUser || !firebase.auth().currentUser.emailVerified) {
+      await firebase.auth().signOut(); throw new Error("Verify this email before using the admin preview.");
+    }
+    $("sessionEmail").textContent=firebase.auth().currentUser.email||"Signed in";
+    // Authorization is enforced by the callable endpoint. A normal verified user will be denied.
+    $("authCard").classList.add("hidden"); $("queueArea").classList.remove("hidden");
+    await loadQueue();
+  } catch(error) {
+    $("queueArea").classList.add("hidden"); $("authCard").classList.remove("hidden");
+    message("authMessage",error.message||"Sign-in or admin authorization failed.",true);
+  } finally { setBusy(false); }
+});
+$("refreshBtn").addEventListener("click",async()=>{if(busy)return;setBusy(true);try{await loadQueue();}catch(error){message("queueMessage",error.message||"Queue refresh failed.",true);}finally{setBusy(false);}});
+$("logoutBtn").addEventListener("click",async()=>{if(busy)return;setBusy(true);try{await firebase.auth().signOut();$("queueArea").classList.add("hidden");$("authCard").classList.remove("hidden");message("authMessage","Signed out.");}catch(error){message("queueMessage",error.message||"Sign-out failed.",true);}finally{setBusy(false);}});
+if(configured){
+  firebase.initializeApp(firebaseConfig);
+  client=createGrashSecureClient(firebase);
+  $("loginBtn").disabled=false;
+} else {
+  document.querySelectorAll("input,button").forEach((element)=>{element.disabled=true;});
+  message("authMessage","Admin preview is locked. Configure a dedicated staging Firebase project before enabling sign-in.",true);
+}
+</script>
+</body></html>
