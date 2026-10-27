@@ -1,0 +1,16 @@
+{
+  "name": "grash-fx-functions",
+  "description": "Server-side authorization and transaction endpoints for GRASH FX",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "check": "node --check index.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0"
+  }
+}
