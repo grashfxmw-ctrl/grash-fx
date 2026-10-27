@@ -11,6 +11,7 @@ This folder is a **staged backend foundation**, not a deployed or production-rea
 - `getMyAccountData`: returns the signed-in user's limited profile and up to 100 of their own transaction records.
 - `reviewTransaction`: administrator-only approval/rejection for records in the new `secure_transactions` tree.
 - `adminListTransactions`: administrator-only, bounded queue for pending and interrupted transaction reviews.
+- `adminListUsers`: administrator-only, bounded read-only directory of up to 100 recent customer profiles; directory access is audit-logged.
 - `adminGetUserProfile`: returns a limited profile view to the administrator.
 
 ## Important safety status
