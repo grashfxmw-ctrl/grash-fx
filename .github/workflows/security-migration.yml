@@ -1,0 +1,28 @@
+name: Security migration checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [secure-backend-migration]
+
+jobs:
+  backend-and-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install root test dependencies
+        run: npm install
+      - name: Install Functions dependencies
+        working-directory: functions
+        run: npm install
+      - name: Check backend JavaScript syntax
+        working-directory: functions
+        run: npm run check
+      - name: Test Realtime Database rules in emulator
+        run: npm run test:rules
