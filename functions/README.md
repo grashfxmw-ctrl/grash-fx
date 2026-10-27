@@ -2,6 +2,8 @@
 
 This folder is a **staged backend foundation**, not a deployed or production-ready service.
 
+> **Do not deploy `database.rules.json` yet.** Those target rules intentionally deny all client access to the legacy `platform_data` tree and would break the current live frontend until its migration is complete.
+
 ## Current endpoints
 
 - `createMyProfile`: creates a zero-balance profile for the signed-in UID.
