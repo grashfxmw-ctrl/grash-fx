@@ -358,3 +358,61 @@ exports.adminListUsers = onCall(async (request) => {
   return { users };
 });
 
+
+
+/**
+ * Read-only legacy-account matching for the migration cutover.
+ *
+ * This endpoint deliberately does NOT copy balances, profit, role, referral
+ * rewards, passwords, or investment-plan values. The legacy platform_data tree
+ * was maintained by the browser app and its integrity/rules have not yet been
+ * independently verified. A unique email match is therefore only a review
+ * candidate, never authority to credit an account.
+ */
+exports.inspectLegacyAccount = onCall(async (request) => {
+  const actor = requireUser(request);
+  if (!actor.email) {
+    throw new HttpsError("failed-precondition", "Your verified account has no email address.");
+  }
+
+  const legacySnap = await db.ref("platform_data/users").get();
+  const raw = legacySnap.val();
+  const legacyUsers = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === "object" ? Object.values(raw) : [];
+  const matches = legacyUsers.filter((entry) =>
+    entry && typeof entry === "object" &&
+    String(entry.email || "").trim().toLowerCase() === actor.email
+  );
+
+  let status;
+  if (matches.length === 0) {
+    status = "no_match";
+  } else if (matches.length > 1) {
+    status = "ambiguous";
+  } else if (matches[0].isBlocked === true) {
+    status = "blocked";
+  } else {
+    status = "review_required";
+  }
+
+  await writeAudit(actor.uid, "legacy_account_inspected", null, {
+    status,
+    matchCount: matches.length
+  });
+
+  // Do not return the legacy record, password, balance, or any other
+  // client-maintained financial/accounting fields.
+  return {
+    status,
+    matchCount: matches.length,
+    migrationCompleted: false,
+    message: status === "review_required"
+      ? "A matching legacy record was found. Financial values require server-side reconciliation before migration."
+      : status === "no_match"
+        ? "No legacy account matched this verified email."
+        : status === "ambiguous"
+          ? "Multiple legacy records matched this email. Support review is required."
+          : "This legacy account is restricted. Contact support."
+  };
+});
