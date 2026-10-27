@@ -44,8 +44,12 @@ test("transaction request limits amount and only accepts supported transaction t
 test("admin list endpoints are bounded and return explicit field allowlists", () => {
   assert.match(source, /Math\.min\(100, Math\.max\(1, Number\.parseInt\(request\.data\?\.limit, 10\) \|\| 50\)\)/);
   const directoryStart = source.indexOf("exports.adminListUsers = onCall(async (request) => {");
-  const directoryEnd = source.indexOf("\\n});", directoryStart) + 4;
-  const directoryBody = source.slice(directoryStart, directoryEnd);
   assert.ok(directoryStart >= 0, "Missing admin customer directory endpoint");
+  const directoryEnd = source.indexOf("\n});", directoryStart);
+  assert.ok(directoryEnd > directoryStart, "Could not isolate admin customer directory endpoint");
+  const directoryBody = source.slice(directoryStart, directoryEnd + 4);
+  for (const field of ["uid:", "email:", "displayName:", "balance:", "profit:", "referralBonus:", "role:", "isBlocked:", "createdAt:"]) {
+    assert.ok(directoryBody.includes(field), `Expected safe directory field ${field}`);
+  }
   assert.doesNotMatch(directoryBody, /processedTransactions|authToken|paymentCredentials/);
 });
