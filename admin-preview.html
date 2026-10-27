@@ -28,6 +28,11 @@
 <div id="queueMessage" class="message" role="status" aria-live="polite"></div>
 <div class="table-wrap"><table><thead><tr><th>Request</th><th>User ID</th><th>Type</th><th>Amount</th><th>Method</th><th>Status</th><th>Requested</th><th>Review note</th><th>Action</th></tr></thead><tbody id="queueRows"><tr><td colspan="9" class="empty">Sign in to load the queue.</td></tr></tbody></table></div>
 </section>
+<section id="directoryArea" class="card hidden">
+<div class="session"><div><h2 style="margin:0">Customer directory</h2><div class="muted">Latest 100 secure profiles · read-only preview</div></div><button id="directoryRefreshBtn" type="button">Refresh customers</button></div>
+<div id="directoryMessage" class="message" role="status" aria-live="polite"></div>
+<div class="table-wrap"><table><thead><tr><th>Customer</th><th>Email</th><th>UID</th><th>Balance</th><th>Profit</th><th>Referral bonus</th><th>Role</th><th>Blocked</th><th>Joined</th></tr></thead><tbody id="directoryRows"><tr><td colspan="9" class="empty">Sign in as the administrator to load customers.</td></tr></tbody></table></div>
+</section>
 <p class="footer">GRASH FX secure migration preview. Approving a transaction may change the user's server-side balance. Use test accounts and test data only.</p>
 </main>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -69,6 +74,22 @@ function renderQueue(items) {
     actions.append(approve,reject); actionCell.append(actions); row.append(actionCell); body.append(row);
   });
 }
+function renderDirectory(users) {
+  const body=$("directoryRows"); body.replaceChildren();
+  if (!Array.isArray(users) || !users.length) { const row=document.createElement("tr"), td=cell("No secure customer profiles found."); td.colSpan=9; td.className="empty"; row.append(td); body.append(row); return; }
+  users.forEach((user)=>{
+    const row=document.createElement("tr");
+    row.append(cell(user.displayName||"—"),cell(user.email||"—"),cell(user.uid||"—"),cell(money(user.balance)),cell(money(user.profit)),cell(money(user.referralBonus)),cell(user.role||"user"),cell(user.isBlocked?"Yes":"No"),cell(date(user.createdAt)));
+    body.append(row);
+  });
+}
+async function loadDirectory() {
+  const result=await client.listAdminUsers({limit:100});
+  if (!result || result.ok===false) throw new Error("Could not load the customer directory.");
+  const users=Array.isArray(result.users)?result.users:[];
+  renderDirectory(users);
+  message("directoryMessage","Loaded "+users.length+" customer profile(s).");
+}
 async function loadQueue() {
   const result=await client.listAdminTransactions({limit:100});
   if (!result || result.ok===false) throw new Error("Could not load the admin queue.");
@@ -99,16 +120,17 @@ $("loginForm").addEventListener("submit",async(event)=>{
     }
     $("sessionEmail").textContent=firebase.auth().currentUser.email||"Signed in";
     // Authorization is enforced by the callable endpoint. A normal verified user will be denied.
-    $("authCard").classList.add("hidden"); $("queueArea").classList.remove("hidden");
-    await loadQueue();
+    $("authCard").classList.add("hidden"); $("queueArea").classList.remove("hidden"); $("directoryArea").classList.remove("hidden");
+    await loadQueue(); await loadDirectory();
   } catch(error) {
     try { if (firebase.auth().currentUser) await firebase.auth().signOut(); } catch (_) {}
-    $("queueArea").classList.add("hidden"); $("authCard").classList.remove("hidden");
+    $("queueArea").classList.add("hidden"); $("directoryArea").classList.add("hidden"); $("authCard").classList.remove("hidden");
     message("authMessage",error.message||"Sign-in or admin authorization failed.",true);
   } finally { setBusy(false); }
 });
 $("refreshBtn").addEventListener("click",async()=>{if(busy)return;setBusy(true);try{await loadQueue();}catch(error){message("queueMessage",error.message||"Queue refresh failed.",true);}finally{setBusy(false);}});
-$("logoutBtn").addEventListener("click",async()=>{if(busy)return;setBusy(true);try{await firebase.auth().signOut();$("queueArea").classList.add("hidden");$("authCard").classList.remove("hidden");message("authMessage","Signed out.");}catch(error){message("queueMessage",error.message||"Sign-out failed.",true);}finally{setBusy(false);}});
+$("directoryRefreshBtn").addEventListener("click",async()=>{if(busy)return;setBusy(true);try{await loadDirectory();}catch(error){message("directoryMessage",error.message||"Directory refresh failed.",true);}finally{setBusy(false);}});
+$("logoutBtn").addEventListener("click",async()=>{if(busy)return;setBusy(true);try{await firebase.auth().signOut();$("queueArea").classList.add("hidden");$("directoryArea").classList.add("hidden");$("authCard").classList.remove("hidden");message("authMessage","Signed out.");}catch(error){message("queueMessage",error.message||"Sign-out failed.",true);}finally{setBusy(false);}});
 if(configured){
   firebase.initializeApp(firebaseConfig);
   client=createGrashSecureClient(firebase);
