@@ -36,6 +36,12 @@ This audit was performed against `index.html` on the `secure-backend-migration` 
 
 `database.rules.json` is a staged target policy that denies client access to the legacy `platform_data` tree. Deploying it before the frontend cutover would break the current website. It is committed for review only and has not been deployed.
 
+## Staged frontend adapter
+
+- `frontend/secure-client.js` now provides a small Firebase Auth/Callable Functions adapter for email verification, sign-in, profile creation, account loading, deposit/withdrawal requests, and admin transaction review.
+- The adapter is deliberately **not loaded by `index.html` yet**. The existing page still has tightly coupled legacy state and must be migrated as one coordinated cutover; wiring in authentication alone would leave balances and history inconsistent.
+- CI syntax-checks the adapter. Before cutover, add automated client tests and migrate dashboard/profile/transaction/admin flows to the secure data model; remove the old shared writes, localStorage identity, client PIN, demo credentials, and browser profit engine.
+
 ## Current status
 
 - Working branch: `secure-backend-migration`
