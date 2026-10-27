@@ -325,3 +325,36 @@ exports.adminGetUserProfile = onCall(async (request) => {
     createdAt: p.createdAt || null
   };
 });
+
+/**
+ * Bounded administrator directory for the secure customer preview. Returns
+ * only the fields needed for customer support; never returns auth tokens,
+ * payment credentials, or processed transaction markers.
+ */
+exports.adminListUsers = onCall(async (request) => {
+  const admin = requireAdmin(request);
+  const limit = Math.min(100, Math.max(1, Number.parseInt(request.data?.limit, 10) || 50));
+  const snap = await db.ref("secure_users")
+    .orderByChild("createdAt")
+    .limitToLast(limit)
+    .get();
+  const users = [];
+  snap.forEach((child) => {
+    const p = child.val() || {};
+    users.push({
+      uid: String(p.uid || child.key),
+      email: String(p.email || ""),
+      displayName: String(p.displayName || ""),
+      balance: Number(p.balance || 0),
+      profit: Number(p.profit || 0),
+      referralBonus: Number(p.referralBonus || 0),
+      role: String(p.role || "user"),
+      isBlocked: p.isBlocked === true,
+      createdAt: p.createdAt || null
+    });
+  });
+  users.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+  await writeAudit(admin.uid, "admin_user_directory_viewed", null, { count: users.length });
+  return { users };
+});
+
