@@ -43,6 +43,9 @@ test("transaction request limits amount and only accepts supported transaction t
 
 test("admin list endpoints are bounded and return explicit field allowlists", () => {
   assert.match(source, /Math\.min\(100, Math\.max\(1, Number\.parseInt\(request\.data\?\.limit, 10\) \|\| 50\)\)/);
-  assert.match(source, /processedTransactions/);
-  assert.match(source, /never returns auth tokens, payment credentials, or processed transaction markers/);
+  const directoryStart = source.indexOf("exports.adminListUsers = onCall(async (request) => {");
+  const directoryEnd = source.indexOf("\\n});", directoryStart) + 4;
+  const directoryBody = source.slice(directoryStart, directoryEnd);
+  assert.ok(directoryStart >= 0, "Missing admin customer directory endpoint");
+  assert.doesNotMatch(directoryBody, /processedTransactions|authToken|paymentCredentials/);
 });
