@@ -267,6 +267,42 @@ exports.getMyAccountData = onCall(async (request) => {
 });
 
 /**
+ * Admin queue for pending and interrupted transaction reviews. This is
+ * bounded and returns only the fields required for the review screen.
+ */
+exports.adminListTransactions = onCall(async (request) => {
+  const admin = requireAdmin(request);
+  const limit = Math.min(100, Math.max(1, Number.parseInt(request.data?.limit, 10) || 50));
+  const statuses = ["Pending", "Processing"];
+  const results = [];
+
+  for (const status of statuses) {
+    const snap = await db.ref("secure_transactions")
+      .orderByChild("status")
+      .equalTo(status)
+      .limitToLast(limit)
+      .get();
+    snap.forEach((child) => {
+      const tx = child.val() || {};
+      results.push({
+        id: String(tx.id || child.key),
+        userId: String(tx.userId || ""),
+        type: String(tx.type || ""),
+        amount: Number(tx.amount || 0),
+        method: String(tx.method || ""),
+        status: String(tx.status || status),
+        createdAt: tx.createdAt || null,
+        updatedAt: tx.updatedAt || null
+      });
+    });
+  }
+
+  results.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+  await writeAudit(admin.uid, "admin_transaction_queue_viewed", null, { count: results.length });
+  return { transactions: results.slice(0, limit) };
+});
+
+/**
  * Admin can inspect a single user's safe public profile fields. This is
  * intentionally narrow; do not expose a global all-users endpoint.
  */
