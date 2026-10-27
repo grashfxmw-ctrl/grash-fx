@@ -110,6 +110,11 @@
         return call("adminListTransactions", { limit });
       },
 
+      async listAdminUsers({ limit } = {}) {
+        await requireVerifiedUser();
+        return call("adminListUsers", { limit });
+      },
+
       async getAdminUserProfile(uid) {
         await requireVerifiedUser();
         return call("adminGetUserProfile", { uid });
