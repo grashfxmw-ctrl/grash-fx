@@ -33,10 +33,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
       - name: Install root dependencies
-        run: npm ci
+        run: npm install
 
       - name: Install Functions dependencies
         working-directory: functions
@@ -47,7 +46,9 @@ jobs:
           node --check frontend/secure-client.js
           node --check functions/index.js
           node --test tests/functions-security.test.mjs
+          node --test tests/secure-preview.test.mjs
           node --test tests/secure-client.test.mjs
+          node --test tests/admin-preview.test.mjs
           npm run test:rules
 
       - name: Authenticate to the staging project
