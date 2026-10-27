@@ -154,8 +154,8 @@
       runAction(async () => {
         await secureClient.signUp({ name: $("signupName").value, email: $("signupEmail").value, password: $("signupPassword").value });
         $("signupForm").reset();
-        showMessage("authMessage", "Account created. Check your email for the verification link, then sign in.");
         authMode(false);
+        showMessage("authMessage", "Account created. Check your email for the verification link, then sign in.");
       }, "authMessage");
     });
     $("forgotBtn").addEventListener("click", () => runAction(async () => {
@@ -179,8 +179,14 @@
       }, "txMessage");
     });
     secureClient.onAuthStateChanged((user) => {
-      if (!user) return;
-      // Do not trust cached profile data; explicit sign-in performs verification and loads backend data.
+      if (!user || busy || !user.emailVerified) return;
+      runAction(async () => {
+        const data = await secureClient.loadAccount();
+        if (data.profile.isBlocked) { await secureClient.signOut(); return; }
+        renderAccount(data);
+        $("authCard").classList.add("hidden");
+        $("accountArea").classList.remove("hidden");
+      }, "authMessage");
     });
   </script>
 </body>
