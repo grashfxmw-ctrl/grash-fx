@@ -56,7 +56,8 @@ Do not run the command if the selected project is unclear or points at productio
 ## 4. Test with fictional data
 
 - A verified ordinary user can create a zero-balance profile and request a test deposit.
-- An ordinary user cannot load the admin queue or approve/reject a transaction.
+- An ordinary user cannot load the admin queue, customer directory, or approve/reject a transaction.
+- The administrator directory shows no more than 100 recent secure profiles and records directory access in the audit log.
 - The verified allowlisted administrator can load the queue.
 - Pending requests can be rejected; approved requests update the staging profile balance exactly once.
 - Repeating or racing approval requests does not apply a deposit/withdrawal twice.
