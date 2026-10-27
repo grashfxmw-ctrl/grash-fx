@@ -102,6 +102,7 @@ $("loginForm").addEventListener("submit",async(event)=>{
     $("authCard").classList.add("hidden"); $("queueArea").classList.remove("hidden");
     await loadQueue();
   } catch(error) {
+    try { if (firebase.auth().currentUser) await firebase.auth().signOut(); } catch (_) {}
     $("queueArea").classList.add("hidden"); $("authCard").classList.remove("hidden");
     message("authMessage",error.message||"Sign-in or admin authorization failed.",true);
   } finally { setBusy(false); }
