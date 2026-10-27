@@ -32,6 +32,10 @@ This audit was performed against `index.html` on the `secure-backend-migration` 
 6. Test with a separate Firebase test project or emulator. Then deploy restrictive database rules and functions in a planned cutover. Do not lock down the existing production database before the migrated frontend is ready.
 7. Review privacy, payment handling, and the legal/regulatory requirements for offering investment products before accepting real deposits.
 
+## Target rules warning
+
+`database.rules.json` is a staged target policy that denies client access to the legacy `platform_data` tree. Deploying it before the frontend cutover would break the current website. It is committed for review only and has not been deployed.
+
 ## Current status
 
 - Working branch: `secure-backend-migration`
