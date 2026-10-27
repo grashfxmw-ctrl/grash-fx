@@ -39,7 +39,7 @@ This audit was performed against `index.html` on the `secure-backend-migration` 
 ## Staged frontend adapter
 
 - `frontend/secure-client.js` now provides a small Firebase Auth/Callable Functions adapter for email verification, sign-in, profile creation, account loading, deposit/withdrawal requests, and admin transaction review.
-- `admin-preview.html` is a separate staging-only admin queue preview; it supports review actions through the server endpoints and remains disabled while its dedicated staging Firebase config contains placeholders.
+- `admin-preview.html` is a separate staging-only admin preview with a bounded customer directory and transaction review queue; it uses server endpoints and remains disabled while its dedicated staging Firebase config contains placeholders.
 - `STAGING_SETUP.md` documents creating a separate Firebase project, configuring local previews, and testing with fictional accounts and amounts.
 - The adapter is deliberately **not loaded by `index.html` yet**. The existing page still has tightly coupled legacy state and must be migrated as one coordinated cutover; wiring in authentication alone would leave balances and history inconsistent.
 - CI syntax-checks the adapter. Before cutover, add automated client tests and migrate dashboard/profile/transaction/admin flows to the secure data model; remove the old shared writes, localStorage identity, client PIN, demo credentials, and browser profit engine.
