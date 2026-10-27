@@ -85,6 +85,11 @@
         await auth.signOut();
       },
 
+      async inspectLegacyAccount() {
+        await requireVerifiedUser();
+        return call("inspectLegacyAccount");
+      },
+
       async loadAccount() {
         await requireVerifiedUser();
         return call("getMyAccountData");
