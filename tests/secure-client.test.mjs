@@ -80,3 +80,13 @@ test("blocked account is signed out after account data is loaded", async () => {
   await assert.rejects(client.signIn({ email: "investor@example.com", password: "long-password" }), /restricted/);
   assert.ok(calls.some((c) => c.name === "getMyAccountData"));
 });
+
+test("admin transaction queue calls the protected server endpoint", async () => {
+  const { client, calls } = harness();
+  await client.signIn({ email: "admin@example.com", password: "long-password" });
+  const result = await client.listAdminTransactions({ limit: 20 });
+  assert.equal(result.ok, true);
+  const queueCall = calls.find((c) => c.name === "adminListTransactions");
+  assert.ok(queueCall);
+  assert.equal(queueCall.payload.limit, 20);
+});
