@@ -90,3 +90,13 @@ test("admin transaction queue calls the protected server endpoint", async () => 
   assert.ok(queueCall);
   assert.equal(queueCall.payload.limit, 20);
 });
+
+test("admin customer directory calls the protected bounded endpoint", async () => {
+  const { client, calls } = harness();
+  await client.signIn({ email: "admin@example.com", password: "long-password" });
+  const result = await client.listAdminUsers({ limit: 100 });
+  assert.equal(result.ok, true);
+  const directoryCall = calls.find((c) => c.name === "adminListUsers");
+  assert.ok(directoryCall);
+  assert.equal(directoryCall.payload.limit, 100);
+});
