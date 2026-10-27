@@ -105,6 +105,11 @@
         return call("reviewTransaction", { transactionId, decision, note });
       },
 
+      async listAdminTransactions({ limit } = {}) {
+        await requireVerifiedUser();
+        return call("adminListTransactions", { limit });
+      },
+
       async getAdminUserProfile(uid) {
         await requireVerifiedUser();
         return call("adminGetUserProfile", { uid });
