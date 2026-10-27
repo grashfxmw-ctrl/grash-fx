@@ -14,7 +14,8 @@
     },
     "secure_transactions": {
       ".indexOn": [
-        "userId"
+        "userId",
+        "status"
       ],
       "$transactionId": {
         ".read": "auth != null && data.child('userId').val() === auth.uid",
