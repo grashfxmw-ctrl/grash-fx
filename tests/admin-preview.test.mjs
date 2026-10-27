@@ -15,6 +15,9 @@ test("admin preview inline JavaScript parses", () => {
 
 test("admin preview uses secure queue and review adapter actions", () => {
   assert.match(html, /listAdminTransactions/);
+  assert.match(html, /listAdminUsers/);
+  assert.match(html, /Customer directory/);
+  assert.match(html, /adminListUsers/);
   assert.match(html, /reviewTransaction/);
   assert.match(html, /transactionId:tx\.id,decision,note/);
   assert.match(html, /Processing/);
