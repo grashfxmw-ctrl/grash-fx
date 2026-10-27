@@ -8,6 +8,7 @@ This folder is a **staged backend foundation**, not a deployed or production-rea
 
 - `createMyProfile`: creates a zero-balance profile for the signed-in UID.
 - `requestTransaction`: records a pending deposit or withdrawal request; it does not move funds.
+- `getMyAccountData`: returns the signed-in user's limited profile and up to 100 of their own transaction records.
 - `reviewTransaction`: administrator-only approval/rejection for records in the new `secure_transactions` tree.
 - `adminGetUserProfile`: returns a limited profile view to the administrator.
 
@@ -35,6 +36,6 @@ Then test with the Firebase Emulator Suite and a separate test project. Verify u
 
 1. Migrate the UI to Firebase Authentication and callable functions.
 2. Add restrictive Realtime Database rules for the new schema.
-3. Add automated emulator tests and recovery handling for interrupted approvals.
+3. Keep expanding automated emulator tests and verify recovery handling for interrupted approvals.
 4. Decide how to handle existing user records and pending transactions; do not blindly import untrusted client balances.
 5. Run a staging cutover and explicitly approve production deployment.
