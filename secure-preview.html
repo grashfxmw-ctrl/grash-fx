@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GRASH FX — Secure Account Preview</title>
+  <meta name="description" content="Staging preview for the GRASH FX secure account migration.">
+  <style>
+    :root{color-scheme:dark;--bg:#070a11;--panel:#111827;--border:#263244;--gold:#eab308;--muted:#9ca3af;--text:#f3f4f6;--green:#34d399;--red:#f87171}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#182235 0,var(--bg) 55%);color:var(--text);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+    .wrap{max-width:1040px;margin:auto;padding:28px 18px 60px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:28px}
+    .brand{font-weight:900;letter-spacing:.09em;font-size:1.25rem}.brand span{color:var(--gold)}.pill{font-size:.72rem;color:#fcd34d;border:1px solid #854d0e;background:#42200666;padding:5px 9px;border-radius:999px}
+    h1{font-size:clamp(1.8rem,5vw,3.2rem);line-height:1.08;margin:12px 0}.intro{color:#cbd5e1;max-width:680px}.notice{border:1px solid #854d0e;background:#42200655;border-radius:12px;padding:12px 14px;color:#fde68a;margin:20px 0}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{background:#111827eF;border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 18px 55px #0002}.card h2{margin:0 0 14px;font-size:1.05rem}.tabs{display:flex;gap:8px;margin-bottom:16px}.tabs button{flex:1}
+    label{display:block;font-size:.8rem;color:#cbd5e1;margin:12px 0 6px}input,select{width:100%;background:#080d17;color:var(--text);border:1px solid #374151;border-radius:10px;padding:12px;font:inherit}button{border:0;border-radius:10px;padding:11px 14px;font:700 .88rem inherit;cursor:pointer;background:var(--gold);color:#111827}button.secondary{background:#1f2937;color:#e5e7eb;border:1px solid #374151}button:disabled{opacity:.55;cursor:wait}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.message{min-height:22px;margin-top:12px;color:#fde68a;font-size:.85rem}.hidden{display:none!important}.balance{font-size:2.2rem;font-weight:850;letter-spacing:-.04em}.muted{color:var(--muted);font-size:.83rem}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.stat{background:#080d17;border:1px solid var(--border);border-radius:12px;padding:12px}.stat strong{display:block;font-size:1.05rem;margin-top:3px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:.82rem;white-space:nowrap}th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #263244}th{color:var(--muted);font-weight:600}.status{color:#fcd34d}.status.completed{color:var(--green)}.status.rejected{color:var(--red)}.full{grid-column:1/-1}.footer{color:var(--muted);font-size:.78rem;margin-top:24px}
+    @media(max-width:700px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.top{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header class="top"><div class="brand">GRASH <span>FX</span></div><div class="pill">SECURE MIGRATION · STAGING PREVIEW</div></header>
+    <h1>Trading account,<br><span style="color:var(--gold)">built on safer foundations.</span></h1>
+    <p class="intro">This separate preview tests Firebase email verification, personal account data, and server-validated deposit/withdrawal requests. It is not the live customer portal.</p>
+    <div class="notice"><strong>Staging only.</strong> Backend functions must be deployed to a test Firebase project before account actions can work. Do not send real deposits or payment details here.</div>
+
+    <section id="authCard" class="card" style="max-width:560px">
+      <div class="tabs"><button id="loginTab" type="button">Sign in</button><button id="signupTab" type="button" class="secondary">Create account</button></div>
+      <form id="loginForm">
+        <h2>Welcome back</h2>
+        <label for="loginEmail">Email address</label><input id="loginEmail" type="email" autocomplete="email" required>
+        <label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required>
+        <div class="actions"><button type="submit">Sign in securely</button><button id="forgotBtn" class="secondary" type="button">Reset password</button></div>
+      </form>
+      <form id="signupForm" class="hidden">
+        <h2>Create your GRASH FX account</h2>
+        <label for="signupName">Full name</label><input id="signupName" autocomplete="name" maxlength="80" required>
+        <label for="signupEmail">Email address</label><input id="signupEmail" type="email" autocomplete="email" required>
+        <label for="signupPassword">Password (at least 8 characters)</label><input id="signupPassword" type="password" autocomplete="new-password" minlength="8" required>
+        <div class="actions"><button type="submit">Create account</button></div>
+      </form>
+      <div id="authMessage" class="message" role="status" aria-live="polite"></div>
+    </section>
+
+    <section id="accountArea" class="hidden">
+      <div class="grid" style="margin-top:18px">
+        <article class="card">
+          <div class="muted">Available balance</div><div id="balance" class="balance">$0.00</div>
+          <div class="stats">
+            <div class="stat"><span class="muted">Recorded profit</span><strong id="profit">$0.00</strong></div>
+            <div class="stat"><span class="muted">Referral bonus</span><strong id="referral">$0.00</strong></div>
+            <div class="stat"><span class="muted">Account status</span><strong id="accountStatus">Active</strong></div>
+          </div>
+          <div id="accountEmail" class="muted"></div>
+          <div class="actions"><button id="refreshBtn" type="button">Refresh account</button><button id="logoutBtn" class="secondary" type="button">Sign out</button></div>
+        </article>
+        <article class="card">
+          <h2>Request a transaction</h2>
+          <p class="muted">Requests remain pending until reviewed by an authorized administrator. Submitting a request does not transfer funds.</p>
+          <form id="transactionForm">
+            <label for="txType">Request type</label><select id="txType"><option value="Deposit">Deposit</option><option value="Withdrawal">Withdrawal</option></select>
+            <label for="txAmount">Amount (USD)</label><input id="txAmount" type="number" min="0.01" max="100000" step="0.01" required>
+            <label for="txMethod">Method</label><select id="txMethod" required><option value="">Choose method</option><option>Bank transfer</option><option>Mobile money</option><option>Crypto</option><option>Other</option></select>
+            <div class="actions"><button type="submit">Submit request</button></div>
+          </form>
+          <div id="txMessage" class="message" role="status" aria-live="polite"></div>
+        </article>
+        <article class="card full">
+          <h2>Your transaction history</h2><div class="table-wrap"><table><thead><tr><th>Type</th><th>Amount</th><th>Method</th><th>Status</th><th>Requested</th></tr></thead><tbody id="history"><tr><td colspan="5" class="muted">Sign in to load your history.</td></tr></tbody></table></div>
+        </article>
+      </div>
+    </section>
+    <p class="footer">GRASH FX secure migration preview. Investment-related products involve financial and regulatory risks; displayed account figures are not a promise of future returns.</p>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+  <script src="frontend/secure-client.js"></script>
+  <script>
+    // Public Firebase web-app configuration. Never place service-account credentials here.
+    const firebaseConfig = {
+      apiKey: "AIzaSyCS-JePIUTBnGu--6oYpMH7KhRqtFFbjkw",
+      authDomain: "grashfx.firebaseapp.com",
+      projectId: "grashfx",
+      storageBucket: "grashfx.firebasestorage.app",
+      messagingSenderId: "420001022752",
+      appId: "1:420001022752:web:db9851dbaeddca247e8d45"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const secureClient = createGrashSecureClient(firebase);
+    const $ = (id) => document.getElementById(id);
+    let busy = false;
+
+    function setBusy(value) {
+      busy = value;
+      document.querySelectorAll("button").forEach((button) => { button.disabled = value; });
+    }
+    function showMessage(id, message, error = false) {
+      const node = $(id); node.textContent = message; node.style.color = error ? "var(--red)" : "var(--gold)";
+    }
+    function authMode(signup) {
+      $("loginForm").classList.toggle("hidden", signup);
+      $("signupForm").classList.toggle("hidden", !signup);
+      $("loginTab").classList.toggle("secondary", signup);
+      $("signupTab").classList.toggle("secondary", !signup);
+      showMessage("authMessage", "");
+    }
+    $("loginTab").addEventListener("click", () => authMode(false));
+    $("signupTab").addEventListener("click", () => authMode(true));
+
+    function money(value) { return "$" + Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function formatDate(value) { return value ? new Date(value).toLocaleString() : "—"; }
+    function safeCell(text, className) {
+      const el = document.createElement("td"); el.textContent = text == null ? "" : String(text);
+      if (className) el.className = className; return el;
+    }
+    function renderAccount(data) {
+      $("balance").textContent = money(data.profile.balance);
+      $("profit").textContent = money(data.profile.profit);
+      $("referral").textContent = money(data.profile.referralBonus);
+      $("accountStatus").textContent = data.profile.isBlocked ? "Restricted" : "Active";
+      $("accountEmail").textContent = data.profile.email || "";
+      const body = $("history"); body.replaceChildren();
+      if (!data.transactions.length) {
+        const row = document.createElement("tr"); const cell = safeCell("No transactions recorded yet."); cell.colSpan = 5; cell.className = "muted"; row.append(cell); body.append(row); return;
+      }
+      data.transactions.forEach((tx) => {
+        const row = document.createElement("tr");
+        row.append(safeCell(tx.type), safeCell(money(tx.amount)), safeCell(tx.method), safeCell(tx.status, "status " + String(tx.status).toLowerCase()), safeCell(formatDate(tx.createdAt)));
+        body.append(row);
+      });
+    }
+    async function runAction(action, messageId) {
+      if (busy) return;
+      setBusy(true);
+      try { await action(); }
+      catch (error) { showMessage(messageId, error.message || "Request failed. Please try again.", true); }
+      finally { setBusy(false); }
+    }
+
+    $("loginForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      runAction(async () => {
+        const data = await secureClient.signIn({ email: $("loginEmail").value, password: $("loginPassword").value });
+        if (data.verificationRequired) {
+          showMessage("authMessage", "Verify your email using the link sent to your inbox, then sign in again.", true); return;
+        }
+        renderAccount(data); $("authCard").classList.add("hidden"); $("accountArea").classList.remove("hidden");
+        showMessage("authMessage", "");
+      }, "authMessage");
+    });
+    $("signupForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      runAction(async () => {
+        await secureClient.signUp({ name: $("signupName").value, email: $("signupEmail").value, password: $("signupPassword").value });
+        $("signupForm").reset();
+        showMessage("authMessage", "Account created. Check your email for the verification link, then sign in.");
+        authMode(false);
+      }, "authMessage");
+    });
+    $("forgotBtn").addEventListener("click", () => runAction(async () => {
+      const email = $("loginEmail").value.trim();
+      if (!email) throw new Error("Enter your email address first.");
+      await firebase.auth().sendPasswordResetEmail(email);
+      showMessage("authMessage", "If an account exists for that email, a password reset link has been sent.");
+    }, "authMessage"));
+    $("refreshBtn").addEventListener("click", () => runAction(async () => renderAccount(await secureClient.loadAccount()), "txMessage"));
+    $("logoutBtn").addEventListener("click", () => runAction(async () => {
+      await secureClient.signOut(); $("accountArea").classList.add("hidden"); $("authCard").classList.remove("hidden"); authMode(false);
+    }, "authMessage"));
+    $("transactionForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      runAction(async () => {
+        const payload = { amount: Number($("txAmount").value), method: $("txMethod").value };
+        const result = $("txType").value === "Deposit" ? await secureClient.requestDeposit(payload) : await secureClient.requestWithdrawal(payload);
+        showMessage("txMessage", "Request submitted. Status: " + result.status + ". No funds have moved yet.");
+        $("transactionForm").reset();
+        renderAccount(await secureClient.loadAccount());
+      }, "txMessage");
+    });
+    secureClient.onAuthStateChanged((user) => {
+      if (!user) return;
+      // Do not trust cached profile data; explicit sign-in performs verification and loads backend data.
+    });
+  </script>
+</body>
+</html>
