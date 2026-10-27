@@ -1,0 +1,68 @@
+name: Deploy secure backend to staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_staging:
+        description: "Type DEPLOY-STAGING to confirm this is a staging-only deployment"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy database rules and Cloud Functions to GRASHFX STAGING
+    if: github.ref == 'refs/heads/secure-backend-migration' && inputs.confirm_staging == 'DEPLOY-STAGING'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out staging branch
+        uses: actions/checkout@v4
+
+      - name: Guard against production deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF}" = "refs/heads/secure-backend-migration"
+          test "grashfx-staging" != "grashfx"
+          grep -q '"rules": "database.rules.json"' firebase.json
+          echo "Verified target is grashfx-staging; Hosting is not included."
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install Functions dependencies
+        working-directory: functions
+        run: npm ci
+
+      - name: Run backend and rules checks
+        run: |
+          node --check frontend/secure-client.js
+          node --check functions/index.js
+          node --test tests/functions-security.test.mjs
+          node --test tests/secure-client.test.mjs
+          npm run test:rules
+
+      - name: Authenticate to the staging project
+        env:
+          FIREBASE_STAGING_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GRASHFX_STAGING }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${FIREBASE_STAGING_SERVICE_ACCOUNT}" ]; then
+            echo "Missing GitHub Actions secret FIREBASE_SERVICE_ACCOUNT_GRASHFX_STAGING." >&2
+            exit 1
+          fi
+          KEY_FILE="${RUNNER_TEMP}/grashfx-staging-service-account.json"
+          printf '%s' "${FIREBASE_STAGING_SERVICE_ACCOUNT}" > "${KEY_FILE}"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=${KEY_FILE}" >> "${GITHUB_ENV}"
+
+      - name: Deploy only database rules and Cloud Functions to staging
+        run: npx firebase-tools deploy --only database,functions --project grashfx-staging --non-interactive
