@@ -6,7 +6,7 @@ import vm from "node:vm";
 const html = await readFile(new URL("../secure-preview.html", import.meta.url), "utf8");
 
 test("secure preview inline JavaScript parses", () => {
-  const inlineScripts = [...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)]
+  const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
     .map((match) => match[1].trim())
     .filter(Boolean);
   assert.ok(inlineScripts.length > 0, "expected an inline application script");
@@ -24,9 +24,9 @@ test("secure preview includes auth, transaction request, and account history UI"
 });
 
 test("secure preview does not write legacy shared platform data", () => {
-  assert.doesNotMatch(html, /ref\\(['"]platform_data['"]\\)\\.set/);
-  assert.doesNotMatch(html, /localStorage\\.setItem/);
+  assert.doesNotMatch(html, /ref\(['"]platform_data['"]\)\.set/);
+  assert.doesNotMatch(html, /localStorage\.setItem/);
   assert.match(html, /Staging only/);
   assert.match(html, /REPLACE_WITH_STAGING_PROJECT/);
-  assert.doesNotMatch(html, /grashfx\\.firebaseapp\\.com/);
+  assert.doesNotMatch(html, /grashfx\.firebaseapp\.com/);
 });
