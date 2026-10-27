@@ -27,6 +27,8 @@ jobs:
         run: node --test tests/secure-preview.test.mjs
       - name: Test secure frontend adapter flows
         run: node --test tests/secure-client.test.mjs
+      - name: Test staging admin review preview
+        run: node --test tests/admin-preview.test.mjs
       - name: Check backend JavaScript syntax
         working-directory: functions
         run: npm run check
