@@ -1,0 +1,26 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "platform_data": {
+      ".read": false,
+      ".write": false
+    },
+    "secure_users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
+      }
+    },
+    "secure_transactions": {
+      "$transactionId": {
+        ".read": "auth != null && data.child('userId').val() === auth.uid",
+        ".write": false
+      }
+    },
+    "secure_audit": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
