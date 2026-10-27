@@ -4,9 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GRASH FX - Trading & Investment Platform</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts (Inter) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Telegram Web App Script -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <!-- Firebase App & Realtime Database SDKs -->
@@ -36,24 +40,43 @@
     }
   </script>
   <style>
-    body { background-color: #070a11; color: #f3f4f6; font-family: 'Inter', sans-serif; }
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #111827; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
-    .gold-gradient { background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%); }
-    .gold-text-gradient { background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    body {
+      background-color: #070a11;
+      color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #111827;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #374151;
+      border-radius: 3px;
+    }
+    .gold-gradient {
+      background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%);
+    }
+    .gold-text-gradient {
+      background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between custom-scrollbar bg-[#070a11] text-gray-100">
 
-  <!-- TOP HEADER -->
+  <!-- TOP HEADER (STATUS & ADMIN ACCESS) -->
   <header class="bg-gray-950 border-b border-gray-800 text-xs py-2 px-4">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
       <div class="flex items-center gap-2">
         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Global Cloud Sync Online
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Sync Online
         </span>
       </div>
+      <!-- ADMIN ACCESS BUTTON: Only visible when admin email (grashfxmw@gmail.com) is logged in -->
       <button id="adminNavBtn" onclick="openAdminModal()" class="hidden text-xs text-yellow-500 border border-yellow-500/30 px-2.5 py-1 rounded-md hover:bg-yellow-500/10 transition flex items-center gap-1 relative">
         <i class="fas fa-shield-alt"></i> Admin Control Panel
         <span id="adminLiveBadge" class="hidden absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></span>
@@ -61,10 +84,11 @@
     </div>
   </header>
 
-  <!-- NAVIGATION -->
+  <!-- MAIN NAVIGATION & MOBILE MENU -->
   <nav class="bg-[#111827] border-b border-gray-800 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
         <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
           <div class="w-10 h-10 gold-gradient rounded-xl flex items-center justify-center shadow-lg shadow-yellow-500/20">
             <i class="fas fa-chart-line text-[#070a11] text-xl font-black"></i>
@@ -75,140 +99,989 @@
           </div>
         </div>
 
-        <div class="hidden lg:flex items-center space-x-3">
-          <button onclick="switchTab('dashboard')" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md font-medium text-xs flex items-center gap-1.5"><i class="fas fa-chart-pie"></i> Dashboard</button>
-          <button onclick="switchTab('plans')" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md font-medium text-xs flex items-center gap-1.5"><i class="fas fa-layer-group"></i> Investment Plans</button>
-          <button onclick="switchTab('referral')" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md font-medium text-xs flex items-center gap-1.5"><i class="fas fa-users-viewfinder text-yellow-500"></i> Refer & Earn</button>
-          <button onclick="switchTab('profile')" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md font-medium text-xs flex items-center gap-1.5"><i class="fas fa-user-gear text-yellow-400"></i> Profile</button>
+        <!-- Navigation Tabs Desktop -->
+        <div id="navLinks" class="hidden lg:flex items-center space-x-3">
+          <button onclick="switchTab('dashboard')" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md font-medium text-xs flex items-center gap-1.5">
+            <i class="fas fa-chart-pie"></i> Dashboard
+          </button>
+          <button onclick="switchTab('plans')" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md font-medium text-xs flex items-center gap-1.5">
+            <i class="fas fa-layer-group"></i> Investment Plans
+          </button>
+          <button onclick="switchTab('referral')" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md font-medium text-xs flex items-center gap-1.5">
+            <i class="fas fa-users-viewfinder text-yellow-500"></i> Refer & Earn
+          </button>
+          <button onclick="switchTab('inbox')" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md font-medium text-xs flex items-center gap-1.5 relative">
+            <i class="fas fa-envelope text-blue-400"></i> Messages
+            <span id="unreadBadge" class="hidden bg-red-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+          </button>
+          <button onclick="switchTab('about')" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md font-medium text-xs flex items-center gap-1.5">
+            <i class="fas fa-info-circle text-emerald-400"></i> About
+          </button>
+          <button onclick="switchTab('faq')" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md font-medium text-xs flex items-center gap-1.5">
+            <i class="fas fa-question-circle text-yellow-400"></i> FAQ
+          </button>
         </div>
 
+        <!-- Auth Controls & Mobile Menu Toggle -->
         <div class="flex items-center gap-3">
           <div id="userInfoHeader" class="hidden flex items-center gap-3">
-            <span id="userHeaderName" class="text-xs font-bold text-gray-200">User</span>
-            <button onclick="logoutUser()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 p-2 rounded-lg text-xs" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+            <button onclick="switchTab('profile')" class="text-right hidden sm:block hover:opacity-80 transition cursor-pointer">
+              <div id="userHeaderName" class="text-xs font-bold text-gray-200 flex items-center gap-1">
+                <span>User Account</span> <i class="fas fa-user-gear text-yellow-500 text-[10px]"></i>
+              </div>
+              <div id="userHeaderBalance" class="text-xs text-yellow-400 font-semibold">$0.00</div>
+            </button>
+            <button onclick="logoutUser()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 p-2 rounded-lg text-xs transition" title="Logout">
+              <i class="fas fa-sign-out-alt"></i>
+            </button>
           </div>
-          <button id="authBtnNav" onclick="openAuthModal()" class="gold-gradient text-gray-950 font-bold px-4 py-2 rounded-lg text-xs shadow-md">Login / Sign Up</button>
+          <button id="authBtnNav" onclick="openAuthModal()" class="gold-gradient text-gray-950 font-bold px-4 py-2 rounded-lg text-xs hover:opacity-90 transition shadow-md">
+            Login / Sign Up
+          </button>
+          <!-- Mobile Drawer Hamburger Button -->
+          <button onclick="toggleMobileMenu()" class="lg:hidden text-gray-400 hover:text-white p-2">
+            <i class="fas fa-bars text-lg"></i>
+          </button>
         </div>
       </div>
+    </div>
+
+    <!-- Mobile Drawer Menu -->
+    <div id="mobileDrawer" class="hidden lg:hidden border-t border-gray-800 bg-gray-950 px-4 py-3 space-y-2">
+      <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="w-full text-left text-gray-300 hover:text-yellow-400 py-2 text-sm flex items-center gap-2">
+        <i class="fas fa-chart-pie text-yellow-500"></i> Dashboard
+      </button>
+      <button onclick="switchTab('plans'); toggleMobileMenu()" class="w-full text-left text-gray-300 hover:text-yellow-400 py-2 text-sm flex items-center gap-2">
+        <i class="fas fa-layer-group text-blue-400"></i> Investment Plans
+      </button>
+      <button onclick="switchTab('referral'); toggleMobileMenu()" class="w-full text-left text-gray-300 hover:text-yellow-400 py-2 text-sm flex items-center gap-2">
+        <i class="fas fa-users-viewfinder text-emerald-400"></i> Refer & Earn ($5)
+      </button>
+      <button onclick="switchTab('inbox'); toggleMobileMenu()" class="w-full text-left text-gray-300 hover:text-yellow-400 py-2 text-sm flex items-center gap-2">
+        <i class="fas fa-envelope text-purple-400"></i> Messages & Replies
+      </button>
+      <button onclick="switchTab('profile'); toggleMobileMenu()" class="w-full text-left text-gray-300 hover:text-yellow-400 py-2 text-sm flex items-center gap-2">
+        <i class="fas fa-user-gear text-yellow-400"></i> Profile Settings
+      </button>
+      <button onclick="switchTab('about'); toggleMobileMenu()" class="w-full text-left text-gray-300 hover:text-yellow-400 py-2 text-sm flex items-center gap-2">
+        <i class="fas fa-info-circle text-emerald-400"></i> About GRASH FX
+      </button>
+      <button onclick="switchTab('faq'); toggleMobileMenu()" class="w-full text-left text-gray-300 hover:text-yellow-400 py-2 text-sm flex items-center gap-2">
+        <i class="fas fa-question-circle text-yellow-400"></i> FAQ & Knowledge Base
+      </button>
     </div>
   </nav>
 
+  <!-- NOTIFICATION CONTAINER -->
   <div id="notificationArea" class="fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-sm"></div>
 
-  <!-- MAIN BODY -->
+  <!-- MAIN APP BODY -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
-    <!-- DASHBOARD TAB -->
+
+    <!-- WARNING BANNER DISPLAY (IF ISSUED BY ADMIN) -->
+    <div id="warningBanner" class="hidden mb-6 bg-red-900/40 border border-red-500/80 p-4 rounded-xl flex items-center gap-3 text-red-200 text-xs">
+      <i class="fas fa-triangle-exclamation text-red-400 text-xl"></i>
+      <div class="flex-grow">
+        <span class="font-bold text-red-100 uppercase tracking-wider block">Account Notice / Warning</span>
+        <span id="warningMsgText">Please resolve pending compliance checks.</span>
+      </div>
+    </div>
+
+    <!-- TAB: DASHBOARD -->
     <section id="dashboardTab" class="space-y-8">
-      <div class="bg-gradient-to-r from-gray-900 via-[#111827] to-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl flex justify-between items-center">
+      <!-- Welcome & Status Header -->
+      <div class="bg-gradient-to-r from-gray-900 via-[#111827] to-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 class="text-2xl font-extrabold text-white">Welcome Back, <span id="dashUserName" class="gold-text-gradient">Investor</span></h1>
-          <p class="text-xs text-gray-400 mt-1">Global Database Sync Active across all devices.</p>
+          <p class="text-xs text-gray-400 mt-1">Manage your active portfolios, deposits, and daily ROI earnings in real-time.</p>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+            <i class="fas fa-shield-check"></i> Account Status: Verified Live
+          </span>
+          <button onclick="openDepositModal()" class="gold-gradient text-gray-950 font-bold px-4 py-2 rounded-lg text-xs hover:scale-105 transition shadow-lg shadow-yellow-500/10 flex items-center gap-2">
+            <i class="fas fa-plus-circle"></i> Deposit Funds
+          </button>
         </div>
       </div>
+
+      <!-- Financial Overview Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- Available Balance Card -->
+        <div class="bg-[#111827] border border-gray-800 p-6 rounded-2xl relative overflow-hidden group hover:border-yellow-500/40 transition">
+          <div class="absolute -right-4 -bottom-4 text-gray-800/40 text-7xl font-black pointer-events-none group-hover:scale-110 transition">
+            <i class="fas fa-wallet"></i>
+          </div>
+          <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Available Balance</p>
+          <div class="text-3xl font-black text-white mt-2" id="dashBalance">$0.00</div>
+          <div class="mt-4 flex items-center gap-2 text-xs">
+            <button onclick="openDepositModal()" class="bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 px-3 py-1.5 rounded-md font-medium transition">
+              + Deposit
+            </button>
+            <button onclick="openWithdrawModal()" class="bg-gray-800 text-gray-300 hover:bg-gray-700 px-3 py-1.5 rounded-md font-medium transition">
+              Withdraw
+            </button>
+          </div>
+        </div>
+
+        <!-- Total ROI Profit Card -->
+        <div class="bg-[#111827] border border-gray-800 p-6 rounded-2xl relative overflow-hidden group hover:border-yellow-500/40 transition">
+          <div class="absolute -right-4 -bottom-4 text-gray-800/40 text-7xl font-black pointer-events-none group-hover:scale-110 transition">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Profit Earned</p>
+          <div class="text-3xl font-black text-emerald-400 mt-2" id="dashProfit">$0.00</div>
+          <p class="text-xs text-gray-400 mt-4 flex items-center gap-1">
+            <i class="fas fa-sync text-yellow-500 animate-spin"></i> Auto 24h Yield Engine Active
+          </p>
+        </div>
+
+        <!-- Referral Bonus Card -->
+        <div class="bg-[#111827] border border-gray-800 p-6 rounded-2xl relative overflow-hidden group hover:border-yellow-500/40 transition">
+          <div class="absolute -right-4 -bottom-4 text-gray-800/40 text-7xl font-black pointer-events-none group-hover:scale-110 transition">
+            <i class="fas fa-gift"></i>
+          </div>
+          <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Referral & Bonus Balance</p>
+          <div class="text-3xl font-black text-yellow-400 mt-2" id="dashRefBonus">$0.00</div>
+          <button onclick="switchTab('referral')" class="mt-4 text-xs text-yellow-400 hover:underline flex items-center gap-1">
+            Invite & Earn $5 &rarr;
+          </button>
+        </div>
+
+        <!-- Active Investment Card -->
+        <div class="bg-[#111827] border border-gray-800 p-6 rounded-2xl relative overflow-hidden group hover:border-yellow-500/40 transition">
+          <div class="absolute -right-4 -bottom-4 text-gray-800/40 text-7xl font-black pointer-events-none group-hover:scale-110 transition">
+            <i class="fas fa-gem"></i>
+          </div>
+          <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Active Investment Plan</p>
+          <div class="text-lg font-extrabold text-yellow-400 mt-2" id="dashPlan">No Active Plan</div>
+          <div class="mt-4">
+            <button onclick="switchTab('plans')" class="text-xs bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 px-3 py-1.5 rounded-md font-medium border border-yellow-500/30 transition">
+              Browse Plans &rarr;
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Action Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div onclick="openDepositModal()" class="bg-gradient-to-r from-emerald-950/40 to-gray-900 border border-emerald-800/40 hover:border-emerald-500 p-5 rounded-xl cursor-pointer transition flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl flex-shrink-0">
+            <i class="fas fa-arrow-down-to-bracket"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-white text-sm">Deposit Funds</h4>
+            <p class="text-xs text-gray-400">Crypto, CashSend, Mobile Money</p>
+          </div>
+        </div>
+        <div onclick="openWithdrawModal()" class="bg-gradient-to-r from-yellow-950/40 to-gray-900 border border-yellow-800/40 hover:border-yellow-500 p-5 rounded-xl cursor-pointer transition flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-yellow-500/10 text-yellow-400 flex items-center justify-center text-xl flex-shrink-0">
+            <i class="fas fa-money-bill-transfer"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-white text-sm">Request Withdrawal</h4>
+            <p class="text-xs text-gray-400">Instant payout processing</p>
+          </div>
+        </div>
+        <div onclick="switchTab('plans')" class="bg-gradient-to-r from-blue-950/40 to-gray-900 border border-blue-800/40 hover:border-blue-500 p-5 rounded-xl cursor-pointer transition flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl flex-shrink-0">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-white text-sm">Invest & Earn</h4>
+            <p class="text-xs text-gray-400">7-Day high yield plans</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Transaction History -->
+      <div class="bg-[#111827] border border-gray-800 rounded-2xl p-6 shadow-xl">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fas fa-history text-yellow-500"></i> Account Activity & Transactions
+          </h3>
+          <span class="text-xs text-gray-400">Real-time status</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-gray-300">
+            <thead class="bg-gray-900 text-gray-400 uppercase font-semibold border-b border-gray-800">
+              <tr>
+                <th class="py-3 px-4">Transaction ID</th>
+                <th class="py-3 px-4">Type</th>
+                <th class="py-3 px-4">Amount</th>
+                <th class="py-3 px-4">Method / Plan</th>
+                <th class="py-3 px-4">Date & Time</th>
+                <th class="py-3 px-4 text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody id="txHistoryBody" class="divide-y divide-gray-800">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: INVESTMENT PLANS -->
+    <section id="plansTab" class="hidden space-y-8">
+      <div class="text-center max-w-3xl mx-auto space-y-3">
+        <h2 class="text-3xl font-extrabold text-white">7-Day Investment <span class="gold-text-gradient">Plans</span></h2>
+        <p class="text-sm text-gray-400">Choose an investment package. All packages run for a standardized 7-day duration with profits calculated and credited every 24 hours.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Plan 1: Starter -->
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl p-6 flex flex-col justify-between hover:border-yellow-500/50 transition relative group">
+          <div>
+            <div class="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-1">Starter Package</div>
+            <h3 class="text-2xl font-black text-white mb-4">10% <span class="text-xs font-normal text-gray-400">/ 24 Hours</span></h3>
+            <div class="space-y-3 border-t border-b border-gray-800 py-4 text-xs text-gray-300">
+              <div class="flex justify-between"><span>Duration:</span> <span class="font-bold text-emerald-400">7 Days</span></div>
+              <div class="flex justify-between"><span>Min Deposit:</span> <span class="font-bold text-yellow-400">$50.00</span></div>
+              <div class="flex justify-between"><span>Max Deposit:</span> <span class="font-bold text-white">$500.00</span></div>
+              <div class="flex justify-between"><span>Auto 24h Payout:</span> <span class="font-bold text-emerald-400">Yes (Automated)</span></div>
+            </div>
+          </div>
+          <button onclick="openSelectPlanModal('Starter Plan', 10, 50, 500)" class="w-full mt-6 bg-gray-800 hover:bg-yellow-500 hover:text-gray-950 text-white font-bold py-3 rounded-xl transition text-xs flex justify-center items-center gap-2">
+            Select Plan <i class="fas fa-chevron-right text-[10px]"></i>
+          </button>
+        </div>
+
+        <!-- Plan 2: Basic -->
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl p-6 flex flex-col justify-between hover:border-yellow-500/50 transition relative group">
+          <div>
+            <div class="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-1">Basic Package</div>
+            <h3 class="text-2xl font-black text-white mb-4">20% <span class="text-xs font-normal text-gray-400">/ 24 Hours</span></h3>
+            <div class="space-y-3 border-t border-b border-gray-800 py-4 text-xs text-gray-300">
+              <div class="flex justify-between"><span>Duration:</span> <span class="font-bold text-emerald-400">7 Days</span></div>
+              <div class="flex justify-between"><span>Min Deposit:</span> <span class="font-bold text-yellow-400">$501.00</span></div>
+              <div class="flex justify-between"><span>Max Deposit:</span> <span class="font-bold text-white">$2,000.00</span></div>
+              <div class="flex justify-between"><span>Auto 24h Payout:</span> <span class="font-bold text-emerald-400">Yes (Automated)</span></div>
+            </div>
+          </div>
+          <button onclick="openSelectPlanModal('Basic Plan', 20, 501, 2000)" class="w-full mt-6 bg-gray-800 hover:bg-yellow-500 hover:text-gray-950 text-white font-bold py-3 rounded-xl transition text-xs flex justify-center items-center gap-2">
+            Select Plan <i class="fas fa-chevron-right text-[10px]"></i>
+          </button>
+        </div>
+
+        <!-- Plan 3: Premium -->
+        <div class="bg-[#111827] border-2 border-yellow-500/80 rounded-2xl p-6 flex flex-col justify-between hover:border-yellow-400 transition relative shadow-lg shadow-yellow-500/10 scale-105">
+          <div class="absolute -top-3 right-4 gold-gradient text-gray-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">Most Popular</div>
+          <div>
+            <div class="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-1">Premium Package</div>
+            <h3 class="text-2xl font-black text-white mb-4">30% <span class="text-xs font-normal text-gray-400">/ 24 Hours</span></h3>
+            <div class="space-y-3 border-t border-b border-gray-800 py-4 text-xs text-gray-300">
+              <div class="flex justify-between"><span>Duration:</span> <span class="font-bold text-emerald-400">7 Days</span></div>
+              <div class="flex justify-between"><span>Min Deposit:</span> <span class="font-bold text-yellow-400">$2,001.00</span></div>
+              <div class="flex justify-between"><span>Max Deposit:</span> <span class="font-bold text-white">$5,000.00</span></div>
+              <div class="flex justify-between"><span>Auto 24h Payout:</span> <span class="font-bold text-emerald-400">Yes (Automated)</span></div>
+            </div>
+          </div>
+          <button onclick="openSelectPlanModal('Premium Plan', 30, 2001, 5000)" class="w-full mt-6 gold-gradient text-gray-950 font-extrabold py-3 rounded-xl transition text-xs flex justify-center items-center gap-2 shadow-md">
+            Select Plan <i class="fas fa-chevron-right text-[10px]"></i>
+          </button>
+        </div>
+
+        <!-- Plan 4: VIP -->
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl p-6 flex flex-col justify-between hover:border-yellow-500/50 transition relative group">
+          <div>
+            <div class="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-1">VIP Package</div>
+            <h3 class="text-2xl font-black text-white mb-4">40% <span class="text-xs font-normal text-gray-400">/ 24 Hours</span></h3>
+            <div class="space-y-3 border-t border-b border-gray-800 py-4 text-xs text-gray-300">
+              <div class="flex justify-between"><span>Duration:</span> <span class="font-bold text-emerald-400">7 Days</span></div>
+              <div class="flex justify-between"><span>Min Deposit:</span> <span class="font-bold text-yellow-400">$5,001.00</span></div>
+              <div class="flex justify-between"><span>Max Deposit:</span> <span class="font-bold text-white">Unlimited</span></div>
+              <div class="flex justify-between"><span>Personal Account Mgr:</span> <span class="font-bold text-emerald-400">Yes</span></div>
+            </div>
+          </div>
+          <button onclick="openSelectPlanModal('VIP Plan', 40, 5001, 100000)" class="w-full mt-6 bg-gray-800 hover:bg-yellow-500 hover:text-gray-950 text-white font-bold py-3 rounded-xl transition text-xs flex justify-center items-center gap-2">
+            Select Plan <i class="fas fa-chevron-right text-[10px]"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: REFER & EARN PROGRAM -->
+    <section id="referralTab" class="hidden space-y-8">
+      <div class="bg-[#111827] border border-gray-800 rounded-2xl p-8 relative overflow-hidden shadow-2xl">
+        <div class="max-w-2xl space-y-4">
+          <span class="px-3 py-1 bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 rounded-full text-xs font-bold uppercase tracking-wider">
+            GRASH FX Affiliate Network
+          </span>
+          <h2 class="text-3xl font-extrabold text-white">Refer 1 Person & Earn <span class="gold-text-gradient">Fixed $5.00</span></h2>
+          <p class="text-sm text-gray-400">Share your referral link with traders or friends. Every time a user registers using your code and completes a deposit, a $5 fixed cash bonus is automatically added to your balance!</p>
+          
+          <!-- Referral Link Generator -->
+          <div class="space-y-2 pt-2">
+            <label class="block text-xs font-medium text-gray-300">Your Exclusive Referral Link</label>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input type="text" id="refLinkInput" readonly class="flex-grow bg-gray-900 border border-gray-700 px-4 py-3 rounded-xl text-xs text-yellow-400 font-mono outline-none">
+              <button onclick="copyRefLink()" class="gold-gradient text-gray-950 font-bold px-5 py-3 rounded-xl text-xs hover:opacity-90 transition flex items-center justify-center gap-2">
+                <i class="fas fa-copy"></i> Copy Link
+              </button>
+              <button onclick="shareTelegramRef()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                <i class="fab fa-telegram"></i> Share Telegram
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Referral Statistics -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-[#111827] border border-gray-800 p-6 rounded-2xl">
-          <p class="text-xs font-medium text-gray-400 uppercase">Available Balance</p>
-          <div class="text-3xl font-black text-white mt-2" id="dashBalance">$0.00</div>
+          <p class="text-xs text-gray-400 uppercase font-semibold">Total Referred Clients</p>
+          <p id="refCount" class="text-3xl font-black text-white mt-2">0</p>
         </div>
         <div class="bg-[#111827] border border-gray-800 p-6 rounded-2xl">
-          <p class="text-xs font-medium text-gray-400 uppercase">Total Profit</p>
-          <div class="text-3xl font-black text-emerald-400 mt-2" id="dashProfit">$0.00</div>
+          <p class="text-xs text-gray-400 uppercase font-semibold">Total Bonus Paid ($5 Fixed)</p>
+          <p id="refEarnings" class="text-3xl font-black text-emerald-400 mt-2">$0.00</p>
         </div>
         <div class="bg-[#111827] border border-gray-800 p-6 rounded-2xl">
-          <p class="text-xs font-medium text-gray-400 uppercase">Referral Bonus</p>
-          <div class="text-3xl font-black text-yellow-400 mt-2" id="dashRefBonus">$0.00</div>
+          <p class="text-xs text-gray-400 uppercase font-semibold">Program Rate</p>
+          <p class="text-3xl font-black text-yellow-400 mt-2">$5.00 / User</p>
         </div>
       </div>
     </section>
 
-    <!-- REFERRAL TAB -->
-    <section id="referralTab" class="hidden space-y-8">
-      <div class="bg-[#111827] border border-gray-800 rounded-2xl p-8">
-        <h2 class="text-3xl font-extrabold text-white mb-4">Refer & Earn <span class="gold-text-gradient">$5.00</span></h2>
-        <div class="flex gap-2">
-          <input type="text" id="refLinkInput" readonly class="flex-grow bg-gray-900 border border-gray-700 px-4 py-3 rounded-xl text-xs text-yellow-400 font-mono">
-          <button onclick="copyRefLink()" class="gold-gradient text-gray-950 font-bold px-5 py-3 rounded-xl text-xs">Copy Link</button>
+    <!-- TAB: CLIENT PROFILE & ACCOUNT SETTINGS -->
+    <section id="profileTab" class="hidden space-y-8">
+      <div class="max-w-xl mx-auto bg-[#111827] border border-gray-800 p-6 rounded-2xl shadow-xl space-y-6">
+        <div class="border-b border-gray-800 pb-4">
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="fas fa-user-gear text-yellow-500"></i> Profile Settings
+          </h2>
+          <p class="text-xs text-gray-400 mt-1">Update personal info, security passwords, or manage your account status.</p>
+        </div>
+
+        <form onsubmit="handleProfileUpdate(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Full Name</label>
+            <input type="text" id="profName" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">Email Address (Immutable)</label>
+            <input type="email" id="profEmail" readonly class="w-full bg-gray-900/50 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-400 cursor-not-allowed">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-300 mb-1">New Password (leave blank to keep current)</label>
+            <input type="password" id="profPassword" placeholder="••••••••" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 outline-none">
+          </div>
+          <button type="submit" class="w-full gold-gradient text-gray-950 font-bold py-3 rounded-xl text-xs hover:opacity-90 transition shadow-lg">
+            Save Profile Changes
+          </button>
+        </form>
+
+        <div class="border-t border-gray-800 pt-6 mt-6">
+          <h3 class="text-sm font-bold text-red-400 mb-2">Danger Zone</h3>
+          <p class="text-xs text-gray-500 mb-4">Deleting your account will purge your active investments and profile permanently.</p>
+          <button onclick="handleDeleteAccount()" class="w-full bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-800/60 font-bold py-3 rounded-xl text-xs transition">
+            <i class="fas fa-trash-alt mr-1"></i> Delete My Account Permanently
+          </button>
         </div>
       </div>
     </section>
+
+    <!-- TAB: IN-APP INBOX & CLIENT REPLIES -->
+    <section id="inboxTab" class="hidden space-y-6">
+      <div class="bg-[#111827] border border-gray-800 rounded-2xl p-6 shadow-xl">
+        <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <i class="fas fa-envelope text-blue-400"></i> Platform Messages & Operator Desk
+        </h2>
+        <p class="text-xs text-gray-400 mb-6">Receive announcements or send direct messages and replies to the admin operator.</p>
+
+        <!-- Send Direct Message to Admin Form -->
+        <form onsubmit="handleClientSendMessage(event)" class="bg-gray-900/80 border border-gray-800 p-4 rounded-xl mb-6 space-y-3">
+          <h3 class="text-xs font-bold text-yellow-400 flex items-center gap-1">
+            <i class="fas fa-paper-plane"></i> Send Direct Message to Operator / Support
+          </h3>
+          <div>
+            <input type="text" id="clientMsgSubject" required placeholder="Subject / Query topic..." class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white focus:border-yellow-500 outline-none">
+          </div>
+          <div>
+            <textarea id="clientMsgBody" required rows="2" placeholder="Write your response or inquiry here..." class="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-xs text-white focus:border-yellow-500 outline-none"></textarea>
+          </div>
+          <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-gray-950 font-bold px-4 py-2 rounded-lg text-xs transition">
+            Send Message to Support
+          </button>
+        </form>
+
+        <div id="inboxContainer" class="space-y-4">
+          <!-- Dynamic Messages -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: ABOUT GRASH FX -->
+    <section id="aboutTab" class="hidden space-y-8">
+      <div class="bg-[#111827] border border-gray-800 rounded-2xl p-8 space-y-6">
+        <div class="max-w-3xl space-y-3">
+          <span class="text-xs font-bold text-yellow-500 uppercase tracking-widest">About GRASH FX</span>
+          <h2 class="text-3xl font-extrabold text-white">Empowering Global Investors with Algorithmic Precision</h2>
+          <p class="text-gray-300 text-sm leading-relaxed">
+            GRASH FX is a premier multi-asset trading and financial technology platform designed to automate investment returns across Forex markets, Cryptocurrency arbitrage, and global indices. Founded on principles of security and transparency, our system balances high-yield performance with institutional risk mitigation.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-800">
+          <div class="space-y-2">
+            <i class="fas fa-shield-halved text-2xl text-emerald-400"></i>
+            <h4 class="font-bold text-white text-base">Secured Funds</h4>
+            <p class="text-xs text-gray-400">Capital reserves backed by multi-signature vaults and liquidity buffers.</p>
+          </div>
+          <div class="space-y-2">
+            <i class="fas fa-bolt text-2xl text-yellow-400"></i>
+            <h4 class="font-bold text-white text-base">Automated Daily ROI</h4>
+            <p class="text-xs text-gray-400">Smart yield engine automatically calculates and credits profits every 24 hours.</p>
+          </div>
+          <div class="space-y-2">
+            <i class="fas fa-headset text-2xl text-blue-400"></i>
+            <h4 class="font-bold text-white text-base">24/7 Support</h4>
+            <p class="text-xs text-gray-400">Dedicated assistance via Telegram (@grashfxmw) and WhatsApp support lines.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: FAQ & KNOWLEDGE BASE -->
+    <section id="faqTab" class="hidden space-y-8">
+      <div class="max-w-4xl mx-auto space-y-6">
+        <div class="text-center space-y-2">
+          <h2 class="text-3xl font-extrabold text-white">Frequently Asked <span class="gold-text-gradient">Questions</span></h2>
+          <p class="text-sm text-gray-400">Find instant answers to general questions about deposits, payouts, and referral bonuses.</p>
+        </div>
+
+        <div class="space-y-4" id="faqAccordion">
+          <div class="bg-[#111827] border border-gray-800 rounded-xl overflow-hidden">
+            <button onclick="toggleFaq(1)" class="w-full text-left p-4 font-bold text-white text-sm flex justify-between items-center bg-gray-900/50 hover:bg-gray-900 transition">
+              <span>How does the 24-Hour Profit Engine work?</span>
+              <i id="faqIcon-1" class="fas fa-chevron-down text-yellow-400"></i>
+            </button>
+            <div id="faqAns-1" class="hidden p-4 text-xs text-gray-300 border-t border-gray-800 space-y-2 bg-gray-950/40">
+              When you activate a 7-day investment plan, the platform records the start timestamp. After 24 elapsed hours, the daily ROI percentage of your selected plan automatically calculates and deposits into your balance.
+            </div>
+          </div>
+
+          <div class="bg-[#111827] border border-gray-800 rounded-xl overflow-hidden">
+            <button onclick="toggleFaq(2)" class="w-full text-left p-4 font-bold text-white text-sm flex justify-between items-center bg-gray-900/50 hover:bg-gray-900 transition">
+              <span>How does the $5 Refer & Earn bonus work?</span>
+              <i id="faqIcon-2" class="fas fa-chevron-down text-yellow-400"></i>
+            </button>
+            <div id="faqAns-2" class="hidden p-4 text-xs text-gray-300 border-t border-gray-800 space-y-2 bg-gray-950/40">
+              Share your unique referral link from the Refer & Earn section. When a user registers through your link and completes a deposit, a fixed $5 cash bonus automatically credits to your referral balance.
+            </div>
+          </div>
+
+          <div class="bg-[#111827] border border-gray-800 rounded-xl overflow-hidden">
+            <button onclick="toggleFaq(3)" class="w-full text-left p-4 font-bold text-white text-sm flex justify-between items-center bg-gray-900/50 hover:bg-gray-900 transition">
+              <span>What deposit methods are accepted?</span>
+              <i id="faqIcon-3" class="fas fa-chevron-down text-yellow-400"></i>
+            </button>
+            <div id="faqAns-3" class="hidden p-4 text-xs text-gray-300 border-t border-gray-800 space-y-2 bg-gray-950/40">
+              We support Bitcoin (BTC), USDT (TRC20), CashSend / Cardless Cash, and Mobile Money (Airtel Money).
+            </div>
+          </div>
+
+          <div class="bg-[#111827] border border-gray-800 rounded-xl overflow-hidden">
+            <button onclick="toggleFaq(4)" class="w-full text-left p-4 font-bold text-white text-sm flex justify-between items-center bg-gray-900/50 hover:bg-gray-900 transition">
+              <span>How long do withdrawals take?</span>
+              <i id="faqIcon-4" class="fas fa-chevron-down text-yellow-400"></i>
+            </button>
+            <div id="faqAns-4" class="hidden p-4 text-xs text-gray-300 border-t border-gray-800 space-y-2 bg-gray-950/40">
+              Withdrawal requests are reviewed and processed within 15 to 60 minutes after submission.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
-  <!-- AUTH MODAL -->
+  <!-- FOOTER (WITH CONTACT DETAILS MOVED TO BOTTOM) -->
+  <footer class="bg-gray-950 border-t border-gray-800 mt-12 py-8 px-4 text-xs text-gray-400">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+      <div>
+        <div class="flex items-center justify-center md:justify-start gap-2 mb-2">
+          <span class="font-extrabold text-white text-base">GRASH <span class="gold-text-gradient">FX</span></span>
+        </div>
+        <p class="max-w-md text-gray-500">GRASH FX Trading & Investment Platform provides automated forex & crypto investment management with guaranteed risk mitigation strategies.</p>
+      </div>
+
+      <!-- Contact Details at Bottom -->
+      <div class="bg-gray-900/80 border border-gray-800 p-4 rounded-xl space-y-2 text-left w-full md:w-auto">
+        <p class="text-xs font-bold text-yellow-400 uppercase tracking-wider mb-1">Official Platform Contacts</p>
+        <p>
+          <a href="https://t.me/grashfxmw" target="_blank" class="hover:text-yellow-400 transition flex items-center gap-2">
+            <i class="fab fa-telegram text-blue-400"></i> Telegram Channel: <span class="text-white font-medium">@grashfxmw</span>
+          </a>
+        </p>
+        <p>
+          <a href="https://wa.me/27721526863" target="_blank" class="hover:text-yellow-400 transition flex items-center gap-2">
+            <i class="fab fa-whatsapp text-green-400"></i> WhatsApp Desk: <span class="text-white font-medium">+27 72 152 6863</span>
+          </a>
+        </p>
+        <p>
+          <a href="mailto:grashfxmw@gmail.com" class="hover:text-yellow-400 transition flex items-center gap-2">
+            <i class="fas fa-envelope text-yellow-500"></i> Support Email: <span class="text-white font-medium">grashfxmw@gmail.com</span>
+          </a>
+        </p>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto border-t border-gray-900 mt-6 pt-4 text-center text-gray-600">
+      &copy; 2026 GRASH FX Platform. All rights reserved.
+    </div>
+  </footer>
+
+
+  <!-- MODAL: AUTHENTICATION (LOGIN / SIGN UP) -->
   <div id="authModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-[#111827] border border-gray-800 rounded-2xl max-w-md w-full p-6 relative">
-      <button onclick="closeModal('authModal')" class="absolute top-4 right-4 text-gray-400">&times;</button>
+    <div class="bg-[#111827] border border-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeModal('authModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+      
+      <!-- Modal Header Tabs -->
       <div class="flex border-b border-gray-800 mb-6">
-        <button id="tabBtnLogin" onclick="switchAuthTab('login')" class="w-1/2 py-3 text-sm font-bold text-yellow-400 border-b-2 border-yellow-400 text-center">Log In</button>
-        <button id="tabBtnSignup" onclick="switchAuthTab('signup')" class="w-1/2 py-3 text-sm font-bold text-gray-400 text-center">Sign Up</button>
+        <button id="tabBtnLogin" onclick="switchAuthTab('login')" class="w-1/2 py-3 text-sm font-bold text-yellow-400 border-b-2 border-yellow-400 text-center">
+          Log In
+        </button>
+        <button id="tabBtnSignup" onclick="switchAuthTab('signup')" class="w-1/2 py-3 text-sm font-bold text-gray-400 hover:text-white text-center">
+          Sign Up
+        </button>
       </div>
 
+      <!-- Form: Login -->
       <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
-        <div><label class="block text-xs text-gray-300 mb-1">Email</label><input type="email" id="loginEmail" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white"></div>
-        <div><label class="block text-xs text-gray-300 mb-1">Password</label><input type="password" id="loginPassword" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white"></div>
-        <button type="submit" class="w-full gold-gradient text-gray-950 font-extrabold py-3.5 rounded-xl text-sm">Log In</button>
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Email Address</label>
+          <input type="email" id="loginEmail" required placeholder="user@example.com" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Password</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
+        </div>
+        <button type="submit" class="w-full gold-gradient text-gray-950 font-extrabold py-3.5 rounded-xl text-sm hover:opacity-90 transition shadow-lg">
+          Log In to Account
+        </button>
       </form>
 
+      <!-- Form: Sign Up -->
       <form id="signupForm" onsubmit="handleSignup(event)" class="space-y-4 hidden">
-        <div><label class="block text-xs text-gray-300 mb-1">Full Name</label><input type="text" id="signupName" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white"></div>
-        <div><label class="block text-xs text-gray-300 mb-1">Email</label><input type="email" id="signupEmail" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white"></div>
-        <div><label class="block text-xs text-gray-300 mb-1">Password</label><input type="password" id="signupPassword" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white"></div>
-        <button type="submit" class="w-full gold-gradient text-gray-950 font-extrabold py-3.5 rounded-xl text-sm">Create Account</button>
+        <input type="hidden" id="signupRefBy">
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Full Name</label>
+          <input type="text" id="signupName" required placeholder="John Doe" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Email Address</label>
+          <input type="email" id="signupEmail" required placeholder="user@example.com" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Password</label>
+          <input type="password" id="signupPassword" required placeholder="••••••••" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
+        </div>
+        <button type="submit" class="w-full gold-gradient text-gray-950 font-extrabold py-3.5 rounded-xl text-sm hover:opacity-90 transition shadow-lg">
+          Create Investor Account
+        </button>
       </form>
     </div>
   </div>
 
-  <!-- ADMIN PANEL MODAL -->
-  <div id="adminPanelModal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
-    <div class="bg-[#111827] border border-yellow-500/30 rounded-2xl max-w-4xl w-full p-6 relative">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold text-white">Worldwide Registered Users Admin Panel</h2>
-        <button onclick="closeModal('adminPanelModal')" class="bg-gray-800 text-white px-3 py-1 rounded text-xs">Close</button>
+
+  <!-- MODAL: DEPOSIT SYSTEM -->
+  <div id="depositModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
+    <div class="bg-[#111827] border border-gray-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative my-8">
+      <button onclick="closeModal('depositModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="mb-6">
+        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+          <i class="fas fa-arrow-down-to-bracket text-emerald-400"></i> Deposit Funds
+        </h3>
+        <p class="text-xs text-gray-400 mt-1">Select your payment method below to view deposit details and submit verification.</p>
       </div>
-      <table class="w-full text-left text-xs text-gray-300">
-        <thead class="bg-gray-950 uppercase">
-          <tr><th class="p-2">Name</th><th class="p-2">Email</th><th class="p-2">Balance</th></tr>
-        </thead>
-        <tbody id="adminUsersTableBody"></tbody>
-      </table>
+
+      <form onsubmit="handleDepositSubmit(event)" class="space-y-5">
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-2">1. Select Payment Method</label>
+          <select id="depositMethod" onchange="updateDepositDetails()" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
+            <option value="BTC">Bitcoin (BTC Crypto)</option>
+            <option value="USDT">USDT / USDC (TRC20 Network)</option>
+            <option value="CASHSEND">CashSend / Cardless Cash</option>
+            <option value="MOBILE">Airtel Money / Mobile Money</option>
+          </select>
+        </div>
+
+        <div id="depositDetailsBox" class="bg-gray-900/90 border border-gray-700 rounded-xl p-4 space-y-3"></div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">2. Enter Deposit Amount ($ USD)</label>
+          <input type="number" id="depositAmount" min="10" step="any" required placeholder="50.00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">3. Payment Reference / TXID / Sender Name / Voucher Details</label>
+          <input type="text" id="depositTxid" required placeholder="Paste TxHash, CashSend Voucher & PIN, or Mobile Reference No." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
+        </div>
+
+        <button type="submit" class="w-full gold-gradient text-gray-950 font-extrabold py-3.5 rounded-xl text-sm hover:opacity-90 transition shadow-lg">
+          Submit Deposit Confirmation
+        </button>
+      </form>
     </div>
   </div>
 
+
+  <!-- MODAL: WITHDRAWAL SYSTEM -->
+  <div id="withdrawModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-[#111827] border border-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeModal('withdrawModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="mb-6">
+        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+          <i class="fas fa-arrow-up-from-bracket text-yellow-400"></i> Request Withdrawal
+        </h3>
+      </div>
+
+      <form onsubmit="handleWithdrawSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Payout Method</label>
+          <select id="withdrawMethod" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
+            <option value="Bitcoin (BTC)">Bitcoin Wallet</option>
+            <option value="USDT (TRC20)">USDT (TRC20)</option>
+            <option value="Airtel Money">Airtel Money</option>
+            <option value="MTN Mobile Money">MTN Mobile Money</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Amount ($ USD)</label>
+          <input type="number" id="withdrawAmount" min="10" step="any" required placeholder="100.00" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
+          <p class="text-[10px] text-gray-400 mt-1">Available Balance: <span id="withdrawAvailBalance" class="text-yellow-400 font-bold">$0.00</span></p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Destination Address / Account Details</label>
+          <textarea id="withdrawDetails" required rows="3" placeholder="Enter Wallet Address or Phone Number" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-yellow-500 focus:outline-none"></textarea>
+        </div>
+
+        <button type="submit" class="w-full gold-gradient text-gray-950 font-extrabold py-3.5 rounded-xl text-sm hover:opacity-90 transition shadow-lg">
+          Process Withdrawal Request
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- MODAL: SELECT PLAN CONFIRMATION -->
+  <div id="selectPlanModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-[#111827] border border-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeModal('selectPlanModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="mb-4">
+        <span class="text-xs text-yellow-500 font-bold uppercase tracking-wider">Confirm 7-Day Investment</span>
+        <h3 id="modalPlanName" class="text-2xl font-black text-white mt-0.5">Plan Name</h3>
+        <p id="modalPlanDesc" class="text-xs text-gray-400 mt-1">Daily returns directly credited.</p>
+      </div>
+
+      <form onsubmit="handleInvestSubmit(event)" class="space-y-4">
+        <input type="hidden" id="modalPlanMin">
+        <input type="hidden" id="modalPlanMax">
+        
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1">Enter Investment Amount ($ USD)</label>
+          <input type="number" id="investAmount" step="any" required placeholder="Min amount" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none">
+          <p class="text-[10px] text-gray-400 mt-1">Your Available Balance: <span id="investAvailBalance" class="text-yellow-400 font-bold">$0.00</span></p>
+        </div>
+
+        <button type="submit" class="w-full gold-gradient text-gray-950 font-extrabold py-3.5 rounded-xl text-sm hover:opacity-90 transition shadow-lg">
+          Activate 7-Day Investment Now
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- MODAL: ADMIN PANEL LOGIN (PIN 5978) -->
+  <div id="adminAuthModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-[#111827] border border-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative text-center">
+      <button onclick="closeModal('adminAuthModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="w-12 h-12 bg-yellow-500/10 text-yellow-400 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+        <i class="fas fa-user-shield"></i>
+      </div>
+      <h3 class="text-lg font-bold text-white mb-1">Admin Security Access</h3>
+      <form onsubmit="handleAdminAuth(event)" class="space-y-4">
+        <input type="password" id="adminPin" maxlength="6" required placeholder="Enter PIN" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-center text-lg tracking-widest text-white focus:border-yellow-500 focus:outline-none">
+        <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-gray-950 font-bold py-3 rounded-xl text-xs transition">Unlock Control Panel</button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- MODAL: MANUAL BONUS TRANSFER BY ADMIN -->
+  <div id="adminBonusModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-[#111827] border border-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeModal('adminBonusModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">&times;</button>
+      <h3 class="text-lg font-bold text-white mb-1">Transfer Bonus to <span id="adminBonusTargetName" class="text-yellow-400"></span></h3>
+      <form onsubmit="handleAdminSendBonus(event)" class="space-y-4">
+        <input type="hidden" id="adminBonusTargetKey">
+        <input type="number" id="adminBonusAmount" step="any" required placeholder="Amount ($)" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white">
+        <input type="text" id="adminBonusNote" placeholder="Reason / Note" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white">
+        <button type="submit" class="w-full gold-gradient text-gray-950 font-extrabold py-3 rounded-xl text-xs">Confirm Transfer</button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- MODAL: SECURE ADMIN CONTROL PANEL CONTAINER -->
+  <div id="adminPanelModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
+    <div class="bg-[#111827] border border-yellow-500/30 rounded-2xl max-w-6xl w-full p-6 shadow-2xl relative my-8">
+      <div class="flex justify-between items-center border-b border-gray-800 pb-4 mb-6">
+        <div class="flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+          <h2 class="text-xl font-black text-white">GRASH FX Global Master Control Panel</h2>
+        </div>
+        <button onclick="closeModal('adminPanelModal')" class="bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-xs">Close Panel</button>
+      </div>
+
+      <div class="space-y-8">
+        <!-- Section 1: Manage User Balances Worldwide -->
+        <div class="bg-gray-900/60 border border-gray-800 p-5 rounded-xl">
+          <h3 class="text-sm font-bold text-yellow-400 mb-3 flex items-center gap-2"><i class="fas fa-users-cog"></i> Worldwide Registered Users & Balances</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-300">
+              <thead class="bg-gray-950 text-gray-400 uppercase font-semibold">
+                <tr>
+                  <th class="py-2.5 px-3">Name</th>
+                  <th class="py-2.5 px-3">Email</th>
+                  <th class="py-2.5 px-3">Balance ($)</th>
+                  <th class="py-2.5 px-3">Profit ($)</th>
+                  <th class="py-2.5 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminUserTable" class="divide-y divide-gray-800"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section 2: Pending Deposits -->
+        <div class="bg-gray-900/60 border border-gray-800 p-5 rounded-xl">
+          <h3 class="text-sm font-bold text-emerald-400 mb-3"><i class="fas fa-arrow-down-to-bracket"></i> Pending Client Deposits</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-300">
+              <thead class="bg-gray-950 text-gray-400 uppercase">
+                <tr><th class="py-2.5 px-3">Client</th><th class="py-2.5 px-3">Amount</th><th class="py-2.5 px-3">Reference</th><th class="py-2.5 px-3 text-right">Action</th></tr>
+              </thead>
+              <tbody id="adminDepositTable" class="divide-y divide-gray-800"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section 3: Pending Withdrawals -->
+        <div class="bg-gray-900/60 border border-gray-800 p-5 rounded-xl">
+          <h3 class="text-sm font-bold text-yellow-500 mb-3"><i class="fas fa-arrow-up-from-bracket"></i> Pending Client Withdrawals</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-300">
+              <thead class="bg-gray-950 text-gray-400 uppercase">
+                <tr><th class="py-2.5 px-3">Client</th><th class="py-2.5 px-3">Amount</th><th class="py-2.5 px-3">Details</th><th class="py-2.5 px-3 text-right">Action</th></tr>
+              </thead>
+              <tbody id="adminWithdrawTable" class="divide-y divide-gray-800"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- APPLICATION JAVASCRIPT LOGIC (FIREBASE CLOUD SYNC) -->
   <script>
     // --- FIREBASE CONFIGURATION ---
-    // Create a free project at firebase.google.com and paste your config here:
+    // (Create a free project at firebase.google.com -> Realtime Database, and paste your credentials below)
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
+      apiKey: "YOUR_FIREBASE_API_KEY",
       authDomain: "YOUR_PROJECT.firebaseapp.com",
       databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
       projectId: "YOUR_PROJECT",
       storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "123456",
+      messagingSenderId: "123456789",
       appId: "YOUR_APP_ID"
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    const DEFAULT_ADMIN_PIN = "5978";
     const ADMIN_EMAIL = "grashfxmw@gmail.com";
-    let currentUser = JSON.parse(localStorage.getItem('grash_curr_user')) || null;
-    let globalUsers = {};
 
-    // Listen to real-time updates for ALL users worldwide from Firebase
+    let globalUsers = {};
+    let globalTxs = {};
+    let globalMsgs = {};
+    let currentUser = JSON.parse(localStorage.getItem('grash_current_user')) || null;
+
+    // Real-time synchronization listeners across all phones and devices worldwide
     db.ref('users').on('value', (snapshot) => {
       globalUsers = snapshot.val() || {};
       renderApp();
-      renderAdminTable();
     });
+
+    db.ref('transactions').on('value', (snapshot) => {
+      globalTxs = snapshot.val() || {};
+      renderApp();
+    });
+
+    db.ref('messages').on('value', (snapshot) => {
+      globalMsgs = snapshot.val() || {};
+      renderApp();
+    });
+
+    // Telegram Mini App Init
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+
+    // Check URL parameters for Referral Link
+    function checkUrlRefCode() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const ref = urlParams.get('ref');
+      if (ref) {
+        document.getElementById('signupRefBy').value = ref;
+      }
+    }
+
+    // --- NOTIFICATIONS ---
+    function notify(message, type = 'info') {
+      const container = document.getElementById('notificationArea');
+      const toast = document.createElement('div');
+      let borderCol = type === 'success' ? 'border-emerald-500' : type === 'error' ? 'border-red-500' : 'border-yellow-500';
+      toast.className = `bg-gray-900 text-white text-xs p-3.5 rounded-xl border-l-4 ${borderCol} shadow-xl flex items-center justify-between gap-3`;
+      toast.innerHTML = `<span>${message}</span><button onclick="this.parentElement.remove()" class="text-gray-400">&times;</button>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 5000);
+    }
+
+    // --- RENDERING & UI SYNC ---
+    function renderApp() {
+      if (currentUser) {
+        const userKey = currentUser.email.replace(/[.#$[\]]/g, '_');
+        if (globalUsers[userKey]) {
+          currentUser = globalUsers[userKey];
+          localStorage.setItem('grash_current_user', JSON.stringify(currentUser));
+        }
+
+        document.getElementById('userHeaderName').innerHTML = `<span>${currentUser.name}</span> <i class="fas fa-user-gear text-yellow-500 text-[10px]"></i>`;
+        document.getElementById('userHeaderBalance').textContent = `$${parseFloat(currentUser.balance || 0).toFixed(2)}`;
+        document.getElementById('userInfoHeader').classList.remove('hidden');
+        document.getElementById('authBtnNav').classList.add('hidden');
+
+        if (currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+          document.getElementById('adminNavBtn').classList.remove('hidden');
+        } else {
+          document.getElementById('adminNavBtn').classList.add('hidden');
+        }
+
+        // Profile & Ref link sync
+        document.getElementById('profName').value = currentUser.name;
+        document.getElementById('profEmail').value = currentUser.email;
+        const refUrl = `${window.location.origin}${window.location.pathname}?ref=${currentUser.referralCode}`;
+        document.getElementById('refLinkInput').value = refUrl;
+
+        // Referral stats
+        const referredList = Object.values(globalUsers).filter(u => u.referredBy === currentUser.referralCode);
+        document.getElementById('refCount').textContent = referredList.length;
+        document.getElementById('refEarnings').textContent = `$${parseFloat(currentUser.refBonus || 0).toFixed(2)}`;
+
+        // Dashboard stats
+        document.getElementById('dashUserName').textContent = currentUser.name;
+        document.getElementById('dashBalance').textContent = `$${parseFloat(currentUser.balance || 0).toFixed(2)}`;
+        document.getElementById('dashProfit').textContent = `$${parseFloat(currentUser.profit || 0).toFixed(2)}`;
+        document.getElementById('dashRefBonus').textContent = `$${parseFloat(currentUser.refBonus || 0).toFixed(2)}`;
+        document.getElementById('dashPlan').textContent = currentUser.activePlan || "No Active Plan";
+
+        // Render Transactions
+        renderTransactions();
+        renderInbox();
+      } else {
+        document.getElementById('userInfoHeader').classList.add('hidden');
+        document.getElementById('authBtnNav').classList.remove('hidden');
+        document.getElementById('adminNavBtn').classList.add('hidden');
+      }
+    }
+
+    function renderTransactions() {
+      const txBody = document.getElementById('txHistoryBody');
+      if (!txBody || !currentUser) return;
+      txBody.innerHTML = '';
+
+      const userTxs = Object.values(globalTxs).filter(t => t.email === currentUser.email);
+      if (userTxs.length === 0) {
+        txBody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-gray-500 text-xs">No transactions recorded yet.</td></tr>`;
+      } else {
+        [...userTxs].reverse().forEach(tx => {
+          let badge = tx.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30';
+          const row = document.createElement('tr');
+          row.className = 'hover:bg-gray-900/40 transition';
+          row.innerHTML = `
+            <td class="py-3 px-4 font-mono text-[11px] text-gray-400">${tx.id}</td>
+            <td class="py-3 px-4 font-semibold text-emerald-400">${tx.type}</td>
+            <td class="py-3 px-4 font-bold text-white">$${parseFloat(tx.amount).toFixed(2)}</td>
+            <td class="py-3 px-4 text-gray-300">${tx.method}</td>
+            <td class="py-3 px-4 text-gray-400">${tx.date}</td>
+            <td class="py-3 px-4 text-right"><span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${badge}">${tx.status}</span></td>
+          `;
+          txBody.appendChild(row);
+        });
+      }
+    }
+
+    // --- NAVIGATION ---
+    function switchTab(tabName) {
+      ['dashboard', 'plans', 'referral', 'profile', 'inbox', 'about', 'faq'].forEach(t => {
+        const el = document.getElementById(t + 'Tab');
+        if (el) el.classList.add('hidden');
+      });
+      const target = document.getElementById(tabName + 'Tab');
+      if (target) target.classList.remove('hidden');
+    }
+
+    function toggleMobileMenu() {
+      document.getElementById('mobileDrawer').classList.toggle('hidden');
+    }
+
+    // --- AUTHENTICATION ---
+    function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function switchAuthTab(type) {
+      const loginForm = document.getElementById('loginForm');
+      const signupForm = document.getElementById('signupForm');
+      if (type === 'login') {
+        loginForm.classList.remove('hidden');
+        signupForm.classList.add('hidden');
+      } else {
+        signupForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+      }
+    }
 
     function handleSignup(e) {
       e.preventDefault();
       const name = document.getElementById('signupName').value.trim();
       const email = document.getElementById('signupEmail').value.trim();
       const password = document.getElementById('signupPassword').value.trim();
-      const userKey = email.replace(/[.#$[\]]/g, '_'); // Safe database key
+      const refBy = document.getElementById('signupRefBy').value.trim();
+      const userKey = email.replace(/[.#$[\]]/g, '_');
 
       if (globalUsers[userKey]) {
-        alert('An account with this email already exists.');
+        notify('An account with this email already exists.', 'error');
         return;
       }
 
@@ -219,17 +1092,21 @@
         balance: 0.00,
         profit: 0.00,
         refBonus: 0.00,
-        referralCode: "GRASH" + Math.floor(1000 + Math.random() * 9000)
+        referredBy: refBy || null,
+        referralCode: "GRASH" + Math.floor(1000 + Math.random() * 9000),
+        activePlan: "None"
       };
 
-      // Save to cloud database instantly
+      // Save globally to Firebase Cloud Database
       db.ref('users/' + userKey).set(newUser, (err) => {
         if (!err) {
           currentUser = newUser;
-          localStorage.setItem('grash_curr_user', JSON.stringify(currentUser));
+          localStorage.setItem('grash_current_user', JSON.stringify(currentUser));
           closeModal('authModal');
-          alert('Account created and synced globally!');
+          notify('Account registered successfully worldwide!', 'success');
           renderApp();
+        } else {
+          notify('Registration failed. Check database connection.', 'error');
         }
       });
     }
@@ -243,95 +1120,214 @@
       const user = globalUsers[userKey];
       if (user && user.password === password) {
         currentUser = user;
-        localStorage.setItem('grash_curr_user', JSON.stringify(currentUser));
+        localStorage.setItem('grash_current_user', JSON.stringify(currentUser));
         closeModal('authModal');
-        alert(`Welcome back, ${user.name}!`);
+        notify(`Welcome back, ${user.name}!`, 'success');
         renderApp();
       } else {
-        alert('Invalid login credentials or user not found in cloud database.');
+        notify('Invalid login credentials or user not found.', 'error');
       }
     }
 
     function logoutUser() {
       currentUser = null;
-      localStorage.removeItem('grash_curr_user');
+      localStorage.removeItem('grash_current_user');
       renderApp();
-      alert('Logged out.');
+      notify('Logged out successfully.');
     }
 
-    function renderApp() {
-      if (currentUser) {
-        const userKey = currentUser.email.replace(/[.#$[\]]/g, '_');
-        if (globalUsers[userKey]) currentUser = globalUsers[userKey];
+    // --- DEPOSIT & WITHDRAWAL ---
+    function openDepositModal() {
+      if (!currentUser) { openAuthModal(); return; }
+      updateDepositDetails();
+      document.getElementById('depositModal').classList.remove('hidden');
+    }
 
-        document.getElementById('dashUserName').textContent = currentUser.name;
-        document.getElementById('dashBalance').textContent = `$${parseFloat(currentUser.balance).toFixed(2)}`;
-        document.getElementById('dashProfit').textContent = `$${parseFloat(currentUser.profit).toFixed(2)}`;
-        document.getElementById('dashRefBonus').textContent = `$${parseFloat(currentUser.refBonus || 0).toFixed(2)}`;
+    function updateDepositDetails() {
+      const method = document.getElementById('depositMethod').value;
+      const box = document.getElementById('depositDetailsBox');
+      if (method === 'BTC') box.innerHTML = `<p class="text-xs text-yellow-400">BTC Wallet: bc1quwnaggzrjrku8haz95cqycc3t8d8allkm9vurj</p>`;
+      else if (method === 'USDT') box.innerHTML = `<p class="text-xs text-emerald-400">USDT (TRC20): 0x1f330420F780fe2c72eF77032295faAc71D46B80</p>`;
+      else if (method === 'CASHSEND') box.innerHTML = `<p class="text-xs text-yellow-400">CashSend Recipient Phone: +27 72 152 6863</p>`;
+      else box.innerHTML = `<p class="text-xs text-yellow-400">Airtel Money: +265 982 98 84 92</p>`;
+    }
 
-        document.getElementById('userInfoHeader').classList.remove('hidden');
-        document.getElementById('userHeaderName').textContent = currentUser.name;
-        document.getElementById('authBtnNav').classList.add('hidden');
+    function handleDepositSubmit(e) {
+      e.preventDefault();
+      const txId = "TX-" + Math.floor(100000 + Math.random() * 900000);
+      const txData = {
+        id: txId,
+        email: currentUser.email,
+        name: currentUser.name,
+        type: "Deposit",
+        amount: parseFloat(document.getElementById('depositAmount').value),
+        method: document.getElementById('depositMethod').value,
+        ref: document.getElementById('depositTxid').value.trim(),
+        date: new Date().toLocaleDateString(),
+        status: "Pending"
+      };
+      db.ref('transactions/' + txId).set(txData);
+      closeModal('depositModal');
+      notify('Deposit submitted for admin approval!', 'success');
+    }
 
-        // Show Admin Panel Button if admin email matches
-        if (currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-          document.getElementById('adminNavBtn').classList.remove('hidden');
-        }
+    function openWithdrawModal() {
+      if (!currentUser) { openAuthModal(); return; }
+      document.getElementById('withdrawAvailBalance').textContent = `$${parseFloat(currentUser.balance || 0).toFixed(2)}`;
+      document.getElementById('withdrawModal').classList.remove('hidden');
+    }
 
-        const refUrl = `${window.location.origin}${window.location.pathname}?ref=${currentUser.referralCode}`;
-        document.getElementById('refLinkInput').value = refUrl;
+    function handleWithdrawSubmit(e) {
+      e.preventDefault();
+      const amount = parseFloat(document.getElementById('withdrawAmount').value);
+      if (amount > (currentUser.balance || 0)) { notify('Insufficient balance.', 'error'); return; }
+      const txId = "WD-" + Math.floor(100000 + Math.random() * 900000);
+      db.ref('transactions/' + txId).set({
+        id: txId,
+        email: currentUser.email,
+        name: currentUser.name,
+        type: "Withdrawal",
+        amount: amount,
+        method: document.getElementById('withdrawMethod').value,
+        ref: document.getElementById('withdrawDetails').value.trim(),
+        date: new Date().toLocaleDateString(),
+        status: "Pending"
+      });
+      closeModal('withdrawModal');
+      notify('Withdrawal requested successfully.', 'success');
+    }
+
+    // --- PLANS & REFERRALS ---
+    function openSelectPlanModal(name, roi, min, max) {
+      if (!currentUser) { openAuthModal(); return; }
+      document.getElementById('modalPlanName').textContent = name;
+      document.getElementById('modalPlanMin').value = min;
+      document.getElementById('modalPlanMax').value = max;
+      document.getElementById('investAvailBalance').textContent = `$${parseFloat(currentUser.balance || 0).toFixed(2)}`;
+      document.getElementById('selectPlanModal').classList.remove('hidden');
+    }
+
+    function handleInvestSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('modalPlanName').textContent;
+      const amount = parseFloat(document.getElementById('investAmount').value);
+      const min = parseFloat(document.getElementById('modalPlanMin').value);
+      const max = parseFloat(document.getElementById('modalPlanMax').value);
+      if (amount < min || amount > max) { notify(`Amount must be between $${min} and $${max}`, 'error'); return; }
+      if (amount > currentUser.balance) { notify('Insufficient balance.', 'error'); return; }
+
+      const userKey = currentUser.email.replace(/[.#$[\]]/g, '_');
+      currentUser.balance -= amount;
+      currentUser.activePlan = `${name} ($${amount})`;
+
+      db.ref('users/' + userKey).update(currentUser);
+      closeModal('selectPlanModal');
+      notify(`Successfully invested in ${name}!`, 'success');
+    }
+
+    function copyRefLink() {
+      navigator.clipboard.writeText(document.getElementById('refLinkInput').value);
+      notify('Referral link copied!', 'success');
+    }
+
+    function shareTelegramRef() {
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(document.getElementById('refLinkInput').value)}`, '_blank');
+    }
+
+    // --- ADMIN PANEL ---
+    function openAdminModal() {
+      if (currentUser && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+        document.getElementById('adminAuthModal').classList.remove('hidden');
       } else {
-        document.getElementById('userInfoHeader').classList.add('hidden');
-        document.getElementById('authBtnNav').classList.remove('hidden');
-        document.getElementById('adminNavBtn').classList.add('hidden');
+        notify('Access denied.', 'error');
       }
     }
 
-    function renderAdminTable() {
-      const tbody = document.getElementById('adminUsersTableBody');
-      if (!tbody) return;
-      tbody.innerHTML = '';
-      
-      Object.values(globalUsers).forEach(u => {
-        const tr = document.createElement('tr');
-        tr.className = "border-b border-gray-800";
-        tr.innerHTML = `
-          <td class="p-2 font-bold text-white">${u.name}</td>
-          <td class="p-2 text-gray-400">${u.email}</td>
-          <td class="p-2 text-emerald-400">$${parseFloat(u.balance || 0).toFixed(2)}</td>
+    function handleAdminAuth(e) {
+      e.preventDefault();
+      if (document.getElementById('adminPin').value === DEFAULT_ADMIN_PIN) {
+        closeModal('adminAuthModal');
+        document.getElementById('adminPin').value = '';
+        renderAdminPanel();
+        document.getElementById('adminPanelModal').classList.remove('hidden');
+        notify('Admin panel unlocked.', 'success');
+      } else {
+        notify('Incorrect PIN.', 'error');
+      }
+    }
+
+    function renderAdminPanel() {
+      // 1. Render All Worldwide Users Table
+      const userTbody = document.getElementById('adminUserTable');
+      userTbody.innerHTML = '';
+      Object.entries(globalUsers).forEach(([key, u]) => {
+        userTbody.innerHTML += `
+          <tr class="hover:bg-gray-900">
+            <td class="py-2.5 px-3 font-bold text-white">${u.name}</td>
+            <td class="py-2.5 px-3 text-gray-400">${u.email}</td>
+            <td class="py-2.5 px-3"><input type="number" id="admBal_${key}" value="${u.balance || 0}" class="w-20 bg-gray-950 border border-yellow-500 px-2 py-1 rounded text-yellow-400 font-bold"></td>
+            <td class="py-2.5 px-3"><input type="number" id="admProf_${key}" value="${u.profit || 0}" class="w-20 bg-gray-950 border border-emerald-500 px-2 py-1 rounded text-emerald-400 font-bold"></td>
+            <td class="py-2.5 px-3 text-right"><button onclick="saveAdminUser('${key}')" class="bg-blue-600 text-white px-2 py-1 rounded text-xs">Save</button></td>
+          </tr>
         `;
-        tbody.appendChild(tr);
+      });
+
+      // 2. Render Pending Deposits
+      const depTbody = document.getElementById('adminDepositTable');
+      depTbody.innerHTML = '';
+      const pendingDeps = Object.entries(globalTxs).filter(([k, t]) => t.type === 'Deposit' && t.status === 'Pending');
+      pendingDeps.forEach(([k, t]) => {
+        depTbody.innerHTML += `
+          <tr class="hover:bg-gray-900"><td class="p-2">${t.name}</td><td class="p-2 text-emerald-400">$${t.amount}</td><td class="p-2 font-mono">${t.ref}</td><td class="p-2 text-right"><button onclick="approveTx('${k}', '${t.email}', ${t.amount})" class="bg-emerald-600 text-white px-2 py-1 rounded text-xs">Approve</button></td></tr>
+        `;
+      });
+
+      // 3. Render Pending Withdrawals
+      const wdTbody = document.getElementById('adminWithdrawTable');
+      wdTbody.innerHTML = '';
+      const pendingWds = Object.entries(globalTxs).filter(([k, t]) => t.type === 'Withdrawal' && t.status === 'Pending');
+      pendingWds.forEach(([k, t]) => {
+        wdTbody.innerHTML += `
+          <tr class="hover:bg-gray-900"><td class="p-2">${t.name}</td><td class="p-2 text-yellow-400">$${t.amount}</td><td class="p-2">${t.ref}</td><td class="p-2 text-right"><button onclick="approveWd('${k}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-xs">Approve</button></td></tr>
+        `;
       });
     }
 
-    function openAdminModal() {
-      if (currentUser && currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-        document.getElementById('adminPanelModal').classList.remove('hidden');
-      } else {
-        alert('Access denied.');
-      }
+    function saveAdminUser(key) {
+      const newBal = parseFloat(document.getElementById(`admBal_${key}`).value);
+      const newProf = parseFloat(document.getElementById(`admProf_${key}`).value);
+      db.ref('users/' + key).update({ balance: newBal, profit: newProf }, () => {
+        notify('User balances updated globally!', 'success');
+        renderAdminPanel();
+      });
     }
 
-    function switchTab(tabName) {
-      ['dashboardTab', 'referralTab'].forEach(t => document.getElementById(t).classList.add('hidden'));
-      document.getElementById(tabName + 'Tab').classList.remove('hidden');
+    function approveTx(txKey, email, amount) {
+      const userKey = email.replace(/[.#$[\]]/g, '_');
+      if (globalUsers[userKey]) {
+        const newBal = (globalUsers[userKey].balance || 0) + amount;
+        db.ref('users/' + userKey).update({ balance: newBal });
+      }
+      db.ref(`transactions/${txKey}`).update({ status: 'Completed' }, () => {
+        notify('Deposit approved and credited!', 'success');
+        renderAdminPanel();
+      });
     }
 
-    function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
-    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-    function switchAuthTab(type) {
-      if (type === 'login') {
-        document.getElementById('loginForm').classList.remove('hidden');
-        document.getElementById('signupForm').classList.add('hidden');
-      } else {
-        document.getElementById('signupForm').classList.remove('hidden');
-        document.getElementById('loginForm').classList.add('hidden');
-      }
+    function approveWd(txKey) {
+      db.ref(`transactions/${txKey}`).update({ status: 'Completed' }, () => {
+        notify('Withdrawal approved!', 'success');
+        renderAdminPanel();
+      });
     }
-    function copyRefLink() {
-      navigator.clipboard.writeText(document.getElementById('refLinkInput').value);
-      alert('Copied referral link!');
+
+    function toggleFaq(num) {
+      document.getElementById(`faqAns-${num}`).classList.toggle('hidden');
     }
+
+    window.onload = function() {
+      checkUrlRefCode();
+    };
   </script>
 </body>
 </html>
