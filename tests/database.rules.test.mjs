@@ -44,3 +44,22 @@ test("audit and legacy global data are not client accessible", async () => {
   await assertFails(get(ref(db, "platform_data/users")));
   await assertFails(set(ref(db, "platform_data/users"), []));
 });
+
+test("unauthenticated clients cannot read protected data", async () => {
+  const db = env.unauthenticatedContext().database();
+  await assertFails(get(ref(db, "secure_users/user-a")));
+  await assertFails(get(ref(db, "secure_transactions/tx-a")));
+  await assertFails(get(ref(db, "secure_audit/log-a")));
+});
+
+test("clients cannot create or alter transaction records directly", async () => {
+  const db = env.authenticatedContext("user-a", { email: "a@example.com", email_verified: true }).database();
+  await assertFails(set(ref(db, "secure_transactions/tx-a/status"), "Completed"));
+  await assertFails(set(ref(db, "secure_transactions/forged"), { userId: "user-a", amount: 999999, status: "Completed" }));
+});
+
+test("users cannot list the full protected profile or transaction collections", async () => {
+  const db = env.authenticatedContext("user-a", { email: "a@example.com", email_verified: true }).database();
+  await assertFails(get(ref(db, "secure_users")));
+  await assertFails(get(ref(db, "secure_transactions")));
+});
