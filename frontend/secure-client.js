@@ -144,6 +144,11 @@
         return { ok: true, account };
       },
 
+      async deleteMyAccount() {
+        await requireVerifiedUser();
+        return call("deleteMyAccount");
+      },
+
       async signOut() {
         await auth.signOut();
       },
