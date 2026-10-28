@@ -178,10 +178,12 @@
         run(async () => {
           handlingAuthAction = true;
           try {
+            const referralCode = new URLSearchParams(window.location.search).get("ref") || "";
             await secure.signUp({
               name: $("signupName").value,
               email: $("signupEmail").value,
-              password: $("signupPassword").value
+              password: $("signupPassword").value,
+              referralCode
             });
             $("signupForm").reset();
             showMode("login");
