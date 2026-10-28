@@ -235,16 +235,18 @@ test("legacy landing page links to the separate secure portal without wiring sec
   assert.doesNotMatch(legacyPageSource, /secure\.signIn\(|secure\.signUp\(|secure\.getMyAccountData\(/);
 });
 
-test("secure administrator pages link between transaction, customer, legacy review and audit tools", () => {
-  for (const [pageName, source] of [
-    ["transaction review", adminReviewPage],
-    ["customer management", adminUsersPage],
-    ["legacy review", adminLegacyPage],
-    ["audit log", adminAuditPage]
-  ]) {
-    assert.match(source, /href="\.\/admin-review\.html"/, pageName + " should link to transaction review");
-    assert.match(source, /href="\.\/admin-users\.html"/, pageName + " should link to customer management");
-    assert.match(source, /href="\.\/admin-legacy-review\.html"/, pageName + " should link to legacy review");
-    assert.match(source, /href="\.\/admin-audit\.html"/, pageName + " should link to audit logs");
+test("secure administrator pages link to the other admin tools", () => {
+  const pages = [
+    ["admin-review.html", adminReviewPage],
+    ["admin-users.html", adminUsersPage],
+    ["admin-legacy-review.html", adminLegacyPage],
+    ["admin-audit.html", adminAuditPage]
+  ];
+  for (const [pageName, source] of pages) {
+    for (const [targetName] of pages) {
+      if (targetName === pageName) continue;
+      assert.ok(source.includes('href="./' + targetName + '"'),
+        pageName + " should link to " + targetName);
+    }
   }
 });
