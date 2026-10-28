@@ -101,3 +101,26 @@ test("secure client exposes the protected admin audit log callable", () => {
   assert.match(clientSource, /async listAdminAuditLogs\(\{ limit \} = \{\}\)/);
   assert.match(clientSource, /call\("adminListAuditLogs", \{ limit \}\)/);
 });
+
+test("transaction review uses a tokenized expiring lease and idempotency marker", () => {
+  const start = source.indexOf("exports.reviewTransaction = onCall(async (request) => {");
+  assert.ok(start >= 0);
+  const end = source.indexOf("\n});", start);
+  const body = source.slice(start, end + 4);
+  assert.ok(body.includes("const claimToken = randomUUID()"));
+  assert.ok(body.includes("processingToken: claimToken"));
+  assert.ok(body.includes("processingAt: now"));
+  assert.ok(body.includes("const leaseMs = 5 * 60 * 1000"));
+  assert.ok(body.includes("current.processingToken !== claimToken"));
+  assert.ok(body.includes("profile.processedTransactions[id] === true"));
+  assert.ok(body.includes('status: "Completed"'));
+});
+
+test("withdrawal approval rechecks the current balance inside the profile transaction", () => {
+  const start = source.indexOf("exports.reviewTransaction = onCall(async (request) => {");
+  const end = source.indexOf("\n});", start);
+  const body = source.slice(start, end + 4);
+  assert.ok(body.includes('else if (claimedTx.type === "Withdrawal")'));
+  assert.ok(body.includes("if (balance < amount) return"));
+  assert.ok(body.includes("profile.processedTransactions[id] = true"));
+});
