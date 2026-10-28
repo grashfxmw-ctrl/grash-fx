@@ -41,7 +41,10 @@ function createHarness({ verified = true, legacyStatus = "no_match" } = {}) {
     httpsCallable(name) {
       return async (payload) => {
         calls.push({ type: "callable", name, payload });
-        if (name === "inspectLegacyAccount") {\n          return { data: { status: legacyStatus, message: legacyStatus === "no_match" ? "No matching legacy account." : "Existing account requires review." } };\n        }\n        if (name === "getMyAccountData") {
+        if (name === "inspectLegacyAccount") {
+          return { data: { status: legacyStatus, message: legacyStatus === "no_match" ? "No matching legacy account." : "Existing account requires review." } };
+        }
+        if (name === "getMyAccountData") {
           return { data: { profile: { uid: user.uid, balance: 0 }, transactions: [] } };
         }
         return { data: { ok: true } };
