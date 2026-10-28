@@ -517,10 +517,12 @@ exports.adminGetUserProfile = onCall(async (request) => {
 exports.adminListUsers = onCall(async (request) => {
   const admin = requireAdmin(request);
   const limit = Math.min(100, Math.max(1, Number.parseInt(request.data?.limit, 10) || 50));
-  const snap = await db.ref("secure_users")
-    .orderByChild("createdAt")
-    .limitToLast(limit)
-    .get();
+  const cursorCreatedAt = Number(request.data?.cursorCreatedAt);
+  const cursorUid = String(request.data?.cursorUid || "").trim();
+  let query = db.ref("secure_users").orderByChild("createdAt");
+  const hasCursor = Number.isFinite(cursorCreatedAt) && cursorCreatedAt > 0 && /^[A-Za-z0-9_-]{1,128}$/.test(cursorUid);
+  if (hasCursor) query = query.endAt(cursorCreatedAt, cursorUid);
+  const snap = await query.limitToLast(limit + 1).get();
   const users = [];
   snap.forEach((child) => {
     const p = child.val() || {};
@@ -536,9 +538,13 @@ exports.adminListUsers = onCall(async (request) => {
       createdAt: p.createdAt || null
     });
   });
-  users.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
-  await writeAudit(admin.uid, "admin_user_directory_viewed", null, { count: users.length });
-  return { users };
+  users.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0) || b.uid.localeCompare(a.uid));
+  let page = hasCursor ? users.filter((u) => !(Number(u.createdAt) === cursorCreatedAt && u.uid === cursorUid)) : users;
+  const hasMore = page.length > limit;
+  page = page.slice(0, limit);
+  const next = hasMore && page.length ? { createdAt: Number(page[page.length - 1].createdAt || 0), uid: page[page.length - 1].uid } : null;
+  await writeAudit(admin.uid, "admin_user_directory_viewed", null, { count: page.length, hasMore });
+  return { users: page, hasMore, nextCursor: next };
 });
 
 
