@@ -9,6 +9,8 @@ test("admin customer page uses protected directory and profile methods",()=>{
  assert.match(html,/secure\.listAdminUsers/);
  assert.match(html,/secure\.getAdminUserProfile/);
  assert.match(html,/View profile/);
+ assert.match(html,/secure\.listAdminUsers\(\{limit:100,cursorCreatedAt/);
+ assert.match(html,/loadMore/);
 });
 test("admin customer page provides audited balance editing without legacy storage",()=>{
  assert.match(html,/secure\.adminSetAccountBalances/);
