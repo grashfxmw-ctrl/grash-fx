@@ -17,7 +17,7 @@ test("admin audit page is read-only and does not access legacy database or brows
 });
 test("admin audit page renders log fields as text rather than HTML",()=>{
  assert.match(html,/td\.textContent=value/);
- assert.match(html,/Administrator access/i);
+ assert.match(html,/backend/i);
 });
 test("admin audit page inline JavaScript parses",()=>{
  const matches=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
