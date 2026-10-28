@@ -195,18 +195,50 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    const box=$("adminQueue");box.textContent="Loading administrator queue…";
    try{
      const data=await callApi("/admin/queue");
-     box.innerHTML="";
-     const groups=[["Pending client accounts",data.pending_profiles||[]],["Pending financial requests",data.financial_requests||[]]];
-     for(const [title,items] of groups){
-       const h=document.createElement("h3");h.textContent=title;box.appendChild(h);
-       if(!items.length){const p=document.createElement("p");p.textContent="Nothing waiting for review.";box.appendChild(p);}
-       for(const item of items){
+     box.replaceChildren();
+     const groups=[
+       {title:"Pending client accounts",items:data.pending_profiles||[],type:"profile"},
+       {title:"Pending financial requests",items:data.financial_requests||[],type:"transaction"}
+     ];
+     for(const group of groups){
+       const h=document.createElement("h3");h.textContent=group.title;box.appendChild(h);
+       if(!group.items.length){const p=document.createElement("p");p.textContent="Nothing waiting for review.";box.appendChild(p);continue;}
+       for(const item of group.items){
          const card=document.createElement("div");card.className="tile";card.style.margin="10px 0";
          const p=document.createElement("p");
-         p.textContent=title==="Pending client accounts"
-          ? (item.full_name||"Client")+" · "+(item.email||"")+" · "+item.status
-          : item.kind+" · "+Number(item.amount).toFixed(2)+" · "+item.status+" · "+item.id;
-         card.appendChild(p);box.appendChild(card);
+         if(group.type==="profile"){
+           p.textContent=(item.full_name||"Client")+" · "+(item.email||"")+" · "+item.status;
+         }else{
+           p.textContent=String(item.kind||"Request").toUpperCase()+" · "+Number(item.amount).toFixed(2)+" · "+item.status+" · "+item.id;
+         }
+         card.appendChild(p);
+         const actions=document.createElement("div");actions.style.display="flex";actions.style.gap="8px";actions.style.flexWrap="wrap";actions.style.marginTop="10px";
+         for(const decision of ["approve","reject"]){
+           const button=document.createElement("button");
+           button.type="button";button.textContent=decision==="approve"?"Approve":"Reject";
+           button.className=decision==="approve"?"primary":"";
+           button.onclick=async()=>{
+             const reason=window.prompt("Optional review note (required if your policy requires it):","") ;
+             if(reason===null)return;
+             if(!window.confirm((decision==="approve"?"Approve":"Reject")+" this "+(group.type==="profile"?"account":"financial request")+"?"))return;
+             button.disabled=true;
+             try{
+               if(group.type==="profile"){
+                 await callApi("/admin/profile-review","POST",{user_id:item.id,decision,reason});
+               }else{
+                 const reference=typeof item.reference==="string"?item.reference:"";
+                 await callApi("/admin/review","POST",{transaction_id:item.id,decision,reference,reason});
+               }
+               say((group.type==="profile"?"Account":"Financial request")+" "+decision+"d successfully.");
+               await loadAdminQueue();
+             }catch(err){
+               say(err.message||"Review could not be completed.");
+               button.disabled=false;
+             }
+           };
+           actions.appendChild(button);
+         }
+         card.appendChild(actions);box.appendChild(card);
        }
      }
    }catch(err){box.textContent=err.message||"Could not load administrator queue.";}
