@@ -111,7 +111,7 @@
       async sendPhoneVerification({ phoneNumber, recaptchaVerifier }) {
         await requireVerifiedUser();
         const normalized = String(phoneNumber || "").trim();
-        if (!/^\\+[1-9]\\d{7,14}$/.test(normalized)) {
+        if (!/^\+[1-9]\d{7,14}$/.test(normalized)) {
           throw new Error("Enter your phone number in international format, e.g. +265XXXXXXXXX.");
         }
         if (!recaptchaVerifier) throw new Error("Phone verification security check is not ready. Refresh and try again.");
