@@ -250,3 +250,25 @@ test("secure administrator pages link to the other admin tools", () => {
     }
   }
 });
+
+test("pending withdrawals reserve funds atomically and prevent double-commitment", () => {
+  const requestStart = source.indexOf("exports.requestTransaction = onCall(async (request) => {");
+  const requestEnd = source.indexOf("\n});", requestStart);
+  const requestBody = source.slice(requestStart, requestEnd + 4);
+  assert.match(requestBody, /withdrawalReservations/);
+  assert.match(requestBody, /Object\.values\(reservations\)\.reduce/);
+  assert.match(requestBody, /available < amount/);
+  assert.match(requestBody, /Insufficient available balance after pending withdrawal reservations/);
+
+  const approvalStart = source.indexOf("exports.reviewTransaction = onCall(async (request) => {");
+  const approvalEnd = source.indexOf("\n});", approvalStart);
+  const approvalBody = source.slice(approvalStart, approvalEnd + 4);
+  assert.match(approvalBody, /delete reservations\[id\]/, "approval/rejection must release a withdrawal reservation");
+  assert.match(approvalBody, /profile\.balance = Math\.round\(\(balance - amount\) \* 100\) \/ 100/);
+
+  const investmentStart = source.indexOf("exports.activateInvestmentPlan = onCall(async (request) => {");
+  const investmentEnd = source.indexOf("\n});", investmentStart);
+  const investmentBody = source.slice(investmentStart, investmentEnd + 4);
+  assert.match(investmentBody, /reservedWithdrawals/);
+  assert.match(investmentBody, /availableBalance/);
+});
