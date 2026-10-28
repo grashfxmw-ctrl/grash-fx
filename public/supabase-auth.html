@@ -76,9 +76,11 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    try{
     const {data,error}=await client.auth.signUp({email:$("signupEmail").value.trim(),password:$("signupPassword").value,options:{data:{full_name:$("fullName").value.trim()},emailRedirectTo:"https://grashfxmw-ctrl.github.io/grash-fx/supabase-auth.html"}});
     if(error)throw error;
-    if(data.session){say("Account created. Verify your email, then sign in with your email and password.");}
-    else say("Signup started. Check your email for the verification link. After verification, return here and sign in.");
+    $("signinEmail").value = $("signupEmail").value.trim();
+    if(data.session){say("Account created. Check your email and complete verification before signing in.");}
+    else say("Account registration submitted. Check your email and open the newest verification link. After verification, sign in here using the same email and password.");
     mode(false);
+    $("signinPassword").focus();
    }catch(err){say(err.message||"Could not create account.");}finally{busy(e.currentTarget,false);}
  };
  $("signinForm").onsubmit=async e=>{
