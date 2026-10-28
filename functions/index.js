@@ -72,30 +72,43 @@ async function writeAudit(actorUid, action, transactionId, detail = {}) {
 exports.createMyProfile = onCall(async (request) => {
   const actor = requireUser(request);
   const displayName = String(request.data?.displayName || "").trim().slice(0, 80);
-  if (!displayName) {
-    throw new HttpsError("invalid-argument", "A display name is required.");
+  const referralCode = String(request.data?.referralCode || "").trim().toUpperCase().slice(0, 32);
+  if (!displayName) throw new HttpsError("invalid-argument", "A display name is required.");
+  const profileRef = db.ref("secure_users/" + actor.uid);
+  let profileSnap = await profileRef.get();
+  let created = false;
+  if (!profileSnap.exists()) {
+    let referrerUid = null;
+    if (referralCode) {
+      const referrerSnap = await db.ref("secure_referral_codes/" + referralCode).get();
+      if (referrerSnap.exists() && String(referrerSnap.val()) !== actor.uid) referrerUid = String(referrerSnap.val());
+    }
+    const generatedReferralCode = "GRASH" + actor.uid.replace(/[^a-zA-Z0-9]/g, "").slice(-10).toUpperCase();
+    const now = Date.now();
+    const profile = { uid: actor.uid, email: actor.email, displayName, balance: 0, profit: 0, totalProfitEarned: 0, referralBonus: 0, referralCode: generatedReferralCode, referredByUid: referrerUid, referralRewardProcessed: !referrerUid, role: "user", createdAt: now, updatedAt: now };
+    const result = await profileRef.transaction((current) => current === null ? profile : undefined);
+    created = result.committed;
+    profileSnap = result.snapshot;
+    if (created) await db.ref("secure_referral_codes/" + generatedReferralCode).set(actor.uid);
   }
-
-  const profileRef = db.ref(`secure_users/${actor.uid}`);
-  const result = await profileRef.transaction((current) => {
-    if (current !== null) return;
-    return {
-      uid: actor.uid,
-      email: actor.email,
-      displayName,
-      balance: 0,
-      profit: 0,
-      referralBonus: 0,
-      role: "user",
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    };
-  });
-
-  if (!result.committed && !result.snapshot.exists()) {
-    throw new HttpsError("aborted", "Could not create your profile. Please try again.");
+  if (!profileSnap.exists()) throw new HttpsError("aborted", "Could not create your profile. Please try again.");
+  const profile = profileSnap.val() || {};
+  const referrerUid = String(profile.referredByUid || "");
+  if (referrerUid && profile.referralRewardProcessed !== true && referrerUid !== actor.uid) {
+    const referrerRef = db.ref("secure_users/" + referrerUid);
+    const rewardResult = await referrerRef.transaction((current) => {
+      if (!current) return;
+      const rewarded = current.referralRewardedUids || {};
+      if (rewarded[actor.uid]) return current;
+      return { ...current, balance: Math.round((Number(current.balance || 0) + REFERRAL_REWARD) * 100) / 100, referralBonus: Math.round((Number(current.referralBonus || 0) + REFERRAL_REWARD) * 100) / 100, referralRewardedUids: { ...rewarded, [actor.uid]: true }, updatedAt: Date.now() };
+    });
+    if (rewardResult.snapshot.exists()) {
+      await profileRef.update({ referralRewardProcessed: true, updatedAt: Date.now() });
+      await writeAudit(actor.uid, "referral_reward_credited", null, { referrerUid, referredUid: actor.uid, amount: REFERRAL_REWARD, trigger: "verified_registration" });
+    }
   }
-  return { ok: true, created: result.committed };
+  if (created) await writeAudit(actor.uid, "secure_profile_created", null, { referralApplied: Boolean(referrerUid) });
+  return { ok: true, created, referralCode: profile.referralCode || null };
 });
 
 /**
