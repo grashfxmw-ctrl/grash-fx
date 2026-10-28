@@ -278,4 +278,10 @@ test("pending withdrawals reserve funds atomically and prevent double-commitment
   assert.match(adminBalanceBody, /reservedBalanceConflict/);
   assert.match(adminBalanceBody, /values\.balance < reserved/);
   assert.match(adminBalanceBody, /Balance cannot be set below funds reserved for pending withdrawals/);
+
+  const deletionStart = source.indexOf("exports.deleteMyAccount = onCall(async (request) => {");
+  const deletionEnd = source.indexOf("\n});", deletionStart);
+  const deletionBody = source.slice(deletionStart, deletionEnd + 4);
+  assert.match(deletionBody, /Object\.keys\(profile\.withdrawalReservations \|\| \{\}\)\.length > 0/);
+  assert.match(deletionBody, /Release all reserved withdrawal funds before deleting this account/);
 });
