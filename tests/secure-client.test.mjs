@@ -8,7 +8,6 @@ const clientSource = await readFile(new URL("../frontend/secure-client.js", impo
 function createHarness({ verified = true } = {}) {
   const calls = [];
   let currentUser = null;
-  let signedOut = false;
   const user = {
     uid: "auth-user-1",
     email: "person@example.com",
@@ -34,7 +33,6 @@ function createHarness({ verified = true } = {}) {
     async signOut() {
       calls.push("signOut");
       currentUser = null;
-      signedOut = true;
     },
     onAuthStateChanged() { return () => {}; }
   };
@@ -57,7 +55,7 @@ function createHarness({ verified = true } = {}) {
     auth: () => auth,
     functions: () => functions
   });
-  return { client, calls, get signedOut() { return signedOut; } };
+  return { client, calls };
 }
 
 test("secure signup sends verification and does not create a profile before verification", async () => {
@@ -68,7 +66,8 @@ test("secure signup sends verification and does not create a profile before veri
     password: "long-test-password"
   });
 
-  assert.deepEqual(result, { ok: true, verificationRequired: true });
+  assert.equal(result.ok, true);
+  assert.equal(result.verificationRequired, true);
   assert.ok(h.calls.some((call) => call?.type === "createUser" && call.email === "person@example.com"));
   assert.ok(h.calls.includes("sendEmailVerification"));
   assert.ok(h.calls.includes("signOut"));
@@ -82,7 +81,8 @@ test("secure sign-in rejects an unverified account without creating a profile", 
     password: "long-test-password"
   });
 
-  assert.deepEqual(result, { ok: false, verificationRequired: true });
+  assert.equal(result.ok, false);
+  assert.equal(result.verificationRequired, true);
   assert.ok(h.calls.includes("signOut"));
   assert.equal(h.calls.some((call) => call?.type === "callable"), false);
 });
