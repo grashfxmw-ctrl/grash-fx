@@ -5,7 +5,7 @@ const { getAuth } = require("firebase-admin/auth");
 const { getDatabase } = require("firebase-admin/database");
 const { randomUUID, createHash } = require("node:crypto");
 
-initializeApp();
+initializeApp({ databaseURL: "https://grashfx-default-rtdb.europe-west1.firebasedatabase.app" });
 
 const db = getDatabase();
 const ADMIN_EMAIL = "grashfxmw@gmail.com";
