@@ -128,6 +128,16 @@
         return call("getMyAccountData");
       },
 
+      async activateInvestmentPlan({ planName, amount }) {
+        await requireVerifiedUser();
+        return call("activateInvestmentPlan", { planName, amount });
+      },
+
+      async adminSetAccountBalances({ uid, balance, profit, referralBonus, reason }) {
+        await requireVerifiedUser();
+        return call("adminSetAccountBalances", { uid, balance, profit, referralBonus, reason });
+      },
+
       async requestDeposit({ amount, method }) {
         await requireVerifiedUser();
         return call("requestTransaction", { type: "Deposit", amount, method });
