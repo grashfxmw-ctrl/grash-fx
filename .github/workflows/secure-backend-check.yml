@@ -8,9 +8,13 @@ on:
     branches:
       - production-backend-integration
 
+permissions:
+  contents: read
+
 jobs:
   syntax-and-hosting-layout:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
