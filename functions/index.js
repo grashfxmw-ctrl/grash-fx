@@ -917,7 +917,7 @@ exports.inspectLegacyAccount = onCall(async (request) => {
 exports.adminStageLegacyMigration = onCall(async (request) => {
   const admin = requireAdmin(request);
   const email = String(request.data?.email || "").trim().toLowerCase();
-  if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new HttpsError("invalid-argument", "Enter a valid legacy customer email.");
   }
 
