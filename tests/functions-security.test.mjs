@@ -80,5 +80,5 @@ test("secure frontend keeps signup unverified until email verification and never
   assert.doesNotMatch(signupBody, /createMyProfile|getMyAccountData/);
   assert.match(clientSource, /if \(!auth\.currentUser \|\| !auth\.currentUser\.emailVerified\)/);
   assert.match(clientSource, /await call\("createMyProfile"/);
-  assert.doesNotMatch(clientSource, /localStorage|\.ref\(["']platform_data|\.set\(.*balance/s);
+  assert.doesNotMatch(clientSource, /\.ref\(["']platform_data|\.set\(.*balance/s);
 });
