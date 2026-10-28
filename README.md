@@ -9,6 +9,7 @@ Secure frontend/backend work is currently isolated on the `production-backend-in
 - [Secure authentication page](secure-auth.html)
 - [Secure customer account page](secure-account.html)
 - [Admin transaction review](admin-review.html)
+- [Admin audit log](admin-audit.html)
 - [Admin customer directory](admin-users.html)
 - [Admin legacy account review](admin-legacy-review.html)
 - [Secure cutover and release checklist](SECURE_CUTOVER_CHECKLIST.md)
