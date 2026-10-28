@@ -271,4 +271,11 @@ test("pending withdrawals reserve funds atomically and prevent double-commitment
   const investmentBody = source.slice(investmentStart, investmentEnd + 4);
   assert.match(investmentBody, /reservedWithdrawals/);
   assert.match(investmentBody, /availableBalance/);
+
+  const adminBalanceStart = source.indexOf("exports.adminSetAccountBalances = onCall(async (request) => {");
+  const adminBalanceEnd = source.indexOf("\n});", adminBalanceStart);
+  const adminBalanceBody = source.slice(adminBalanceStart, adminBalanceEnd + 4);
+  assert.match(adminBalanceBody, /reservedBalanceConflict/);
+  assert.match(adminBalanceBody, /values\.balance < reserved/);
+  assert.match(adminBalanceBody, /Balance cannot be set below funds reserved for pending withdrawals/);
 });
