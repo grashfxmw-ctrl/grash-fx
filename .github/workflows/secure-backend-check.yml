@@ -1,6 +1,7 @@
 name: Secure backend checks
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - production-backend-integration
