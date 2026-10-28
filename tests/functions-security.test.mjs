@@ -207,7 +207,7 @@ test("account deletion releases a phone only after auth deletion and blocks unre
   assert.ok(body.indexOf('await deletionRef.set(deletionRecord)') < body.indexOf("await getAuth().deleteUser(actor.uid)"));
   assert.match(source, /async function finalizeAccountDeletion\\(record\\)/);
   assert.match(source, /if \\(String\\(phoneSnap\\.val\\(\\) \\|\\| ""\\) === uid\\)/);
-  assert.match(body, /account_deleted/);
+  assert.match(source, /writeAudit\(uid, "account_deleted"/);
 });
 
 test("account deletion persists recovery state and reconciles interrupted cleanup", () => {
