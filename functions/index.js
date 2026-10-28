@@ -522,7 +522,7 @@ exports.adminListUsers = onCall(async (request) => {
   let query = db.ref("secure_users").orderByChild("createdAt");
   const hasCursor = Number.isFinite(cursorCreatedAt) && cursorCreatedAt > 0 && /^[A-Za-z0-9_-]{1,128}$/.test(cursorUid);
   if (hasCursor) query = query.endAt(cursorCreatedAt, cursorUid);
-  const snap = await query.limitToLast(limit + 1).get();
+  const snap = await query.limitToLast(limit + (hasCursor ? 2 : 1)).get();
   const users = [];
   snap.forEach((child) => {
     const p = child.val() || {};
