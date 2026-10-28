@@ -57,6 +57,21 @@
         </form>
       </div>
 
+      <section id="phonePanel" class="hidden">
+        <h2 class="text-xl font-bold">Verify your mobile number</h2>
+        <p class="mt-2 text-sm leading-6 text-gray-400">Each secure GRASH FX account must have its own verified phone number. A number already linked to another account cannot be reused. Enter the number in international format.</p>
+        <form id="phoneForm" class="mt-5 space-y-4">
+          <label class="block text-sm font-semibold">Mobile phone number
+            <input id="phoneNumber" class="field mt-2 w-full rounded-lg px-3 py-3" type="tel" autocomplete="tel" placeholder="+265XXXXXXXXX" pattern="\\+[1-9][0-9]{7,14}" required>
+          </label>
+          <div id="recaptcha-container"></div>
+          <button id="sendPhoneCode" class="w-full rounded-lg bg-yellow-500 px-4 py-3 font-bold text-gray-950" type="submit">Send SMS verification code</button>
+          <label id="phoneCodeWrap" class="hidden block text-sm font-semibold">Six-digit SMS code
+            <input id="phoneCode" class="field mt-2 w-full rounded-lg px-3 py-3" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6">
+          </label>
+          <button id="confirmPhoneCode" class="hidden w-full rounded-lg border border-gray-600 px-4 py-3 font-bold" type="button">Verify number and open account</button>
+        </form>
+      </section>
       <section id="accountPanel" class="hidden">
         <p class="text-sm font-semibold text-green-300">Signed in and verified</p>
         <h2 id="accountName" class="mt-2 text-2xl font-bold"></h2>
@@ -168,6 +183,12 @@
             notice("This email matches an existing GRASH FX record. Access is paused for manual account reconciliation; no balance or profit was transferred.", "error");
             return;
           }
+          if (result.phoneVerificationRequired) {
+            $("authForms").classList.add("hidden");
+            $("phonePanel").classList.remove("hidden");
+            notice("Before opening your secure account, verify a mobile number that is not already used by another account.", "success");
+            return;
+          }
           if (!result.ok || !result.account) throw new Error("The secure account could not be loaded.");
           showAccount(result.account, firebase.auth().currentUser);
           notice("You are signed in securely.", "success");
@@ -193,6 +214,30 @@
           }
         });
       });
+      let phoneRecaptcha = null;
+      $("phoneForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        run(async () => {
+          if (!phoneRecaptcha) {
+            phoneRecaptcha = new firebase.auth.RecaptchaVerifier("recaptcha-container", { size: "invisible" }, firebase.auth());
+            await phoneRecaptcha.render();
+          }
+          await secure.sendPhoneVerification({ phoneNumber: $("phoneNumber").value, recaptchaVerifier: phoneRecaptcha });
+          $("phoneCodeWrap").classList.remove("hidden");
+          $("confirmPhoneCode").classList.remove("hidden");
+          $("sendPhoneCode").textContent = "Send another code";
+          notice("SMS sent. Enter the six-digit code to verify this phone number.", "success");
+        });
+      });
+      $("confirmPhoneCode").addEventListener("click", () => run(async () => {
+        const result = await secure.completePhoneVerification({
+          code: $("phoneCode").value,
+          displayName: firebase.auth().currentUser && firebase.auth().currentUser.displayName
+        });
+        $("phonePanel").classList.add("hidden");
+        showAccount(result.account, firebase.auth().currentUser);
+        notice("Phone verified and secure account opened.", "success");
+      }));
       $("resetPassword").addEventListener("click", () => run(async () => {
         const email = $("loginEmail").value.trim();
         if (!email) throw new Error("Enter your email address first.");
@@ -218,6 +263,13 @@
             await secure.signOut();
             showSignedOut();
             notice("Verify your email before accessing your account.", "error");
+            return;
+          }
+          if (!firebase.auth().currentUser.phoneNumber) {
+            $("authForms").classList.add("hidden");
+            $("accountPanel").classList.add("hidden");
+            $("phonePanel").classList.remove("hidden");
+            notice("Verify your mobile number to continue to your secure account.", "success");
             return;
           }
           const result = await secure.loadAccount();
