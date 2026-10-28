@@ -5,6 +5,10 @@ import { readFile } from "node:fs/promises";
 const source = await readFile(new URL("../functions/index.js", import.meta.url), "utf8");
 const clientSource = await readFile(new URL("../frontend/secure-client.js", import.meta.url), "utf8");
 const legacyPageSource = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const adminReviewPage = await readFile(new URL("../admin-review.html", import.meta.url), "utf8");
+const adminUsersPage = await readFile(new URL("../admin-users.html", import.meta.url), "utf8");
+const adminLegacyPage = await readFile(new URL("../admin-legacy-review.html", import.meta.url), "utf8");
+const adminAuditPage = await readFile(new URL("../admin-audit.html", import.meta.url), "utf8");
 
 test("backend requires Firebase authentication and verified email", () => {
   assert.match(source, /function requireUser\(request\)/);
@@ -229,4 +233,18 @@ test("legacy landing page links to the separate secure portal without wiring sec
   assert.match(legacyPageSource, /Do not assume legacy balances or account history have transferred/);
   assert.match(legacyPageSource, /Secure backend client is initialized but not yet used by legacy login\/data flows/);
   assert.doesNotMatch(legacyPageSource, /secure\.signIn\(|secure\.signUp\(|secure\.getMyAccountData\(/);
+});
+
+test("secure administrator pages link between transaction, customer, legacy review and audit tools", () => {
+  for (const [pageName, source] of [
+    ["transaction review", adminReviewPage],
+    ["customer management", adminUsersPage],
+    ["legacy review", adminLegacyPage],
+    ["audit log", adminAuditPage]
+  ]) {
+    assert.match(source, /href="\.\/admin-review\.html"/, pageName + " should link to transaction review");
+    assert.match(source, /href="\.\/admin-users\.html"/, pageName + " should link to customer management");
+    assert.match(source, /href="\.\/admin-legacy-review\.html"/, pageName + " should link to legacy review");
+    assert.match(source, /href="\.\/admin-audit\.html"/, pageName + " should link to audit logs");
+  }
 });
