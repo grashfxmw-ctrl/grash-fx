@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080b12">
+<title>GRASH FX — Secure Account Access</title>
+<style>
+:root{color-scheme:dark;--bg:#080b12;--panel:#111827;--line:#273449;--text:#f3f6fb;--muted:#9aa9bd;--accent:#48d6a5;--danger:#ff8585}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#16263a 0, var(--bg) 55%);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text);min-height:100vh;display:grid;place-items:center;padding:24px}
+main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font-size:34px}.brand h1{font-size:28px;letter-spacing:.1em;margin:4px 0}.brand p{color:var(--muted);margin:0}.panel{background:rgba(17,24,39,.96);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:0 20px 70px #0006}h2{font-size:20px;margin:0 0 14px}.tabs{display:flex;gap:8px;margin-bottom:18px}.tabs button{flex:1}.field{margin:12px 0}label{display:block;color:#c7d2e1;font-size:13px;margin-bottom:6px}input{width:100%;padding:12px 13px;border-radius:10px;border:1px solid var(--line);background:#0a111d;color:var(--text);font:inherit}button{border:1px solid var(--line);border-radius:10px;padding:11px 14px;background:#1c2b3d;color:var(--text);font:600 14px system-ui;cursor:pointer}button.primary{background:var(--accent);color:#05261d;border-color:transparent}button:disabled{opacity:.55;cursor:wait}.full{width:100%;margin-top:8px}.muted{color:var(--muted);font-size:13px}.status{white-space:pre-wrap;margin:14px 0 0;padding:11px;border-radius:10px;background:#0a111d;color:#d7e5f4;min-height:40px;font-size:14px}.hidden{display:none!important}.account{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}.balance{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.tile{background:#0a111d;border:1px solid var(--line);padding:12px;border-radius:12px}.tile strong{display:block;font-size:20px}.tile span{font-size:12px;color:var(--muted)}footer{text-align:center;color:var(--muted);font-size:12px;margin-top:14px}
+</style>
+</head>
+<body><main>
+<header class="brand"><div class="cat" aria-hidden="true">🐈‍⬛</div><h1>GRASH FX</h1><p>Secure account access</p></header>
+<section class="panel">
+<h2>Welcome</h2>
+<p class="muted">This is the new secure account portal. Your account can be accessed on different devices using the same sign-in details.</p>
+<div class="tabs"><button id="showSignup" class="primary" type="button">Create account</button><button id="showSignin" type="button">Sign in</button></div>
+<form id="signupForm">
+<div class="field"><label for="fullName">Full name</label><input id="fullName" autocomplete="name" minlength="2" maxlength="100" required></div>
+<div class="field"><label for="signupEmail">Email address</label><input id="signupEmail" type="email" autocomplete="email" required></div>
+<div class="field"><label for="signupPassword">Password (at least 8 characters)</label><input id="signupPassword" type="password" minlength="8" autocomplete="new-password" required></div>
+<button class="primary full" type="submit">Create account</button>
+<p class="muted">After signup, check your email for a verification link. Then sign in and verify your phone by SMS.</p>
+</form>
+<form id="signinForm" class="hidden">
+<div class="field"><label for="signinEmail">Email address</label><input id="signinEmail" type="email" autocomplete="email" required></div>
+<div class="field"><label for="signinPassword">Password</label><input id="signinPassword" type="password" autocomplete="current-password" required></div>
+<button class="primary full" type="submit">Sign in</button>
+<button id="resetPassword" class="full" type="button">Send password reset email</button>
+</form>
+<div id="phoneSection" class="hidden account">
+<h2>Verify your phone</h2>
+<p class="muted">One verified phone number can be reserved to one account. Shared IP addresses alone will not block registration.</p>
+<form id="phoneForm">
+<div class="field"><label for="phone">Phone number in international format</label><input id="phone" type="tel" placeholder="+265..." autocomplete="tel" required></div>
+<button id="sendOtp" class="full" type="submit">Send SMS code</button>
+</form>
+<form id="otpForm" class="hidden">
+<div class="field"><label for="otp">SMS verification code</label><input id="otp" inputmode="numeric" autocomplete="one-time-code" required></div>
+<button class="primary full" type="submit">Verify phone and finish profile</button>
+</form>
+</div>
+<div id="accountSection" class="hidden account">
+<h2>Your account</h2><div id="accountStatus" class="muted"></div>
+<div class="balance"><div class="tile"><span>Main balance</span><strong id="balance">—</strong></div><div class="tile"><span>Profit balance</span><strong id="profit">—</strong></div></div>
+<p id="accountEmail" class="muted"></p><button id="signout" class="full" type="button">Sign out</button>
+</div>
+<div id="message" class="status" role="status" aria-live="polite">Ready.</div>
+</section>
+<footer>Secure setup in progress · Do not deposit funds through this page.</footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+ const SUPABASE_URL = "https://vsearqlfvrhkckyndwtv.supabase.co";
+ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_qm8983rk3-y_7rkSzofHrg_7FYM3unt";
+ const API = SUPABASE_URL + "/functions/v1/account-api";
+ const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+ const $ = id => document.getElementById(id);
+ let pendingPhone = "";
+ const say = msg => $("message").textContent = msg;
+ const busy = (form, on) => { const b=form.querySelector('button[type="submit"]'); if(b){b.disabled=on;b.dataset.old ||= b.textContent;b.textContent=on?"Please wait…":b.dataset.old;} };
+ const callApi = async (path, method="GET", body) => {
+   const {data:{session}} = await client.auth.getSession();
+   if(!session) throw new Error("Please sign in again.");
+   const res = await fetch(API + path, {method, headers:{Authorization:"Bearer "+session.access_token, apikey:SUPABASE_PUBLISHABLE_KEY, "Content-Type":"application/json"}, body:body?JSON.stringify(body):undefined});
+   const data = await res.json().catch(()=>({}));
+   if(!res.ok) throw new Error(data.error || "Request failed.");
+   return data;
+ };
+ function mode(signup){
+   $("signupForm").classList.toggle("hidden",!signup); $("signinForm").classList.toggle("hidden",signup);
+   $("showSignup").classList.toggle("primary",signup); $("showSignin").classList.toggle("primary",!signup);
+ }
+ $("showSignup").onclick=()=>mode(true); $("showSignin").onclick=()=>mode(false);
+ $("signupForm").onsubmit=async e=>{
+   e.preventDefault();busy(e.currentTarget,true);
+   try{
+    const {data,error}=await client.auth.signUp({email:$("signupEmail").value.trim(),password:$("signupPassword").value,options:{data:{full_name:$("fullName").value.trim()}}});
+    if(error)throw error;
+    if(data.session){say("Account created. Verify your email, then sign in and verify your phone by SMS.");}
+    else say("Signup started. Check your email for the verification link. After verification, return here and sign in.");
+    mode(false);
+   }catch(err){say(err.message||"Could not create account.");}finally{busy(e.currentTarget,false);}
+ };
+ $("signinForm").onsubmit=async e=>{
+   e.preventDefault();busy(e.currentTarget,true);
+   try{
+    const {data,error}=await client.auth.signInWithPassword({email:$("signinEmail").value.trim(),password:$("signinPassword").value});
+    if(error)throw error;
+    $("accountEmail").textContent=data.user.email||"";
+    await loadAccount();
+   }catch(err){say(err.message||"Could not sign in.");}finally{busy(e.currentTarget,false);}
+ };
+ async function loadAccount(){
+   $("accountSection").classList.add("hidden");$("phoneSection").classList.add("hidden");
+   try{
+    const data=await callApi("/me");
+    if(data.profile){
+     $("accountSection").classList.remove("hidden");
+     $("accountStatus").textContent="Account status: "+data.profile.status;
+     $("balance").textContent=Number(data.profile.balance).toFixed(2);
+     $("profit").textContent=Number(data.profile.profit_balance).toFixed(2);
+     say(data.profile.status==="pending"?"Profile created. Your account is awaiting admin review.":"Signed in successfully.");
+    }else{
+     $("phoneSection").classList.remove("hidden");
+     say("Sign-in successful. Verify your phone number by SMS to finish your profile.");
+    }
+   }catch(err){say(err.message||"Could not load account.");}
+ }
+ $("phoneForm").onsubmit=async e=>{
+  e.preventDefault();busy(e.currentTarget,true);
+  try{
+   pendingPhone=$("phone").value.trim();
+   const {error}=await client.auth.updateUser({phone:pendingPhone});
+   if(error)throw error;
+   $("otpForm").classList.remove("hidden");
+   say("SMS verification requested. Enter the code sent to your phone.");
+  }catch(err){say(err.message||"Could not send SMS.");}finally{busy(e.currentTarget,false);}
+ };
+ $("otpForm").onsubmit=async e=>{
+  e.preventDefault();busy(e.currentTarget,true);
+  try{
+   const {error}=await client.auth.verifyOtp({phone:pendingPhone,token:$("otp").value.trim(),type:"phone_change"});
+   if(error)throw error;
+   const {data:{user}}=await client.auth.getUser();
+   const fullName=(user?.user_metadata?.full_name||$("fullName").value||"").trim();
+   const result=await callApi("/profile","POST",{full_name:fullName});
+   $("phoneSection").classList.add("hidden");$("accountSection").classList.remove("hidden");
+   $("accountStatus").textContent="Account status: "+result.profile.status;
+   $("balance").textContent=Number(result.profile.balance).toFixed(2);
+   $("profit").textContent=Number(result.profile.profit_balance).toFixed(2);
+   $("accountEmail").textContent=result.profile.email||"";
+   say("Phone verified and profile created. Account status: pending admin review.");
+  }catch(err){say(err.message||"Phone verification did not complete.");}finally{busy(e.currentTarget,false);}
+ };
+ $("resetPassword").onclick=async()=>{
+  const email=$("signinEmail").value.trim();if(!email){say("Enter your email address first.");return;}
+  try{const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.href});if(error)throw error;say("If the address is registered, a password reset email has been sent.");}
+  catch(err){say(err.message||"Could not request password reset.");}
+ };
+ $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("phoneSection").classList.add("hidden");mode(false);say("Signed out.");};
+ client.auth.getSession().then(({data})=>{if(data.session){$("accountEmail").textContent=data.session.user.email||"";loadAccount();}});
+})();
+</script>
+</body></html>
