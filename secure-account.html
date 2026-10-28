@@ -39,10 +39,24 @@
         <p class="mt-4 text-xs leading-5 text-gray-500">Values are from the secure account record only. Existing legacy balances are not automatically imported; contact support if your old account needs reconciliation.</p>
       </section>
       <section class="panel rounded-2xl p-5 sm:p-7">
-        <h2 class="text-xl font-bold">Request a transaction</h2><p class="mt-1 text-sm text-gray-400">This creates a pending request for administrator review. It does not initiate a payment or immediately change your balance.</p>
+        <h2 class="text-xl font-bold">Investment plan</h2>
+        <p class="mt-1 text-sm text-gray-400">Choose one seven-day plan. Profits are calculated at the existing plan rate every 24 hours, held in the profit balance, then transferred to your main balance after day seven.</p>
+        <div class="mt-4 rounded-xl border border-gray-800 p-4">
+          <p class="text-xs text-gray-400">Current plan</p><p id="activePlan" class="mt-1 font-bold">No active plan</p>
+          <p id="activePlanProgress" class="mt-1 text-sm text-gray-400">Select a plan to get started.</p>
+        </div>
+        <form id="investmentForm" class="mt-5 grid gap-4 sm:grid-cols-2">
+          <label class="text-sm font-semibold">Plan<select id="planName" class="field mt-2 w-full rounded-lg px-3 py-3"><option value="Starter Plan">Starter — 10% per 24h ($50–$500)</option><option value="Basic Plan">Basic — 20% per 24h ($501–$2,000)</option><option value="Premium Plan">Premium — 30% per 24h ($2,001–$5,000)</option><option value="VIP Plan">VIP — 40% per 24h ($5,001+)</option></select></label>
+          <label class="text-sm font-semibold">Investment amount (USD)<input id="investmentAmount" class="field mt-2 w-full rounded-lg px-3 py-3" type="number" min="50" max="100000" step="0.01" required></label>
+          <button id="activatePlan" class="rounded-lg bg-yellow-500 px-5 py-3 font-bold text-gray-950 sm:col-span-2" type="submit">Activate investment plan</button>
+        </form>
+        <p class="mt-3 text-xs leading-5 text-gray-500">Plan activation deducts the investment amount from your available balance. The existing legacy logic does not return principal at maturity; only accumulated profits are transferred automatically under these rules.</p>
+      </section>
+      <section class="panel rounded-2xl p-5 sm:p-7">
+        <h2 class="text-xl font-bold">Request a transaction</h2><p class="mt-1 text-sm text-gray-400">Minimum deposit $20; minimum withdrawal $50. No deposit or withdrawal fees. Requests await admin review and do not initiate payment or immediately change your balance.</p>
         <form id="transactionForm" class="mt-5 grid gap-4 sm:grid-cols-2">
           <label class="text-sm font-semibold">Request type<select id="type" class="field mt-2 w-full rounded-lg px-3 py-3"><option value="Deposit">Deposit</option><option value="Withdrawal">Withdrawal</option></select></label>
-          <label class="text-sm font-semibold">Amount (USD)<input id="amount" class="field mt-2 w-full rounded-lg px-3 py-3" type="number" min="0.01" max="100000" step="0.01" required></label>
+          <label class="text-sm font-semibold">Amount (USD)<input id="amount" class="field mt-2 w-full rounded-lg px-3 py-3" type="number" min="20" max="100000" step="0.01" required></label>
           <label class="text-sm font-semibold sm:col-span-2">Payment method / reference<input id="method" class="field mt-2 w-full rounded-lg px-3 py-3" type="text" maxlength="80" placeholder="e.g. bank transfer, mobile money" required></label>
           <button id="submitRequest" class="rounded-lg bg-yellow-500 px-5 py-3 font-bold text-gray-950 sm:col-span-2" type="submit">Submit request</button>
         </form>
@@ -67,7 +81,7 @@
     el.className="mb-5 rounded-xl border p-3 text-sm "+(error?"border-red-700 bg-red-950/40 text-red-200":"border-green-700 bg-green-950/40 text-green-200");
     el.classList.remove("hidden");
   }
-  function setBusy(value) { busy=value; ["signOut","refresh","submitRequest"].forEach(id=>$(id).disabled=value); }
+  function setBusy(value) { busy=value; ["signOut","refresh","submitRequest","activatePlan"].forEach(id=>$(id).disabled=value); }
   function money(value) { return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(value)||0); }
   function date(value) { if(!value)return "—"; const d=new Date(Number(value)); return Number.isNaN(d.getTime())?"—":d.toLocaleString(); }
   function render(data,user) {
@@ -77,6 +91,9 @@
     $("balance").textContent=money(data.profile.balance);
     $("profit").textContent=money(data.profile.profit);
     $("status").textContent=data.profile.isBlocked?"Restricted":"Active";
+    const inv=data.profile.activeInvestment;
+    $("activePlan").textContent=inv&&inv.status==="Active"?(inv.planName+" · "+money(inv.principal)):(inv&&inv.status==="Completed"?(inv.planName+" completed"):"No active plan");
+    $("activePlanProgress").textContent=inv?(String(inv.creditedDays||0)+" of 7 daily profit credits · "+String(inv.dailyRate||0)+"% per 24h · status "+String(inv.status||"—")):"Select a plan to get started.";
     const body=$("transactions"); body.replaceChildren();
     const rows=Array.isArray(data.transactions)?data.transactions:[];
     if(!rows.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=5;td.className="py-5 text-gray-500";td.textContent="No transactions yet.";tr.append(td);body.append(tr);return;}
@@ -90,6 +107,13 @@
     render(data,firebase.auth().currentUser);
   }
   async function run(action) { if(busy)return;setBusy(true);try{await action();}catch(e){notice(e&&e.message?e.message:"Something went wrong. Please try again.",true);}finally{setBusy(false);} }
+  $("investmentForm").addEventListener("submit",event=>{event.preventDefault();run(async()=>{
+    const planName=$("planName").value,amount=Number($("investmentAmount").value);
+    if(!Number.isFinite(amount)||amount<50||amount>100000)throw new Error("Investment amount must be at least $50 and no more than $100,000.");
+    const result=await secure.activateInvestmentPlan({planName,amount});
+    $("investmentForm").reset();await refresh();notice("Investment plan activated: "+result.investment.planName+". Daily profit processing starts after 24 elapsed hours.",false);
+  });});
+  $("type").addEventListener("change",()=>{$("amount").min=$("type").value==="Deposit"?"20":"50";$("amount").placeholder=$("type").value==="Deposit"?"Minimum $20":"Minimum $50";});
   $("transactionForm").addEventListener("submit",event=>{event.preventDefault();run(async()=>{
     const amount=Number($("amount").value),method=$("method").value.trim(),type=$("type").value;
     if(!Number.isFinite(amount)||amount<=0||amount>100000)throw new Error("Enter an amount above zero and no more than 100,000.");
