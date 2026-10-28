@@ -26,5 +26,5 @@ test("secure auth page does not load or write the legacy shared database", () =>
 test("secure auth page includes email verification and reset-password flows", () => {
   assert.match(html, /emailVerified/);
   assert.match(html, /sendPasswordResetEmail/);
-  assert.match(html, /send your email and verify/i);
+  assert.match(html, /verify it before signing in/i);
 });
