@@ -124,3 +124,46 @@ test("withdrawal approval rechecks the current balance inside the profile transa
   assert.ok(body.includes("if (balance < amount) return"));
   assert.ok(body.includes("profile.processedTransactions[id] = true"));
 });
+
+test("business rules enforce transaction minimums and existing investment plan rates", () => {
+  assert.match(source, /const MIN_DEPOSIT = 20/);
+  assert.match(source, /const MIN_INVESTMENT = 50/);
+  assert.match(source, /const MIN_WITHDRAWAL = 50/);
+  assert.match(source, /"Starter Plan": \{ rate: 10, min: 50, max: 500 \}/);
+  assert.match(source, /"Basic Plan": \{ rate: 20, min: 501, max: 2000 \}/);
+  assert.match(source, /"Premium Plan": \{ rate: 30, min: 2001, max: 5000 \}/);
+  assert.match(source, /"VIP Plan": \{ rate: 40, min: 5001, max: 100000 \}/);
+  assert.match(source, /const REFERRAL_REWARD = 5/);
+  assert.match(source, /exports\.processScheduledInvestmentProfits = onSchedule\("every 15 minutes"/);
+});
+
+test("admin balance editing requires server-side admin access, a reason, and an audit record", () => {
+  const start = source.indexOf("exports.adminSetAccountBalances = onCall(async (request) => {");
+  assert.ok(start >= 0, "Missing admin balance editor");
+  const end = source.indexOf("\n});", start);
+  const body = source.slice(start, end + 4);
+  assert.match(body, /requireAdmin\(request\)/);
+  assert.match(body, /Customer UID and adjustment reason are required/);
+  assert.match(body, /admin_balance_adjustment/);
+  assert.match(body, /before, after: values/);
+});
+
+test("investment activation uses server-owned rates and prevents a second active plan", () => {
+  const start = source.indexOf("exports.activateInvestmentPlan = onCall(async (request) => {");
+  assert.ok(start >= 0, "Missing investment activation callable");
+  const end = source.indexOf("\n});", start);
+  const body = source.slice(start, end + 4);
+  assert.match(body, /INVESTMENT_PLANS\[planName\]/);
+  assert.match(body, /current\.activeInvestment && current\.activeInvestment\.status === "Active"/);
+  assert.match(body, /balance - amount/);
+});
+
+test("referral reward is fixed at $5 and idempotently recorded per referred UID", () => {
+  const start = source.indexOf("exports.createMyProfile = onCall(async (request) => {");
+  const end = source.indexOf("\n});", start);
+  const body = source.slice(start, end + 4);
+  assert.match(body, /secure_referral_codes/);
+  assert.match(body, /referralRewardedUids/);
+  assert.match(body, /REFERRAL_REWARD/);
+  assert.match(body, /verified_registration/);
+});
