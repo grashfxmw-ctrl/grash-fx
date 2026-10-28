@@ -133,3 +133,10 @@ test("blocked secure profile is signed out and rejected", async () => {
   );
   assert.equal(h.auth.currentUser, null);
 });
+
+test("secure client exposes verified phone verification methods", () => {
+  assert.match(source, /async sendPhoneVerification/);
+  assert.match(source, /async completePhoneVerification/);
+  assert.match(source, /linkWithCredential/);
+  assert.match(source, /PhoneAuthProvider/);
+});
