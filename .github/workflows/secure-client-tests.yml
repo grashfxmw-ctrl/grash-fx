@@ -26,10 +26,12 @@ on:
       - "frontend/secure-account-page.test.js"
       - "frontend/admin-review-page.test.js"
       - "frontend/admin-users-page.test.js"
+      - "frontend/admin-legacy-review-page.test.js"
       - "secure-auth.html"
       - "secure-account.html"
       - "admin-review.html"
       - "admin-users.html"
+      - "admin-legacy-review.html"
       - ".github/workflows/secure-client-tests.yml"
 
 permissions:
