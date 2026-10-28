@@ -18,6 +18,7 @@
 
     const auth = firebase.auth();
     const functions = firebase.functions();
+    let phoneVerificationId = null;
 
     const call = (name, payload) => functions.httpsCallable(name)(payload || {})
       .then((result) => result.data);
@@ -88,6 +89,9 @@
           };
         }
 
+        if (!credential.user.phoneNumber) {
+          return { ok: false, phoneVerificationRequired: true };
+        }
         const referralCode = typeof sessionStorage !== "undefined"
           ? sessionStorage.getItem("grash_pending_referral_code") || ""
           : "";
@@ -95,6 +99,42 @@
           displayName: credential.user.displayName || "GRASH FX Investor",
           referralCode
         });
+        if (typeof sessionStorage !== "undefined") sessionStorage.removeItem("grash_pending_referral_code");
+        const account = await call("getMyAccountData");
+        if (account.profile.isBlocked) {
+          await auth.signOut();
+          throw new Error("This account is restricted. Contact support.");
+        }
+        return { ok: true, account };
+      },
+
+      async sendPhoneVerification({ phoneNumber, recaptchaVerifier }) {
+        await requireVerifiedUser();
+        const normalized = String(phoneNumber || "").trim();
+        if (!/^\\+[1-9]\\d{7,14}$/.test(normalized)) {
+          throw new Error("Enter your phone number in international format, e.g. +265XXXXXXXXX.");
+        }
+        if (!recaptchaVerifier) throw new Error("Phone verification security check is not ready. Refresh and try again.");
+        const provider = new firebase.auth.PhoneAuthProvider();
+        phoneVerificationId = await provider.verifyPhoneNumber(normalized, recaptchaVerifier);
+        return { ok: true };
+      },
+
+      async completePhoneVerification({ code, displayName }) {
+        const user = await requireVerifiedUser();
+        if (!phoneVerificationId) throw new Error("Request a verification code first.");
+        const normalizedCode = String(code || "").trim();
+        if (!/^\\d{6}$/.test(normalizedCode)) throw new Error("Enter the six-digit SMS code.");
+        const credential = firebase.auth.PhoneAuthProvider.credential(phoneVerificationId, normalizedCode);
+        await user.linkWithCredential(credential);
+        await user.reload();
+        await user.getIdToken(true);
+        if (!auth.currentUser || !auth.currentUser.phoneNumber) throw new Error("Phone verification did not complete.");
+        phoneVerificationId = null;
+        const referralCode = typeof sessionStorage !== "undefined"
+          ? sessionStorage.getItem("grash_pending_referral_code") || ""
+          : "";
+        await call("createMyProfile", { displayName: displayName || user.displayName || "GRASH FX Investor", referralCode });
         if (typeof sessionStorage !== "undefined") sessionStorage.removeItem("grash_pending_referral_code");
         const account = await call("getMyAccountData");
         if (account.profile.isBlocked) {
