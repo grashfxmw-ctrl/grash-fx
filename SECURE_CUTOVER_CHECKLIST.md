@@ -42,6 +42,9 @@ This document defines the gates that must be completed before the secure fronten
 - [ ] Confirm the $20 minimum deposit, $50 minimum withdrawal, $50 minimum investment, and zero-fee policy are reflected in all customer-facing terms before release.
 - [ ] Confirm that the scheduled processor, duplicate prevention, account isolation, and referral-link flow work in Firebase staging.
 - [ ] Confirm admin balance edits are restricted server-side and every edit requires a reason and creates an audit record.
+- [ ] Confirm Firebase Phone Authentication and the required authorized domains are enabled before release.
+- [ ] Confirm every secure customer account must link a verified phone number and the backend reserves each normalized number for one UID only.
+- [ ] Reconcile existing customer accounts before cutover; legacy records do not automatically populate the new verified-phone registry.
 - [ ] Define and publish any plan cancellation, pause, refund, and missed-scheduler policies before enabling plans for customers.
 - [ ] Have legal/compliance review public claims about returns, risks, and the nature of the investment service.
 - [ ] Confirm the system's financial ledger and customer transaction history are sufficient for reconciliation; the scheduled profit processor currently writes audit entries but does not create a separate customer transaction row for each daily credit.
