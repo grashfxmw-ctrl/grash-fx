@@ -71,7 +71,7 @@ test("legacy account inspection is verified-user-only and never migrates untrust
 });
 
 test("secure frontend keeps signup unverified until email verification and never reads legacy data", () => {
-  const signupStart = clientSource.indexOf("async signUp({ name, email, password })");
+  const signupStart = clientSource.indexOf("async signUp({ name, email, password, referralCode })");
   const signinStart = clientSource.indexOf("async signIn({ email, password })");
   assert.ok(signupStart >= 0 && signinStart > signupStart, "Expected secure signup and signin methods");
   const signupBody = clientSource.slice(signupStart, signinStart);
