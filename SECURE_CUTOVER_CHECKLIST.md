@@ -38,25 +38,13 @@ This document defines the gates that must be completed before the secure fronten
 - [ ] Confirm the existing plan investment ranges remain Starter $50–$500, Basic $501–$2,000, Premium $2,001–$5,000, and VIP $5,001–$100,000.
 - [ ] Confirm the $5 referral reward is credited to the inviter after the new account verifies its email and creates its secure profile.
 - [ ] Confirm that seven daily credits accumulate in the profit balance and transfer to the main balance at maturity.
-- [ ] Confirm the investment principal treatment at maturity. The current implementation keeps the principal locked and transfers accumulated profits only; it does not return principal automatically.
-- [ ] Confirm that scheduled processing, duplicate prevention, account isolation, and referral-link flows work in Firebase staging.
-- [ ] Confirm the $20 minimum deposit, $50 minimum withdrawal, $50 minimum investment, and zero-fee policy are reflected in all live customer-facing terms before release.
+- [ ] Confirm the investment principal treatment at maturity. Current code keeps principal locked and transfers accumulated profits only; it does not return principal automatically.
+- [ ] Confirm the $20 minimum deposit, $50 minimum withdrawal, $50 minimum investment, and zero-fee policy are reflected in all customer-facing terms before release.
+- [ ] Confirm that the scheduled processor, duplicate prevention, account isolation, and referral-link flow work in Firebase staging.
 - [ ] Confirm admin balance edits are restricted server-side and every edit requires a reason and creates an audit record.
-
-
-
-These rules require business-owner approval before implementation. Do not infer them from old frontend code.
-
-- [ ] Publish the approved list of plans and currency.
-- [ ] Define whether plan returns are fixed, variable, simple, compound, or not guaranteed.
-- [ ] Define when profit starts/stops, how it is calculated, rounding, time zone, pauses, and missed-run recovery.
-- [ ] Define whether profits are credited to available balance or displayed separately.
-- [ ] Define withdrawal eligibility, fees, limits, processing windows, and pending-withdrawal reservations.
-- [ ] Define referral eligibility, reward amount/formula, caps, and reversal rules for refunds/fraud.
-- [ ] Implement server-side scheduled calculations only after the above rules are approved.
-- [ ] Make scheduled jobs idempotent and auditable; never let the browser calculate authoritative profit or rewards.
-- [ ] Test boundary dates, retries, duplicate events, rounding, cancelled plans, and insufficient funds.
-- [ ] Have legal/compliance review any public claims about investment returns and risk.
+- [ ] Define and publish any plan cancellation, pause, refund, and missed-scheduler policies before enabling plans for customers.
+- [ ] Have legal/compliance review public claims about returns, risks, and the nature of the investment service.
+- [ ] Confirm the system's financial ledger and customer transaction history are sufficient for reconciliation; the scheduled profit processor currently writes audit entries but does not create a separate customer transaction row for each daily credit.
 
 ## 4. Firebase configuration and security
 
