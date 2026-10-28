@@ -2,7 +2,8 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
-const path = require("node:path");\nconst vm = require("node:vm");
+const path = require("node:path");
+const vm = require("node:vm");
 
 const pagePath = path.join(__dirname, "..", "secure-auth.html");
 const html = fs.readFileSync(pagePath, "utf8");
@@ -30,7 +31,7 @@ test("secure auth page includes email verification and reset-password flows", ()
 });
 
 test("secure auth page inline JavaScript parses", () => {
-  const match = html.match(/<script>([\\s\\S]*?)<\\/script>/);
+  const match = html.match(/<script>([\s\S]*?)<\/script>/);
   assert.ok(match, "inline application script exists");
   assert.doesNotThrow(() => new vm.Script(match[1]));
 });
