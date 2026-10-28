@@ -285,3 +285,18 @@ test("pending withdrawals reserve funds atomically and prevent double-commitment
   assert.match(deletionBody, /Object\.keys\(profile\.withdrawalReservations \|\| \{\}\)\.length > 0/);
   assert.match(deletionBody, /Release all reserved withdrawal funds before deleting this account/);
 });
+
+test("withdrawal reservation recovery releases only missing or terminal transactions", () => {
+  const start = source.indexOf("exports.reconcileWithdrawalReservations = onSchedule(");
+  assert.ok(start >= 0, "Missing scheduled withdrawal reservation reconciler");
+  const end = source.indexOf("\n});", start);
+  assert.ok(end > start, "Could not isolate withdrawal reservation reconciler");
+  const body = source.slice(start, end + 4);
+  assert.match(body, /secure_transactions/);
+  assert.match(body, /Completed.*Rejected.*Cancelled/);
+  assert.match(body, /orphaned_reservation/);
+  assert.match(body, /terminal_transaction/);
+  assert.match(body, /15 \* 60 \* 1000/);
+  assert.match(source, /\[id\]: \{ amount, createdAt: Date\.now\(\) \}/);
+  assert.match(source, /typeof value === "object" \? value\.amount : value/);
+});
