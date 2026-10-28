@@ -347,6 +347,90 @@ exports.adminListTransactions = onCall(async (request) => {
  * Admin-only balance editor. Each supplied field is set to an absolute USD
  * amount; a reason and before/after values are recorded in the audit log.
  */
+/**
+ * Activate an existing seven-day plan using available main-account funds.
+ * Rates and amount ranges are fixed on the server, never trusted from UI.
+ */
+exports.activateInvestmentPlan = onCall(async (request) => {
+  const actor = requireUser(request);
+  const planName = String(request.data?.planName || "").trim();
+  const plan = INVESTMENT_PLANS[planName];
+  const amount = validAmount(request.data?.amount);
+  if (!plan) throw new HttpsError("invalid-argument", "Select a valid investment plan.");
+  if (amount < MIN_INVESTMENT || amount < plan.min || amount > plan.max) {
+    throw new HttpsError("failed-precondition", "Investment amount is outside the selected plan range.");
+  }
+  const profileRef = db.ref("secure_users/" + actor.uid);
+  let activation = null;
+  const result = await profileRef.transaction((current) => {
+    if (!current || current.isBlocked === true) return;
+    if (current.activeInvestment && current.activeInvestment.status === "Active") return;
+    const balance = Math.round(Number(current.balance || 0) * 100) / 100;
+    if (balance < amount) return;
+    const now = Date.now();
+    activation = { id: randomUUID(), planName, principal: amount, dailyRate: plan.rate, durationDays: 7, startAt: now, lastProfitAt: now, creditedDays: 0, accumulatedProfit: 0, status: "Active" };
+    return { ...current, balance: Math.round((balance - amount) * 100) / 100, activeInvestment: activation, updatedAt: now };
+  });
+  if (!result.committed) {
+    const latest = result.snapshot.val();
+    if (!latest) throw new HttpsError("failed-precondition", "Secure account profile not found.");
+    if (latest.isBlocked === true) throw new HttpsError("permission-denied", "This account is restricted.");
+    if (latest.activeInvestment && latest.activeInvestment.status === "Active") throw new HttpsError("failed-precondition", "An investment plan is already active.");
+    throw new HttpsError("failed-precondition", "Insufficient available balance.");
+  }
+  await writeAudit(actor.uid, "investment_plan_activated", activation.id, { planName, principal: amount, dailyRate: plan.rate, durationDays: 7 });
+  return { ok: true, investment: activation };
+});
+
+/**
+ * Scheduled processor credits elapsed 24-hour cycles exactly once, up to seven.
+ * On the seventh cycle, accumulated profit is transferred to the main balance.
+ * The invested principal remains locked, matching the current legacy behavior.
+ */
+exports.processScheduledInvestmentProfits = onSchedule("every 15 minutes", async () => {
+  const usersSnap = await db.ref("secure_users").get();
+  const now = Date.now();
+  const tasks = [];
+  usersSnap.forEach((child) => {
+    const uid = child.key;
+    tasks.push((async () => {
+      let cyclesCredited = 0;
+      let creditedTotal = 0;
+      let matured = false;
+      const profileRef = db.ref("secure_users/" + uid);
+      const result = await profileRef.transaction((current) => {
+        cyclesCredited = 0; creditedTotal = 0; matured = false;
+        if (!current || !current.activeInvestment || current.activeInvestment.status !== "Active") return;
+        const inv = { ...current.activeInvestment };
+        let lastProfitAt = Number(inv.lastProfitAt || inv.startAt || now);
+        let creditedDays = Number(inv.creditedDays || 0);
+        let profitBalance = Math.round(Number(current.profit || 0) * 100) / 100;
+        let lifetimeProfit = Math.round(Number(current.totalProfitEarned || 0) * 100) / 100;
+        let balance = Math.round(Number(current.balance || 0) * 100) / 100;
+        while (creditedDays < 7 && now - lastProfitAt >= DAY_MS) {
+          const payout = Math.round(Number(inv.principal) * (Number(inv.dailyRate) / 100) * 100) / 100;
+          profitBalance = Math.round((profitBalance + payout) * 100) / 100;
+          lifetimeProfit = Math.round((lifetimeProfit + payout) * 100) / 100;
+          inv.accumulatedProfit = Math.round((Number(inv.accumulatedProfit || 0) + payout) * 100) / 100;
+          lastProfitAt += DAY_MS; creditedDays += 1; cyclesCredited += 1;
+          creditedTotal = Math.round((creditedTotal + payout) * 100) / 100;
+        }
+        if (!cyclesCredited) return;
+        inv.lastProfitAt = lastProfitAt; inv.creditedDays = creditedDays;
+        if (creditedDays >= 7) {
+          balance = Math.round((balance + profitBalance) * 100) / 100;
+          profitBalance = 0; inv.status = "Completed"; inv.completedAt = now; matured = true;
+        }
+        inv.updatedAt = now;
+        return { ...current, balance, profit: profitBalance, totalProfitEarned: lifetimeProfit, activeInvestment: inv, updatedAt: now };
+      });
+      if (result.committed && cyclesCredited) {
+        await writeAudit("system:investment-scheduler", matured ? "investment_matured" : "investment_profit_credited", result.snapshot.val()?.activeInvestment?.id, { uid, cyclesCredited, creditedTotal, matured });
+      }
+    })().catch((error) => console.error("Investment profit processing failed for user", uid, error)));
+  });
+  await Promise.all(tasks);
+});
 exports.adminSetAccountBalances = onCall(async (request) => {
   const admin = requireAdmin(request);
   const uid = String(request.data?.uid || "").trim();
