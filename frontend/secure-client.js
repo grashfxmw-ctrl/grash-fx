@@ -37,7 +37,7 @@
         return auth.onAuthStateChanged(callback);
       },
 
-      async signUp({ name, email, password }) {
+      async signUp({ name, email, password, referralCode }) {
         const displayName = String(name || "").trim();
         const normalizedEmail = String(email || "").trim().toLowerCase();
         if (!displayName) throw new Error("Enter your name.");
@@ -54,6 +54,11 @@
           await credential.user.updateProfile({ displayName });
         }
         await credential.user.sendEmailVerification();
+        // Retain only a referral code (not identity data) for this browser session.
+        if (typeof sessionStorage !== "undefined") {
+          const code = String(referralCode || "").trim().toUpperCase();
+          if (code) sessionStorage.setItem("grash_pending_referral_code", code.slice(0, 32));
+        }
         // Profile creation is intentionally deferred until email is verified.
         await auth.signOut();
         return { ok: true, verificationRequired: true };
@@ -83,9 +88,14 @@
           };
         }
 
+        const referralCode = typeof sessionStorage !== "undefined"
+          ? sessionStorage.getItem("grash_pending_referral_code") || ""
+          : "";
         await call("createMyProfile", {
-          displayName: credential.user.displayName || "GRASH FX Investor"
+          displayName: credential.user.displayName || "GRASH FX Investor",
+          referralCode
         });
+        if (typeof sessionStorage !== "undefined") sessionStorage.removeItem("grash_pending_referral_code");
         const account = await call("getMyAccountData");
         if (account.profile.isBlocked) {
           await auth.signOut();
