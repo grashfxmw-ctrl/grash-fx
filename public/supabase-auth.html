@@ -21,7 +21,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <div class="field"><label for="signupEmail">Email address</label><input id="signupEmail" type="email" autocomplete="email" required></div>
 <div class="field"><label for="signupPassword">Password (at least 8 characters)</label><input id="signupPassword" type="password" minlength="8" autocomplete="new-password" required></div>
 <button class="primary full" type="submit">Create account</button>
-<p class="muted">After signup, check your email for a verification link. Then sign in and verify your phone by SMS.</p>
+<p class="muted">After signup, check your email for a verification link. Then sign in with your email and password.</p>
 </form>
 <form id="signinForm" class="hidden">
 <div class="field"><label for="signinEmail">Email address</label><input id="signinEmail" type="email" autocomplete="email" required></div>
@@ -29,18 +29,6 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <button class="primary full" type="submit">Sign in</button>
 <button id="resetPassword" class="full" type="button">Send password reset email</button>
 </form>
-<div id="phoneSection" class="hidden account">
-<h2>Verify your phone</h2>
-<p class="muted">One verified phone number can be reserved to one account. Shared IP addresses alone will not block registration.</p>
-<form id="phoneForm">
-<div class="field"><label for="phone">Phone number in international format</label><input id="phone" type="tel" placeholder="+265..." autocomplete="tel" required></div>
-<button id="sendOtp" class="full" type="submit">Send SMS code</button>
-</form>
-<form id="otpForm" class="hidden">
-<div class="field"><label for="otp">SMS verification code</label><input id="otp" inputmode="numeric" autocomplete="one-time-code" required></div>
-<button class="primary full" type="submit">Verify phone and finish profile</button>
-</form>
-</div>
 <div id="accountSection" class="hidden account">
 <h2>Your account</h2><div id="accountStatus" class="muted"></div>
 <div class="balance"><div class="tile"><span>Main balance</span><strong id="balance">—</strong></div><div class="tile"><span>Profit balance</span><strong id="profit">—</strong></div></div>
@@ -64,7 +52,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
  const API = SUPABASE_URL + "/functions/v1/account-api";
  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
  const $ = id => document.getElementById(id);
- let pendingPhone = "";
+
  const say = msg => $("message").textContent = msg;
  const busy = (form, on) => { const b=form.querySelector('button[type="submit"]'); if(b){b.disabled=on;b.dataset.old ||= b.textContent;b.textContent=on?"Please wait…":b.dataset.old;} };
  const callApi = async (path, method="GET", body) => {
@@ -85,7 +73,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    try{
     const {data,error}=await client.auth.signUp({email:$("signupEmail").value.trim(),password:$("signupPassword").value,options:{data:{full_name:$("fullName").value.trim()}}});
     if(error)throw error;
-    if(data.session){say("Account created. Verify your email, then sign in and verify your phone by SMS.");}
+    if(data.session){say("Account created. Verify your email, then sign in with your email and password.");}
     else say("Signup started. Check your email for the verification link. After verification, return here and sign in.");
     mode(false);
    }catch(err){say(err.message||"Could not create account.");}finally{busy(e.currentTarget,false);}
@@ -100,7 +88,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    }catch(err){say(err.message||"Could not sign in.");}finally{busy(e.currentTarget,false);}
  };
  async function loadAccount(){
-   $("accountSection").classList.add("hidden");$("phoneSection").classList.add("hidden");$("financialActions").classList.add("hidden");
+   $("accountSection").classList.add("hidden");$("financialActions").classList.add("hidden");
    try{
     const data=await callApi("/me");
     if(data.profile){
@@ -111,37 +99,21 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
      $("profit").textContent=Number(data.profile.profit_balance).toFixed(2);
      say(data.profile.status==="pending"?"Profile created. Your account is awaiting admin review.":"Signed in successfully.");
     }else{
-     $("phoneSection").classList.remove("hidden");
-     say("Sign-in successful. Verify your phone number by SMS to finish your profile.");
+     const {data:{user}} = await client.auth.getUser();
+     const fullName = (user?.user_metadata?.full_name || "").trim();
+     if (fullName.length < 2) throw new Error("Your account profile needs a full name. Contact support to complete setup.");
+     const created = await callApi("/profile", "POST", {full_name: fullName});
+     const profile = created.profile;
+     $("accountSection").classList.remove("hidden");
+     $("accountStatus").textContent = "Account status: " + profile.status;
+     if(profile.status === "active") $("financialActions").classList.remove("hidden");
+     $("balance").textContent = Number(profile.balance).toFixed(2);
+     $("profit").textContent = Number(profile.profit_balance).toFixed(2);
+     $("accountEmail").textContent = profile.email || user.email || "";
+     say(profile.status === "pending" ? "Profile created. Your account is awaiting admin review." : "Signed in successfully.");
     }
    }catch(err){say(err.message||"Could not load account.");}
  }
- $("phoneForm").onsubmit=async e=>{
-  e.preventDefault();busy(e.currentTarget,true);
-  try{
-   pendingPhone=$("phone").value.trim();
-   const {error}=await client.auth.updateUser({phone:pendingPhone});
-   if(error)throw error;
-   $("otpForm").classList.remove("hidden");
-   say("SMS verification requested. Enter the code sent to your phone.");
-  }catch(err){say(err.message||"Could not send SMS.");}finally{busy(e.currentTarget,false);}
- };
- $("otpForm").onsubmit=async e=>{
-  e.preventDefault();busy(e.currentTarget,true);
-  try{
-   const {error}=await client.auth.verifyOtp({phone:pendingPhone,token:$("otp").value.trim(),type:"phone_change"});
-   if(error)throw error;
-   const {data:{user}}=await client.auth.getUser();
-   const fullName=(user?.user_metadata?.full_name||$("fullName").value||"").trim();
-   const result=await callApi("/profile","POST",{full_name:fullName});
-   $("phoneSection").classList.add("hidden");$("accountSection").classList.remove("hidden");
-   $("accountStatus").textContent="Account status: "+result.profile.status;
-   $("balance").textContent=Number(result.profile.balance).toFixed(2);
-   $("profit").textContent=Number(result.profile.profit_balance).toFixed(2);
-   $("accountEmail").textContent=result.profile.email||"";
-   say("Phone verified and profile created. Account status: pending admin review.");
-  }catch(err){say(err.message||"Phone verification did not complete.");}finally{busy(e.currentTarget,false);}
- };
  $("resetPassword").onclick=async()=>{
   const email=$("signinEmail").value.trim();if(!email){say("Enter your email address first.");return;}
   try{const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.href});if(error)throw error;say("If the address is registered, a password reset email has been sent.");}
