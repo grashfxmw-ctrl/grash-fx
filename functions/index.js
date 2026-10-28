@@ -83,7 +83,7 @@ exports.createMyProfile = onCall(async (request) => {
       const referrerSnap = await db.ref("secure_referral_codes/" + referralCode).get();
       if (referrerSnap.exists() && String(referrerSnap.val()) !== actor.uid) referrerUid = String(referrerSnap.val());
     }
-    const generatedReferralCode = "GRASH" + actor.uid.replace(/[^a-zA-Z0-9]/g, "").slice(-10).toUpperCase();
+    const generatedReferralCode = "G" + actor.uid.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 31);
     const now = Date.now();
     const profile = { uid: actor.uid, email: actor.email, displayName, balance: 0, profit: 0, totalProfitEarned: 0, referralBonus: 0, referralCode: generatedReferralCode, referredByUid: referrerUid, referralRewardProcessed: !referrerUid, role: "user", createdAt: now, updatedAt: now };
     const result = await profileRef.transaction((current) => current === null ? profile : undefined);
