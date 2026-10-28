@@ -406,8 +406,8 @@ exports.activateInvestmentPlan = onCall(async (request) => {
 
 /**
  * Scheduled processor credits elapsed 24-hour cycles exactly once, up to seven.
- * On the seventh cycle, accumulated profit is transferred to the main balance.
- * The invested principal remains locked, matching the current legacy behavior.
+ * On the seventh cycle, accumulated profit and the original principal are
+ * transferred to the main balance exactly once.
  */
 exports.processScheduledInvestmentProfits = onSchedule("every 15 minutes", async () => {
   const usersSnap = await db.ref("secure_users").get();
@@ -440,14 +440,15 @@ exports.processScheduledInvestmentProfits = onSchedule("every 15 minutes", async
         if (!cyclesCredited) return;
         inv.lastProfitAt = lastProfitAt; inv.creditedDays = creditedDays;
         if (creditedDays >= 7) {
-          balance = Math.round((balance + profitBalance) * 100) / 100;
+          balance = Math.round((balance + profitBalance + Number(inv.principal || 0)) * 100) / 100;
+          inv.principalReturned = true; inv.principalReturnedAt = now;
           profitBalance = 0; inv.status = "Completed"; inv.completedAt = now; matured = true;
         }
         inv.updatedAt = now;
         return { ...current, balance, profit: profitBalance, totalProfitEarned: lifetimeProfit, activeInvestment: inv, updatedAt: now };
       });
       if (result.committed && cyclesCredited) {
-        await writeAudit("system:investment-scheduler", matured ? "investment_matured" : "investment_profit_credited", result.snapshot.val()?.activeInvestment?.id, { uid, cyclesCredited, creditedTotal, matured });
+        await writeAudit("system:investment-scheduler", matured ? "investment_matured" : "investment_profit_credited", result.snapshot.val()?.activeInvestment?.id, { uid, cyclesCredited, creditedTotal, principalReturned: matured ? Number(result.snapshot.val()?.activeInvestment?.principal || 0) : 0, matured });
       }
     })().catch((error) => console.error("Investment profit processing failed for user", uid, error)));
   });
