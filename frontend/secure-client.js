@@ -70,6 +70,19 @@
           return { ok: false, verificationRequired: true };
         }
 
+        // Never silently create a zero-balance secure profile for a legacy
+        // customer. A matching legacy record must go through reconciliation.
+        const legacy = await call("inspectLegacyAccount");
+        if (legacy.status !== "no_match") {
+          await auth.signOut();
+          return {
+            ok: false,
+            legacyReviewRequired: true,
+            legacyStatus: legacy.status,
+            message: legacy.message
+          };
+        }
+
         await call("createMyProfile", {
           displayName: credential.user.displayName || "GRASH FX Investor"
         });
@@ -78,7 +91,7 @@
           await auth.signOut();
           throw new Error("This account is restricted. Contact support.");
         }
-        return account;
+        return { ok: true, account };
       },
 
       async signOut() {
