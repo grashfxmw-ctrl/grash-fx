@@ -1,0 +1,33 @@
+name: Secure client regression tests
+
+on:
+  pull_request:
+    paths:
+      - "frontend/secure-client.js"
+      - "frontend/secure-client.test.js"
+      - ".github/workflows/secure-client-tests.yml"
+  push:
+    branches:
+      - production-backend-integration
+    paths:
+      - "frontend/secure-client.js"
+      - "frontend/secure-client.test.js"
+      - ".github/workflows/secure-client-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  secure-client-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run secure client regression tests
+        run: node --test frontend/secure-client.test.js
+      - name: Check backend JavaScript syntax
+        run: node --check functions/index.js
