@@ -92,7 +92,8 @@
       firebase.initializeApp(firebaseConfig);
       const secure = window.grashSecureClient = window.createGrashSecureClient(firebase);
       const $ = (id) => document.getElementById(id);
-      let busy = false;\n      let handlingAuthAction = false;
+      let busy = false;
+      let handlingAuthAction = false;
 
       function notice(message, kind) {
         const box = $("notice");
@@ -202,7 +203,8 @@
         notice("You have signed out.", "success");
       }));
 
-      secure.onAuthStateChanged(async (user) => {\n        if (handlingAuthAction) return;
+      secure.onAuthStateChanged(async (user) => {
+        if (handlingAuthAction) return;
         if (!user) {
           showSignedOut();
           return;
