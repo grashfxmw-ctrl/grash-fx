@@ -32,7 +32,18 @@ This document defines the gates that must be completed before the secure fronten
 - [ ] Test unauthorized access, duplicate review, malformed amounts, blocked users, and insufficient funds.
 - [ ] Never treat a browser-only admin PIN or localStorage value as authorization.
 
-## 3. Investment plans, profits, withdrawals, and referrals
+## 3. Investment and referral rules (implemented on development branch)
+
+- [ ] Confirm the existing Starter (10%), Basic (20%), Premium (30%), and VIP (40%) percentages are intentionally daily returns per 24-hour cycle.
+- [ ] Confirm the existing plan investment ranges remain Starter $50–$500, Basic $501–$2,000, Premium $2,001–$5,000, and VIP $5,001–$100,000.
+- [ ] Confirm the $5 referral reward is credited to the inviter after the new account verifies its email and creates its secure profile.
+- [ ] Confirm that seven daily credits accumulate in the profit balance and transfer to the main balance at maturity.
+- [ ] Confirm the investment principal treatment at maturity. The current implementation keeps the principal locked and transfers accumulated profits only; it does not return principal automatically.
+- [ ] Confirm that scheduled processing, duplicate prevention, account isolation, and referral-link flows work in Firebase staging.
+- [ ] Confirm the $20 minimum deposit, $50 minimum withdrawal, $50 minimum investment, and zero-fee policy are reflected in all live customer-facing terms before release.
+- [ ] Confirm admin balance edits are restricted server-side and every edit requires a reason and creates an audit record.
+
+
 
 These rules require business-owner approval before implementation. Do not infer them from old frontend code.
 
