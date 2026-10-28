@@ -1405,7 +1405,8 @@
 
     // --- 6. AUTHENTICATION LOGIC ---
     function openAuthModal() {
-      document.getElementById('authModal').classList.remove('hidden');
+      // Use the canonical Supabase account system; never authenticate through legacy local/Firebase user records.
+      window.location.href = './supabase-auth.html?mode=signin';
     }
 
     function closeModal(modalId) {
