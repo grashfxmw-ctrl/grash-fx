@@ -1354,53 +1354,12 @@
       drawer.classList.toggle('hidden');
     }
 
-    // --- 5. AUTOMATED 24-HOUR PROFIT ENGINE (STANDARDIZED 7 DAYS) ---
+    // --- 5. PROFIT ENGINE SAFETY GUARD ---
+    // Profit percentages remain defined by the existing plan configuration (10%, 20%, 30%, 40%).
+    // Do not credit balances in browser code: client-side values can be changed by visitors.
+    // Profit accrual must be implemented and verified in the trusted server-side ledger.
     function checkAutomatedProfits() {
-      let updated = false;
-      const now = Date.now();
-      const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-
-      users.forEach(u => {
-        if (u.activePlan && u.activePlan !== "None" && u.planStartTime && u.planRate > 0 && u.planAmount > 0) {
-          const lastCalc = u.lastProfitTime || u.planStartTime;
-          if (now - lastCalc >= TWENTY_FOUR_HOURS) {
-            const profitEarned = u.planAmount * (u.planRate / 100);
-            u.profit = (u.profit || 0) + profitEarned;
-            u.balance = (u.balance || 0) + profitEarned;
-            u.lastProfitTime = now;
-
-            // Log Profit Transaction
-            transactions.push({
-              id: "ROI-" + Math.floor(100000 + Math.random() * 900000),
-              userId: u.id,
-              userName: u.name,
-              type: "ROI Yield",
-              amount: profitEarned,
-              method: u.activePlan,
-              ref: "24h Yield Engine Credit (7-Day Plan)",
-              date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-              status: "Completed"
-            });
-
-            // Send Inbox Notification
-            messages.push({
-              id: "msg_" + Date.now() + Math.random(),
-              targetUserId: u.id,
-              sender: "Automated Profit Engine",
-              subject: "Daily 24-Hour Profit Credited!",
-              body: `Congratulations! Your active 7-day ${u.activePlan} package has generated a 24-hour profit return of $${profitEarned.toFixed(2)}, which has been added directly to your available balance.`,
-              date: new Date().toLocaleDateString(),
-              readBy: []
-            });
-
-            updated = true;
-          }
-        }
-      });
-
-      if (updated) {
-        saveData();
-      }
+      return false;
     }
 
     // --- 6. AUTHENTICATION LOGIC ---
@@ -2271,16 +2230,9 @@
     // --- 15. APP INITIALIZATION ON WINDOW LOAD ---
     window.onload = function() {
       checkUrlRefCode();
-      checkAutomatedProfits();
       renderApp();
-
-      // Log platform visit activity
-      logAdminActivity("Platform Visit", "A visitor opened the GRASH FX platform.");
-
-      // Set up periodic check for 24-hour yield engine every 1 minute
-      setInterval(() => {
-        checkAutomatedProfits();
-      }, 60000);
+      // Public browsing must not write visitor activity or financial changes to legacy shared data.
+      // Authenticated activity and all ledger updates belong in the secure backend.
     };
   </script>
 </body>
