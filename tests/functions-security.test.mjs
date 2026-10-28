@@ -208,6 +208,20 @@ test("account deletion releases a phone only after auth deletion and blocks unre
   assert.match(body, /account_deleted/);
 });
 
+test("account deletion persists recovery state and reconciles interrupted cleanup", () => {
+  const start = source.indexOf("exports.deleteMyAccount = onCall(async (request) => {");
+  const end = source.indexOf("\\n});", start);
+  const body = source.slice(start, end + 4);
+  assert.ok(body.indexOf("await deletionRef.set(deletionRecord)") < body.indexOf("await getAuth().deleteUser(actor.uid)"));
+  assert.match(body, /await deletionRef\\.update\\(\\{ status: "auth_deleted"/);
+  assert.match(source, /async function finalizeAccountDeletion\\(record\\)/);
+  assert.match(source, /exports\\.reconcileAccountDeletions = onSchedule\\("every 15 minutes"/);
+  assert.match(source, /error\\.code === "auth\\/user-not-found"/);
+  assert.match(source, /Date\\.now\\(\\) - requestedAt > 30 \\* 60 \\* 1000/);
+  assert.match(source, /if \\(String\\(phoneSnap\\.val\\(\\) \\|\\| ""\\) === uid\\)/);
+  assert.match(source, /if \\(String\\(referralSnap\\.val\\(\\) \\|\\| ""\\) === uid\\)/);
+});
+
 test("new account registrations record hashed IP reuse as a review signal, not an automatic block", () => {
   assert.match(source, /request\.rawRequest\?\.ip/);
   assert.match(source, /secure_ip_signals/);
