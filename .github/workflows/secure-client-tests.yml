@@ -5,6 +5,10 @@ on:
     paths:
       - "frontend/secure-client.js"
       - "frontend/secure-client.test.js"
+      - "frontend/secure-auth-page.test.js"
+      - "secure-auth.html"
+      - "frontend/secure-auth-page.test.js"
+      - "secure-auth.html"
       - ".github/workflows/secure-client-tests.yml"
   push:
     branches:
@@ -28,6 +32,6 @@ jobs:
         with:
           node-version: "20"
       - name: Run secure client regression tests
-        run: node --test frontend/secure-client.test.js
+        run: node --test frontend/secure-client.test.js frontend/secure-auth-page.test.js
       - name: Check backend JavaScript syntax
         run: node --check functions/index.js
