@@ -69,6 +69,8 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    $("showSignup").classList.toggle("primary",signup); $("showSignin").classList.toggle("primary",!signup);
  }
  $("showSignup").onclick=()=>mode(true); $("showSignin").onclick=()=>mode(false);
+ // Homepage Login / Sign Up links may select the appropriate initial tab.
+ mode(new URLSearchParams(window.location.search).get("mode") !== "signin");
  $("signupForm").onsubmit=async e=>{
    e.preventDefault();busy(e.currentTarget,true);
    try{
