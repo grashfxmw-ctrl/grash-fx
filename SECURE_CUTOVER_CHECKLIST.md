@@ -38,7 +38,7 @@ This document defines the gates that must be completed before the secure fronten
 - [ ] Confirm the existing plan investment ranges remain Starter $50–$500, Basic $501–$2,000, Premium $2,001–$5,000, and VIP $5,001–$100,000.
 - [ ] Confirm the $5 referral reward is credited to the inviter after the new account verifies its email and creates its secure profile.
 - [ ] Confirm that seven daily credits accumulate in the profit balance and transfer to the main balance at maturity.
-- [ ] Confirm the investment principal treatment at maturity. Current code keeps principal locked and transfers accumulated profits only; it does not return principal automatically.
+- [x] At maturity, transfer accumulated profit plus the original investment principal to the main balance in the same profile transaction; mark the plan Completed to prevent a second return.
 - [ ] Confirm the $20 minimum deposit, $50 minimum withdrawal, $50 minimum investment, and zero-fee policy are reflected in all customer-facing terms before release.
 - [ ] Confirm that the scheduled processor, duplicate prevention, account isolation, and referral-link flow work in Firebase staging.
 - [ ] Confirm admin balance edits are restricted server-side and every edit requires a reason and creates an audit record.
