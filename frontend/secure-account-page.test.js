@@ -28,3 +28,21 @@ test("dashboard inline application JavaScript parses",()=>{
   assert.ok(match,"inline application script exists");
   assert.doesNotThrow(()=>new vm.Script(match[1]));
 });
+
+test("dashboard includes server-authoritative investment plans and business minimums",()=>{
+  assert.match(html,/secure\.activateInvestmentPlan/);
+  assert.match(html,/Starter Plan/);
+  assert.match(html,/10% per 24h/);
+  assert.match(html,/20% per 24h/);
+  assert.match(html,/30% per 24h/);
+  assert.match(html,/40% per 24h/);
+  assert.match(html,/minimum deposit \$20/i);
+  assert.match(html,/minimum withdrawal \$50/i);
+  assert.match(html,/No deposit or withdrawal fees/i);
+  assert.match(html,/after day seven/i);
+});
+test("dashboard displays referral link and lifetime profit fields",()=>{
+  assert.match(html,/referralCode/);
+  assert.match(html,/searchParams\.set\("ref",code\)/);
+  assert.match(html,/totalProfitEarned/);
+});
