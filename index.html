@@ -928,6 +928,19 @@
         </div>
       </div>
 
+      <!-- Secure legacy account migration review -->
+      <section class="bg-gray-900/60 border border-cyan-700/50 p-5 rounded-xl">
+        <div class="mb-4">
+          <h3 class="text-sm font-bold text-cyan-300">Secure Customer Migration Review</h3>
+          <p class="text-xs text-gray-400 mt-1">Stage a unique legacy customer record for reconciliation. This does not transfer funds or change the customer's account.</p>
+        </div>
+        <form id="legacyMigrationForm" class="flex flex-col md:flex-row gap-3" onsubmit="stageLegacyMigrationFromAdmin(event)">
+          <input id="legacyMigrationEmail" type="email" required placeholder="Customer's existing account email" class="flex-1 bg-gray-950 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-500">
+          <button type="submit" class="bg-cyan-700 hover:bg-cyan-600 text-white font-bold px-4 py-2.5 rounded-lg text-xs">Stage for Review</button>
+        </form>
+        <div id="legacyMigrationResult" class="hidden mt-4 text-xs text-gray-200 whitespace-pre-wrap break-words bg-gray-950 border border-gray-800 rounded-lg p-3"></div>
+      </section>
+
       <!-- Admin Actions Grid -->
       <div class="space-y-8">
         
@@ -1876,6 +1889,33 @@
         notify('Admin control panel unlocked.', 'success');
       } else {
         notify('Incorrect Admin PIN.', 'error');
+      }
+    }
+
+    async function stageLegacyMigrationFromAdmin(e) {
+      e.preventDefault();
+      const emailInput = document.getElementById('legacyMigrationEmail');
+      const resultBox = document.getElementById('legacyMigrationResult');
+      const email = emailInput.value.trim().toLowerCase();
+      resultBox.classList.remove('hidden');
+      resultBox.textContent = 'Submitting secure migration review request...';
+
+      try {
+        if (!window.grashSecureClient) {
+          throw new Error('Secure account service is not available on this page yet.');
+        }
+        const result = await window.grashSecureClient.stageLegacyMigration(email);
+        resultBox.textContent = [
+          result.message || 'Migration record staged.',
+          'Status: ' + (result.status || 'needs_reconciliation'),
+          'Migration ID: ' + (result.migrationId || 'not returned'),
+          result.alreadyStaged ? 'Existing review record retained; no values overwritten.' : 'No customer balance or profile was changed.'
+        ].join('\\n');
+        notify('Migration review request completed.', 'success');
+      } catch (error) {
+        resultBox.textContent = 'Could not stage this record: ' + (error && error.message ? error.message : 'Unknown error') +
+          '\\nSign in through the secure Firebase account system with the authorised administrator account before using this feature.';
+        notify('Migration review request could not be completed.', 'error');
       }
     }
 
