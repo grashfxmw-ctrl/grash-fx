@@ -146,7 +146,7 @@
       async getAdminUserProfile(uid) {
         await requireVerifiedUser();
         return call("adminGetUserProfile", { uid });
-      }
+      },
 
       async listAdminAuditLogs({ limit } = {}) {
         await requireVerifiedUser();
