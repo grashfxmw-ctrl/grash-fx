@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const source = await readFile(new URL("../functions/index.js", import.meta.url), "utf8");
+const clientSource = await readFile(new URL("../frontend/secure-client.js", import.meta.url), "utf8");
 
 test("backend requires Firebase authentication and verified email", () => {
   assert.match(source, /function requireUser\(request\)/);
@@ -54,7 +55,6 @@ test("admin list endpoints are bounded and return explicit field allowlists", ()
   assert.doesNotMatch(directoryBody, /processedTransactions|authToken|paymentCredentials/);
 });
 
-
 test("legacy account inspection is verified-user-only and never migrates untrusted financial fields", () => {
   const start = source.indexOf("exports.inspectLegacyAccount = onCall(async (request) => {");
   assert.ok(start >= 0, "Missing read-only legacy inspection endpoint");
@@ -68,4 +68,17 @@ test("legacy account inspection is verified-user-only and never migrates untrust
   assert.match(body, /migrationCompleted: false/);
   assert.doesNotMatch(body, /secure_users\/\$\{actor\.uid\}.*\.set|balance:\s*Number|password\s*:/s);
   assert.doesNotMatch(body, /return\s*\{[^}]*balance\s*:/s);
+});
+
+test("secure frontend keeps signup unverified until email verification and never reads legacy data", () => {
+  const signupStart = clientSource.indexOf("async signUp({ name, email, password })");
+  const signinStart = clientSource.indexOf("async signIn({ email, password })");
+  assert.ok(signupStart >= 0 && signinStart > signupStart, "Expected secure signup and signin methods");
+  const signupBody = clientSource.slice(signupStart, signinStart);
+  assert.match(signupBody, /sendEmailVerification\(\)/);
+  assert.match(signupBody, /await auth\.signOut\(\)/);
+  assert.doesNotMatch(signupBody, /createMyProfile|getMyAccountData/);
+  assert.match(clientSource, /if \(!auth\.currentUser \|\| !auth\.currentUser\.emailVerified\)/);
+  assert.match(clientSource, /await call\("createMyProfile"/);
+  assert.doesNotMatch(clientSource, /localStorage|\.ref\(["']platform_data|\.set\(.*balance/s);
 });
