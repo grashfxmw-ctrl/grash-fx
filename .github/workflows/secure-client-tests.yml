@@ -7,8 +7,6 @@ on:
       - "frontend/secure-client.test.js"
       - "frontend/secure-auth-page.test.js"
       - "secure-auth.html"
-      - "frontend/secure-auth-page.test.js"
-      - "secure-auth.html"
       - ".github/workflows/secure-client-tests.yml"
   push:
     branches:
@@ -16,6 +14,8 @@ on:
     paths:
       - "frontend/secure-client.js"
       - "frontend/secure-client.test.js"
+      - "frontend/secure-auth-page.test.js"
+      - "secure-auth.html"
       - ".github/workflows/secure-client-tests.yml"
 
 permissions:
