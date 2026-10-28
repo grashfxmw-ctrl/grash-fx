@@ -2,7 +2,7 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { initializeApp } = require("firebase-admin/app");
 const { getDatabase } = require("firebase-admin/database");
-const { randomUUID } = require("node:crypto");
+const { randomUUID, createHash } = require("node:crypto");
 
 initializeApp();
 
@@ -73,9 +73,26 @@ exports.createMyProfile = onCall(async (request) => {
   const actor = requireUser(request);
   const displayName = String(request.data?.displayName || "").trim().slice(0, 80);
   const referralCode = String(request.data?.referralCode || "").trim().toUpperCase().slice(0, 32);
+  const phoneNumber = String(request.auth.token.phone_number || "").trim();
   if (!displayName) throw new HttpsError("invalid-argument", "A display name is required.");
+  if (!/^\\+[1-9]\\d{7,14}$/.test(phoneNumber)) {
+    throw new HttpsError("failed-precondition", "Verify a mobile phone number before opening a GRASH FX account.");
+  }
   const profileRef = db.ref("secure_users/" + actor.uid);
   let profileSnap = await profileRef.get();
+  const existingProfile = profileSnap.val() || {};
+  if (existingProfile.phoneNumber && existingProfile.phoneNumber !== phoneNumber) {
+    throw new HttpsError("failed-precondition", "This account is already registered with a different verified phone number. Contact support.");
+  }
+  const phoneKey = createHash("sha256").update(phoneNumber).digest("hex");
+  const phoneRef = db.ref("secure_phone_numbers/" + phoneKey);
+  const phoneClaim = await phoneRef.transaction((current) => {
+    if (current === null || current === actor.uid) return actor.uid;
+    return;
+  });
+  if (!phoneClaim.committed || String(phoneClaim.snapshot.val()) !== actor.uid) {
+    throw new HttpsError("already-exists", "This verified phone number is already linked to another GRASH FX account.");
+  }
   let created = false;
   if (!profileSnap.exists()) {
     let referrerUid = null;
@@ -85,13 +102,16 @@ exports.createMyProfile = onCall(async (request) => {
     }
     const generatedReferralCode = "G" + actor.uid.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 31);
     const now = Date.now();
-    const profile = { uid: actor.uid, email: actor.email, displayName, balance: 0, profit: 0, totalProfitEarned: 0, referralBonus: 0, referralCode: generatedReferralCode, referredByUid: referrerUid, referralRewardProcessed: !referrerUid, role: "user", createdAt: now, updatedAt: now };
+    const profile = { uid: actor.uid, email: actor.email, displayName, phoneNumber, balance: 0, profit: 0, totalProfitEarned: 0, referralBonus: 0, referralCode: generatedReferralCode, referredByUid: referrerUid, referralRewardProcessed: !referrerUid, role: "user", createdAt: now, updatedAt: now };
     const result = await profileRef.transaction((current) => current === null ? profile : undefined);
     created = result.committed;
     profileSnap = result.snapshot;
     if (created) await db.ref("secure_referral_codes/" + generatedReferralCode).set(actor.uid);
   }
   if (!profileSnap.exists()) throw new HttpsError("aborted", "Could not create your profile. Please try again.");
+  if (!profileSnap.val()?.phoneNumber) {
+    await profileRef.update({ phoneNumber, updatedAt: Date.now() });
+  }
   const profile = profileSnap.val() || {};
   const referrerUid = String(profile.referredByUid || "");
   if (referrerUid && profile.referralRewardProcessed !== true && referrerUid !== actor.uid) {
