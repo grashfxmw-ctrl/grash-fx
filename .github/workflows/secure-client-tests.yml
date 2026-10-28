@@ -8,9 +8,11 @@ on:
       - "frontend/secure-auth-page.test.js"
       - "frontend/secure-account-page.test.js"
       - "frontend/admin-review-page.test.js"
+      - "frontend/admin-users-page.test.js"
       - "secure-auth.html"
       - "secure-account.html"
       - "admin-review.html"
+      - "admin-users.html"
       - ".github/workflows/secure-client-tests.yml"
   push:
     branches:
@@ -19,7 +21,13 @@ on:
       - "frontend/secure-client.js"
       - "frontend/secure-client.test.js"
       - "frontend/secure-auth-page.test.js"
+      - "frontend/secure-account-page.test.js"
+      - "frontend/admin-review-page.test.js"
+      - "frontend/admin-users-page.test.js"
       - "secure-auth.html"
+      - "secure-account.html"
+      - "admin-review.html"
+      - "admin-users.html"
       - ".github/workflows/secure-client-tests.yml"
 
 permissions:
@@ -36,6 +44,6 @@ jobs:
         with:
           node-version: "20"
       - name: Run secure client regression tests
-        run: node --test frontend/secure-client.test.js frontend/secure-auth-page.test.js frontend/secure-account-page.test.js frontend/admin-review-page.test.js
+        run: node --test frontend/secure-client.test.js frontend/secure-auth-page.test.js frontend/secure-account-page.test.js frontend/admin-review-page.test.js frontend/admin-users-page.test.js
       - name: Check backend JavaScript syntax
         run: node --check functions/index.js
