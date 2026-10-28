@@ -141,8 +141,8 @@
               <i class="fas fa-sign-out-alt"></i>
             </button>
           </div>
-          <button id="authBtnNav" onclick="openAuthModal()" class="gold-gradient text-gray-950 font-bold px-4 py-2 rounded-lg text-xs hover:opacity-90 transition shadow-md">
-            Login / Sign Up
+          <button id="authBtnNav" onclick="openAuthModal('signup')" class="gold-gradient text-gray-950 font-bold px-4 py-2 rounded-lg text-xs hover:opacity-90 transition shadow-md">
+            Create Account
           </button>
           <!-- Mobile Drawer Hamburger Button -->
           <button onclick="toggleMobileMenu()" class="lg:hidden text-gray-400 hover:text-white p-2">
@@ -1404,9 +1404,11 @@
     }
 
     // --- 6. AUTHENTICATION LOGIC ---
-    function openAuthModal() {
-      // Use the canonical Supabase account system; never authenticate through legacy local/Firebase user records.
-      window.location.href = './supabase-auth.html?mode=signin';
+    function openAuthModal(mode = 'signin') {
+      // Public visitors can browse the platform without an account.
+      // Registration and login use the canonical Supabase account system.
+      const selectedMode = mode === 'signup' ? 'signup' : 'signin';
+      window.location.href = './supabase-auth.html?mode=' + selectedMode;
     }
 
     function closeModal(modalId) {
