@@ -123,9 +123,7 @@
           <button onclick="switchTab('faq')" class="text-gray-300 hover:text-yellow-400 px-3 py-2 rounded-md font-medium text-xs flex items-center gap-1.5">
             <i class="fas fa-question-circle text-yellow-400"></i> FAQ
           </button>
-          <a href="./secure-auth.html" class="border border-yellow-500/60 text-yellow-300 hover:bg-yellow-500/10 px-3 py-2 rounded-md font-bold text-xs flex items-center gap-1.5">
-            <i class="fas fa-shield-halved"></i> Secure Portal
-          </a>
+          
         </div>
 
         <!-- Auth Controls & Mobile Menu Toggle -->
@@ -141,9 +139,7 @@
               <i class="fas fa-sign-out-alt"></i>
             </button>
           </div>
-          <button id="authBtnNav" onclick="openAuthModal('signup')" class="gold-gradient text-gray-950 font-bold px-4 py-2 rounded-lg text-xs hover:opacity-90 transition shadow-md">
-            Create Account
-          </button>
+          
           <!-- Mobile Drawer Hamburger Button -->
           <button onclick="toggleMobileMenu()" class="lg:hidden text-gray-400 hover:text-white p-2">
             <i class="fas fa-bars text-lg"></i>
@@ -175,9 +171,7 @@
       <button onclick="switchTab('faq'); toggleMobileMenu()" class="w-full text-left text-gray-300 hover:text-yellow-400 py-2 text-sm flex items-center gap-2">
         <i class="fas fa-question-circle text-yellow-400"></i> FAQ & Knowledge Base
       </button>
-      <a href="./secure-auth.html" class="block w-full rounded-lg border border-yellow-500/50 px-3 py-3 text-sm font-bold text-yellow-300">
-        <i class="fas fa-shield-halved mr-2"></i> Secure Account Portal
-      </a>
+      
     </div>
   </nav>
 
@@ -1240,7 +1234,6 @@
       // Sync Header
       const userHeaderName = document.getElementById('userHeaderName');
       const userHeaderBalance = document.getElementById('userHeaderBalance');
-      const authBtnNav = document.getElementById('authBtnNav');
       const userInfoHeader = document.getElementById('userInfoHeader');
       const adminNavBtn = document.getElementById('adminNavBtn');
 
@@ -1248,7 +1241,6 @@
         userHeaderName.innerHTML = `<span>${currentUser.name}</span> <i class="fas fa-user-gear text-yellow-500 text-[10px]"></i>`;
         userHeaderBalance.textContent = `$${parseFloat(currentUser.balance).toFixed(2)}`;
         userInfoHeader.classList.remove('hidden');
-        authBtnNav.classList.add('hidden');
 
         // Show Admin access button ONLY when website email is logged in
         if (currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
@@ -1289,7 +1281,6 @@
 
       } else {
         userInfoHeader.classList.add('hidden');
-        authBtnNav.classList.remove('hidden');
         adminNavBtn.classList.add('hidden');
         document.getElementById('warningBanner').classList.add('hidden');
       }
