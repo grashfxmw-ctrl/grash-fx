@@ -1,4 +1,4 @@
-name: Deploy GRASH FX registration preview
+name: Deploy GRASH FX Supabase preview to GitHub Pages
 
 on:
   push:
@@ -8,29 +8,29 @@ on:
 
 permissions:
   contents: read
+  pages: write
   id-token: write
+
+concurrency:
+  group: grash-fx-pages-preview
+  cancel-in-progress: true
 
 jobs:
   deploy-preview:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload registration site
+        uses: actions/upload-pages-artifact@v3
         with:
-          node-version: 20
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: projects/420001022752/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider
-          service_account: github-firebase-deployer@grashfx.iam.gserviceaccount.com
-
-      - name: Install Firebase CLI
-        run: npm install --global firebase-tools
-
-      - name: Deploy isolated Hosting preview only
-        run: firebase hosting:channel:deploy supabase-registration-preview --expires 7d --project grashfx --non-interactive
+          path: ./public
+      - name: Deploy preview
+        id: deployment
+        uses: actions/deploy-pages@v4
