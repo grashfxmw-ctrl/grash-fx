@@ -88,6 +88,7 @@
         </div>
         <p class="mt-4 text-sm leading-6 text-gray-400">This secure access page reads only the signed-in account through callable backend functions. It does not read or overwrite the legacy shared customer database.</p>
         <a href="./secure-account.html" class="mt-5 block w-full rounded-lg bg-yellow-500 px-4 py-3 text-center font-bold text-gray-950">Open account dashboard</a>
+        <button id="deleteAccount" class="mt-4 w-full rounded-lg border border-red-800 px-4 py-3 font-bold text-red-300" type="button">Delete my account</button>
         <button id="signOut" class="mt-6 w-full rounded-lg border border-gray-600 px-4 py-3 font-bold" type="button">Sign out</button>
       </section>
     </section>
@@ -243,6 +244,17 @@
         if (!email) throw new Error("Enter your email address first.");
         await firebase.auth().sendPasswordResetEmail(email);
         notice("If an account exists for that email, a password reset message has been sent.", "success");
+      }));
+      $("deleteAccount").addEventListener("click", () => run(async () => {
+        const confirmed = window.confirm(
+          "Delete this GRASH FX secure account permanently? This is allowed only when all balances/profits are zero, no investment is active, and no transactions are pending. Historical transaction and audit records are retained. The verified phone number can be reused after deletion."
+        );
+        if (!confirmed) return;
+        await secure.deleteMyAccount();
+        await firebase.auth().signOut().catch(() => {});
+        showSignedOut();
+        showMode("login");
+        notice("Account deleted. Historical transaction and audit records are retained.", "success");
       }));
       $("signOut").addEventListener("click", () => run(async () => {
         await secure.signOut();
