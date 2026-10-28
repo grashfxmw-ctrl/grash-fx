@@ -11,12 +11,13 @@ const source = fs.readFileSync(
   "utf8"
 );
 
-function createHarness({ emailVerified = true, legacyStatus = "no_match", blocked = false } = {}) {
+function createHarness({ emailVerified = true, legacyStatus = "no_match", blocked = false, phoneNumber = "+265991234567" } = {}) {
   const calls = [];
   const user = {
     uid: "test-uid",
     email: "customer@example.com",
     emailVerified,
+    phoneNumber,
     displayName: "Test Customer",
     async reload() {},
     async updateProfile() {},
@@ -139,4 +140,11 @@ test("secure client exposes verified phone verification methods", () => {
   assert.match(source, /async completePhoneVerification/);
   assert.match(source, /linkWithCredential/);
   assert.match(source, /PhoneAuthProvider/);
+});
+
+test("sign-in pauses secure account creation until a unique verified phone is linked", async () => {
+  const h = createHarness({ phoneNumber: null });
+  const result = await h.client.signIn({ email: "customer@example.com", password: "password123" });
+  assert.equal(result.phoneVerificationRequired, true);
+  assert.equal(h.calls.some((call) => call.name === "createMyProfile"), false);
 });
