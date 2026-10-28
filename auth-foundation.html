@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>GRASH FX — Authentication Foundation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <style>body{background:#070a11;color:#f3f4f6;font-family:Inter,system-ui,sans-serif}</style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+  <main class="w-full max-w-md rounded-2xl border border-gray-800 bg-gray-900 p-6 shadow-2xl">
+    <p class="text-xs font-bold uppercase tracking-[.2em] text-yellow-400">GRASH FX · Private implementation page</p>
+    <h1 class="mt-2 text-2xl font-black">Account authentication</h1>
+    <p class="mt-2 text-sm text-gray-400">This isolated page validates Firebase Authentication only. It does not read or change customer records, balances, transactions, or administrator privileges.</p>
+
+    <div id="status" role="status" aria-live="polite" class="mt-4 rounded-lg border border-gray-700 bg-gray-950 p-3 text-sm text-gray-300">Connecting to Firebase Authentication…</div>
+
+    <section id="authForms" class="mt-5 space-y-5">
+      <div class="flex gap-2">
+        <button id="showLogin" type="button" class="flex-1 rounded-lg border border-yellow-500 bg-yellow-500/10 p-2 text-sm font-bold text-yellow-300">Sign in</button>
+        <button id="showSignup" type="button" class="flex-1 rounded-lg border border-gray-700 p-2 text-sm font-bold text-gray-300">Create account</button>
+      </div>
+      <form id="loginForm" class="space-y-3">
+        <label class="block text-sm">Email
+          <input id="loginEmail" type="email" autocomplete="email" required class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-950 p-3 text-white">
+        </label>
+        <label class="block text-sm">Password
+          <input id="loginPassword" type="password" autocomplete="current-password" minlength="6" required class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-950 p-3 text-white">
+        </label>
+        <button class="w-full rounded-lg bg-yellow-500 p-3 font-extrabold text-gray-950" type="submit">Sign in</button>
+        <button id="resetPassword" class="w-full p-2 text-sm text-blue-300" type="button">Send password reset email</button>
+      </form>
+      <form id="signupForm" class="hidden space-y-3">
+        <label class="block text-sm">Full name
+          <input id="signupName" type="text" autocomplete="name" maxlength="100" required class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-950 p-3 text-white">
+        </label>
+        <label class="block text-sm">Email
+          <input id="signupEmail" type="email" autocomplete="email" required class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-950 p-3 text-white">
+        </label>
+        <label class="block text-sm">Password (at least 8 characters)
+          <input id="signupPassword" type="password" autocomplete="new-password" minlength="8" required class="mt-1 w-full rounded-lg border border-gray-700 bg-gray-950 p-3 text-white">
+        </label>
+        <button class="w-full rounded-lg bg-yellow-500 p-3 font-extrabold text-gray-950" type="submit">Create account & verify email</button>
+      </form>
+      <div id="verifiedActions" class="hidden space-y-3">
+        <p id="accountInfo" class="break-words text-sm text-gray-300"></p>
+        <button id="resendVerification" type="button" class="w-full rounded-lg border border-yellow-500 p-3 text-sm font-bold text-yellow-300">Resend verification email</button>
+        <button id="refreshVerification" type="button" class="w-full rounded-lg border border-gray-700 p-3 text-sm">I verified my email — refresh status</button>
+        <button id="signOut" type="button" class="w-full rounded-lg border border-red-800 p-3 text-sm text-red-300">Sign out</button>
+      </div>
+    </section>
+
+    <p class="mt-6 border-t border-gray-800 pt-4 text-xs leading-5 text-gray-500">Security boundary: a signed-in user is not automatically an administrator. Admin permissions must be enforced by a trusted backend. This page intentionally has no database access and is not linked from the public navigation.</p>
+  </main>
+
+  <script>
+    // Public Firebase web-app configuration. Never place Admin SDK credentials here.
+    const firebaseConfig = {
+      apiKey: "AIzaSyCS-JePIUTBnGu--6oYpMH7KhRqtFFbjkw",
+      authDomain: "grashfx.firebaseapp.com",
+      databaseURL: "https://grashfx-default-rtdb.firebaseio.com",
+      projectId: "grashfx",
+      storageBucket: "grashfx.firebasestorage.app",
+      messagingSenderId: "420001022752",
+      appId: "1:420001022752:web:db9851dbaeddca247e8d45"
+    };
+
+    const statusBox = document.getElementById('status');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const authForms = document.getElementById('authForms');
+    const verifiedActions = document.getElementById('verifiedActions');
+    let auth;
+    let mode = 'login';
+
+    function showStatus(message, isError = false) {
+      statusBox.textContent = message;
+      statusBox.className = 'mt-4 rounded-lg border p-3 text-sm ' +
+        (isError ? 'border-red-700 bg-red-950 text-red-200' : 'border-gray-700 bg-gray-950 text-gray-300');
+    }
+
+    function friendlyError(error) {
+      const messages = {
+        'auth/email-already-in-use': 'An account already exists for this email. Try signing in.',
+        'auth/invalid-email': 'Enter a valid email address.',
+        'auth/invalid-credential': 'Email or password is incorrect.',
+        'auth/user-disabled': 'This account is disabled. Contact support.',
+        'auth/weak-password': 'Choose a stronger password with at least 8 characters.',
+        'auth/too-many-requests': 'Too many attempts. Wait a while and try again.',
+        'auth/network-request-failed': 'Network error. Check your connection and try again.',
+        'auth/operation-not-allowed': 'Email/password sign-in is not enabled in Firebase Authentication settings.',
+        'auth/unauthorized-domain': 'This domain is not authorized in Firebase Authentication settings.'
+      };
+      return messages[error.code] || 'Authentication could not be completed. Check Firebase Authentication settings and try again.';
+    }
+
+    function setMode(nextMode) {
+      mode = nextMode;
+      loginForm.classList.toggle('hidden', mode !== 'login');
+      signupForm.classList.toggle('hidden', mode !== 'signup');
+      document.getElementById('showLogin').className = mode === 'login'
+        ? 'flex-1 rounded-lg border border-yellow-500 bg-yellow-500/10 p-2 text-sm font-bold text-yellow-300'
+        : 'flex-1 rounded-lg border border-gray-700 p-2 text-sm font-bold text-gray-300';
+      document.getElementById('showSignup').className = mode === 'signup'
+        ? 'flex-1 rounded-lg border border-yellow-500 bg-yellow-500/10 p-2 text-sm font-bold text-yellow-300'
+        : 'flex-1 rounded-lg border border-gray-700 p-2 text-sm font-bold text-gray-300';
+    }
+
+    document.getElementById('showLogin').addEventListener('click', () => setMode('login'));
+    document.getElementById('showSignup').addEventListener('click', () => setMode('signup'));
+
+    async function requireVerifiedEmail(user) {
+      await user.reload();
+      if (!user.emailVerified) {
+        await auth.signOut();
+        showStatus('Your account exists, but your email is not verified. Open the verification email first, then sign in again.', true);
+        return false;
+      }
+      return true;
+    }
+
+    signupForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const name = document.getElementById('signupName').value.trim();
+      const email = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      if (!name || name.length > 100 || password.length < 8) {
+        showStatus('Enter a valid name and a password with at least 8 characters.', true);
+        return;
+      }
+      const submit = signupForm.querySelector('button[type="submit"]');
+      submit.disabled = true;
+      try {
+        const credential = await auth.createUserWithEmailAndPassword(email, password);
+        await credential.user.updateProfile({ displayName: name });
+        await credential.user.sendEmailVerification();
+        await auth.signOut();
+        signupForm.reset();
+        showStatus('Account created. Check your inbox and spam folder for the verification email, then sign in.');
+        setMode('login');
+      } catch (error) {
+        showStatus(friendlyError(error), true);
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const submit = loginForm.querySelector('button[type="submit"]');
+      submit.disabled = true;
+      try {
+        const credential = await auth.signInWithEmailAndPassword(email, password);
+        const user = credential.user;
+        await user.reload();
+        if (!user.emailVerified) {
+          await user.sendEmailVerification();
+          await auth.signOut();
+          showStatus('Email not verified. A new verification email has been sent. Verify it before signing in.', true);
+          return;
+        }
+        showStatus('Email verified. Firebase Authentication sign-in succeeded. Customer dashboard access is not connected in this isolated implementation.');
+      } catch (error) {
+        showStatus(friendlyError(error), true);
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    document.getElementById('resetPassword').addEventListener('click', async () => {
+      const email = document.getElementById('loginEmail').value.trim();
+      if (!email) {
+        showStatus('Enter your email in the sign-in form first.', true);
+        return;
+      }
+      try {
+        await auth.sendPasswordResetEmail(email);
+        showStatus('If the account is eligible, a password reset email has been sent.');
+      } catch (error) {
+        showStatus(friendlyError(error), true);
+      }
+    });
+
+    document.getElementById('resendVerification').addEventListener('click', async () => {
+      if (!auth.currentUser) return;
+      try {
+        await auth.currentUser.sendEmailVerification();
+        showStatus('Verification email sent. Check your inbox and spam folder.');
+      } catch (error) {
+        showStatus(friendlyError(error), true);
+      }
+    });
+
+    document.getElementById('refreshVerification').addEventListener('click', async () => {
+      if (!auth.currentUser) return;
+      try {
+        await auth.currentUser.reload();
+        if (auth.currentUser.emailVerified) {
+          showStatus('Email verified. Authentication is ready for secure backend integration.');
+          document.getElementById('accountInfo').textContent = 'Verified account: ' + (auth.currentUser.email || '');
+        } else {
+          showStatus('Firebase still reports this email as unverified. Open the newest verification email and try again.', true);
+        }
+      } catch (error) {
+        showStatus(friendlyError(error), true);
+      }
+    });
+
+    document.getElementById('signOut').addEventListener('click', async () => {
+      try {
+        await auth.signOut();
+        showStatus('Signed out.');
+      } catch (error) {
+        showStatus(friendlyError(error), true);
+      }
+    });
+
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+      auth.onAuthStateChanged(async (user) => {
+        authForms.classList.toggle('hidden', !!user);
+        verifiedActions.classList.toggle('hidden', !user);
+        if (!user) return;
+        try {
+          await user.reload();
+          document.getElementById('accountInfo').textContent =
+            (user.email || 'Account') + ' · ' + (user.emailVerified ? 'email verified' : 'email not verified');
+          showStatus(user.emailVerified
+            ? 'Authenticated. No customer data or administrator privileges are granted by this page.'
+            : 'Email verification is required before protected features can be enabled.');
+        } catch (error) {
+          showStatus(friendlyError(error), true);
+        }
+      });
+      showStatus('Firebase Authentication initialized. Confirm Email/Password is enabled in Firebase Console.');
+    } catch (error) {
+      showStatus('Firebase Authentication could not initialize. Check the web-app configuration.', true);
+    }
+  </script>
+</body>
+</html>
