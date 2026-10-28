@@ -15,7 +15,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <section class="panel">
 <h2>Welcome</h2>
 <p class="muted">This is the new secure account portal. Your account can be accessed on different devices using the same sign-in details.</p>
-<div class="tabs"><button id="showSignup" class="primary" type="button">Create account</button><button id="showSignin" type="button">Sign in</button></div>
+<div id="authTabs" class="tabs"><button id="showSignup" class="primary" type="button">Create account</button><button id="showSignin" type="button">Sign in</button></div>
 <form id="signupForm">
 <div class="field"><label for="fullName">Full name</label><input id="fullName" autocomplete="name" minlength="2" maxlength="100" required></div>
 <div class="field"><label for="signupEmail">Email address</label><input id="signupEmail" type="email" autocomplete="email" required></div>
@@ -32,7 +32,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 </form>
 <div id="accountSection" class="hidden account">
 <h2>Your account</h2><div id="accountStatus" class="muted"></div>
-<div class="balance"><div class="tile"><span>Main balance</span><strong id="balance">—</strong></div><div class="tile"><span>Profit balance</span><strong id="profit">—</strong></div></div>
+<div id="balanceCards" class="balance"><div class="tile"><span>Main balance</span><strong id="balance">—</strong></div><div class="tile"><span>Profit balance</span><strong id="profit">—</strong></div></div>
 <p id="accountEmail" class="muted"></p>
 <div id="financialActions" class="hidden">
 <h2>Requests</h2><p class="muted">Deposit requests remain pending until an administrator verifies payment. Withdrawal requests reserve your balance until reviewed. Do not send money based only on a submitted request.</p>
@@ -65,8 +65,18 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    return data;
  };
  function mode(signup){
-   $("signupForm").classList.toggle("hidden",!signup); $("signinForm").classList.toggle("hidden",signup);
-   $("showSignup").classList.toggle("primary",signup); $("showSignin").classList.toggle("primary",!signup);
+   $("authTabs").classList.remove("hidden");
+   $("signupForm").classList.toggle("hidden",!signup);
+   $("signinForm").classList.toggle("hidden",signup);
+   $("accountSection").classList.add("hidden");
+   $("showSignup").classList.toggle("primary",signup);
+   $("showSignin").classList.toggle("primary",!signup);
+ }
+ function showAccountView(){
+   $("authTabs").classList.add("hidden");
+   $("signupForm").classList.add("hidden");
+   $("signinForm").classList.add("hidden");
+   $("accountSection").classList.remove("hidden");
  }
  $("showSignup").onclick=()=>mode(true); $("showSignin").onclick=()=>mode(false);
  // Homepage Login / Sign Up links may select the appropriate initial tab.
@@ -93,15 +103,18 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    }catch(err){say(err.message||"Could not sign in.");}finally{busy(e.currentTarget,false);}
  };
  async function loadAccount(){
-   $("accountSection").classList.add("hidden");$("financialActions").classList.add("hidden");
+   $("accountSection").classList.add("hidden");$("financialActions").classList.add("hidden");$("balanceCards").classList.add("hidden");
    try{
     const data=await callApi("/me");
     if(data.profile){
-     $("accountSection").classList.remove("hidden");
+     showAccountView();
      $("accountStatus").textContent="Account status: "+data.profile.status;
-     if(data.profile.status==="active") $("financialActions").classList.remove("hidden");
-     $("balance").textContent=Number(data.profile.balance).toFixed(2);
-     $("profit").textContent=Number(data.profile.profit_balance).toFixed(2);
+     if(data.profile.status==="active") {
+       $("financialActions").classList.remove("hidden");
+       $("balanceCards").classList.remove("hidden");
+       $("balance").textContent=Number(data.profile.balance).toFixed(2);
+       $("profit").textContent=Number(data.profile.profit_balance).toFixed(2);
+     }
      say(data.profile.status==="pending"?"Profile created. Your account is awaiting admin review.":"Signed in successfully.");
     }else{
      const {data:{user}} = await client.auth.getUser();
@@ -109,15 +122,18 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
      if (fullName.length < 2) throw new Error("Your account profile needs a full name. Contact support to complete setup.");
      const created = await callApi("/profile", "POST", {full_name: fullName});
      const profile = created.profile;
-     $("accountSection").classList.remove("hidden");
+     showAccountView();
      $("accountStatus").textContent = "Account status: " + profile.status;
-     if(profile.status === "active") $("financialActions").classList.remove("hidden");
-     $("balance").textContent = Number(profile.balance).toFixed(2);
-     $("profit").textContent = Number(profile.profit_balance).toFixed(2);
+     if(profile.status === "active") {
+       $("financialActions").classList.remove("hidden");
+       $("balanceCards").classList.remove("hidden");
+       $("balance").textContent = Number(profile.balance).toFixed(2);
+       $("profit").textContent = Number(profile.profit_balance).toFixed(2);
+     }
      $("accountEmail").textContent = profile.email || user.email || "";
      say(profile.status === "pending" ? "Profile created. Your account is awaiting admin review." : "Signed in successfully.");
     }
-   }catch(err){say(err.message||"Could not load account.");}
+   }catch(err){mode(false);say(err.message||"Could not load account.");}
  }
  $("resendVerification").onclick=async()=>{
   const email=$("signinEmail").value.trim();
@@ -146,7 +162,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
  }
  $("depositForm").onsubmit=async e=>{e.preventDefault();busy(e.currentTarget,true);try{await submitFinancialRequest("deposit",$("depositAmount").value);}finally{busy(e.currentTarget,false);}};
  $("withdrawalForm").onsubmit=async e=>{e.preventDefault();busy(e.currentTarget,true);try{await submitFinancialRequest("withdrawal",$("withdrawalAmount").value);}finally{busy(e.currentTarget,false);}};
- $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("financialActions").classList.add("hidden");mode(false);say("Signed out.");};
+ $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("financialActions").classList.add("hidden");$("balanceCards").classList.add("hidden");mode(false);say("Signed out.");};
  client.auth.getSession().then(({data})=>{if(data.session){$("accountEmail").textContent=data.session.user.email||"";loadAccount();}});
 })();
 </script>
