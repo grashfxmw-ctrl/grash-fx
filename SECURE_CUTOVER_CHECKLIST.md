@@ -44,6 +44,8 @@ This document defines the gates that must be completed before the secure fronten
 - [ ] Confirm admin balance edits are restricted server-side and every edit requires a reason and creates an audit record.
 - [ ] Confirm Firebase Phone Authentication and the required authorized domains are enabled before release.
 - [ ] Confirm every secure customer account must link a verified phone number and the backend reserves each normalized number for one UID only.
+- [ ] Verify account deletion is blocked while balances/profits, active investments, or pending/processing transactions remain; confirm successful deletion removes the Auth account and releases only that account’s phone reservation while retaining historical transactions/audit records.
+- [ ] Verify hashed IP reuse is recorded as a review signal; do not auto-block solely on IP because shared Wi-Fi, carrier NAT, and VPNs can create false positives.
 - [ ] Reconcile existing customer accounts before cutover; legacy records do not automatically populate the new verified-phone registry.
 - [ ] Define and publish any plan cancellation, pause, refund, and missed-scheduler policies before enabling plans for customers.
 - [ ] Have legal/compliance review public claims about returns, risks, and the nature of the investment service.
