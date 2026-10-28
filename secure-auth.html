@@ -92,7 +92,7 @@
       firebase.initializeApp(firebaseConfig);
       const secure = window.grashSecureClient = window.createGrashSecureClient(firebase);
       const $ = (id) => document.getElementById(id);
-      let busy = false;
+      let busy = false;\n      let handlingLogin = false;
 
       function notice(message, kind) {
         const box = $("notice");
@@ -148,7 +148,7 @@
       $("loginForm").addEventListener("submit", (event) => {
         event.preventDefault();
         run(async () => {
-          const result = await secure.signIn({ email: $("loginEmail").value, password: $("loginPassword").value });
+          handlingLogin = true;\n          let result;\n          try { result = await secure.signIn({ email: $("loginEmail").value, password: $("loginPassword").value }); }\n          finally { handlingLogin = false; }
           if (result.verificationRequired) {
             notice("Please verify your email using the link we sent, then sign in again.", "error");
             return;
