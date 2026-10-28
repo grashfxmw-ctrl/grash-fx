@@ -124,7 +124,7 @@
         const user = await requireVerifiedUser();
         if (!phoneVerificationId) throw new Error("Request a verification code first.");
         const normalizedCode = String(code || "").trim();
-        if (!/^\\d{6}$/.test(normalizedCode)) throw new Error("Enter the six-digit SMS code.");
+        if (!/^\d{6}$/.test(normalizedCode)) throw new Error("Enter the six-digit SMS code.");
         const credential = firebase.auth.PhoneAuthProvider.credential(phoneVerificationId, normalizedCode);
         await user.linkWithCredential(credential);
         await user.reload();
