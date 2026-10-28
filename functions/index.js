@@ -75,7 +75,7 @@ exports.createMyProfile = onCall(async (request) => {
   const referralCode = String(request.data?.referralCode || "").trim().toUpperCase().slice(0, 32);
   const phoneNumber = String(request.auth.token.phone_number || "").trim();
   if (!displayName) throw new HttpsError("invalid-argument", "A display name is required.");
-  if (!/^\\+[1-9]\\d{7,14}$/.test(phoneNumber)) {
+  if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber)) {
     throw new HttpsError("failed-precondition", "Verify a mobile phone number before opening a GRASH FX account.");
   }
   const profileRef = db.ref("secure_users/" + actor.uid);
