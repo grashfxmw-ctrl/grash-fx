@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080b12">
+  <title>GRASH FX — Secure Account Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+  <script src="./frontend/secure-client.js"></script>
+  <style>
+    body { background:#080b12; color:#f3f4f6; font-family:Inter,ui-sans-serif,system-ui,sans-serif; }
+    .panel { background:#111827; border:1px solid #273244; }
+    .field { background:#080b12; border:1px solid #374151; color:#fff; }
+    .field:focus { outline:2px solid #eab308; outline-offset:1px; }
+  </style>
+</head>
+<body class="min-h-screen px-4 py-8">
+  <main class="mx-auto max-w-4xl">
+    <header class="mb-7 flex flex-wrap items-center justify-between gap-4">
+      <div><p class="text-xs font-bold tracking-[.3em] text-yellow-400">GRASH FX</p><h1 class="mt-2 text-3xl font-extrabold">Account dashboard</h1><p class="mt-1 text-sm text-gray-400">Secure account data and transaction requests</p></div>
+      <div class="flex gap-2"><a href="./secure-auth.html" class="rounded-lg border border-gray-700 px-4 py-2 text-sm font-semibold">Account access</a><button id="signOut" class="rounded-lg border border-gray-700 px-4 py-2 text-sm font-semibold">Sign out</button></div>
+    </header>
+    <div id="notice" class="mb-5 hidden rounded-xl border p-3 text-sm" role="status" aria-live="polite"></div>
+    <section id="signedOut" class="panel rounded-2xl p-6">
+      <h2 class="text-xl font-bold">Sign in required</h2><p class="mt-2 text-gray-400">Sign in with a verified email to view your secure account and request a transaction.</p>
+      <a href="./secure-auth.html" class="mt-4 inline-block rounded-lg bg-yellow-500 px-5 py-3 font-bold text-gray-950">Go to secure sign in</a>
+    </section>
+    <div id="dashboard" class="hidden space-y-5">
+      <section class="panel rounded-2xl p-5 sm:p-7">
+        <p class="text-sm text-gray-400">Welcome back</p><h2 id="accountName" class="mt-1 text-2xl font-bold">Account</h2><p id="accountEmail" class="mt-1 break-all text-sm text-gray-400"></p>
+        <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="rounded-xl bg-gray-950 p-4"><p class="text-xs text-gray-400">Available balance (USD)</p><p id="balance" class="mt-2 text-2xl font-extrabold">$0.00</p></div>
+          <div class="rounded-xl bg-gray-950 p-4"><p class="text-xs text-gray-400">Profit balance (USD)</p><p id="profit" class="mt-2 text-2xl font-extrabold">$0.00</p></div>
+          <div class="rounded-xl bg-gray-950 p-4"><p class="text-xs text-gray-400">Total profit earned (USD)</p><p id="totalProfitEarned" class="mt-2 text-2xl font-extrabold">$0.00</p></div>
+          <div class="rounded-xl bg-gray-950 p-4"><p class="text-xs text-gray-400">Account status</p><p id="status" class="mt-2 text-xl font-bold">Active</p></div>
+        </div>
+        <div class="mt-4 rounded-xl border border-gray-800 p-4"><p class="text-xs text-gray-400">Your referral code</p><p id="referralCode" class="mt-1 break-all font-bold">—</p><div class="mt-3 flex flex-wrap gap-2"><button id="copyReferralLink" type="button" class="rounded-lg border border-gray-700 px-3 py-2 text-sm">Copy referral link</button><span id="referralHint" class="self-center text-xs text-gray-500">Invite a friend; the $5 reward is credited after their verified registration.</span></div></div>
+        <p class="mt-4 text-xs leading-5 text-gray-500">Values are from the secure account record only. Existing legacy balances are not automatically imported; contact support if your old account needs reconciliation.</p>
+      </section>
+      <section class="panel rounded-2xl p-5 sm:p-7">
+        <h2 class="text-xl font-bold">Investment plan</h2>
+        <p class="mt-1 text-sm text-gray-400">Choose one seven-day plan. Profits are calculated at the existing plan rate every 24 hours, held in the profit balance, then transferred to your main balance after day seven together with your original investment principal.</p>
+        <div class="mt-4 rounded-xl border border-gray-800 p-4">
+          <p class="text-xs text-gray-400">Current plan</p><p id="activePlan" class="mt-1 font-bold">No active plan</p>
+          <p id="activePlanProgress" class="mt-1 text-sm text-gray-400">Select a plan to get started.</p>
+        </div>
+        <form id="investmentForm" class="mt-5 grid gap-4 sm:grid-cols-2">
+          <label class="text-sm font-semibold">Plan<select id="planName" class="field mt-2 w-full rounded-lg px-3 py-3"><option value="Starter Plan">Starter — 10% per 24h ($50–$500)</option><option value="Basic Plan">Basic — 20% per 24h ($501–$2,000)</option><option value="Premium Plan">Premium — 30% per 24h ($2,001–$5,000)</option><option value="VIP Plan">VIP — 40% per 24h ($5,001+)</option></select></label>
+          <label class="text-sm font-semibold">Investment amount (USD)<input id="investmentAmount" class="field mt-2 w-full rounded-lg px-3 py-3" type="number" min="50" max="100000" step="0.01" required></label>
+          <button id="activatePlan" class="rounded-lg bg-yellow-500 px-5 py-3 font-bold text-gray-950 sm:col-span-2" type="submit">Activate investment plan</button>
+        </form>
+        <p class="mt-3 text-xs leading-5 text-gray-500">Plan activation deducts the investment amount from your available balance. At maturity, the system returns your original investment plus the seven days of accumulated profit to your main balance. Profit rates are the existing plan rates; the calculation uses simple daily profit on the original principal.</p>
+      </section>
+      <section class="panel rounded-2xl p-5 sm:p-7">
+        <h2 class="text-xl font-bold">Request a transaction</h2><p class="mt-1 text-sm text-gray-400">Minimum deposit $20; minimum withdrawal $50. No deposit or withdrawal fees. This creates a pending request for administrator review. It does not initiate a payment or immediately change your balance.</p>
+        <form id="transactionForm" class="mt-5 grid gap-4 sm:grid-cols-2">
+          <label class="text-sm font-semibold">Request type<select id="type" class="field mt-2 w-full rounded-lg px-3 py-3"><option value="Deposit">Deposit</option><option value="Withdrawal">Withdrawal</option></select></label>
+          <label class="text-sm font-semibold">Amount (USD)<input id="amount" class="field mt-2 w-full rounded-lg px-3 py-3" type="number" min="20" max="100000" step="0.01" required></label>
+          <label class="text-sm font-semibold sm:col-span-2">Payment method / reference<input id="method" class="field mt-2 w-full rounded-lg px-3 py-3" type="text" maxlength="80" placeholder="e.g. bank transfer, mobile money" required></label>
+          <button id="submitRequest" class="rounded-lg bg-yellow-500 px-5 py-3 font-bold text-gray-950 sm:col-span-2" type="submit">Submit request</button>
+        </form>
+      </section>
+      <section class="panel rounded-2xl p-5 sm:p-7">
+        <div class="flex flex-wrap items-center justify-between gap-3"><h2 class="text-xl font-bold">Recent transactions</h2><button id="refresh" class="rounded-lg border border-gray-700 px-4 py-2 text-sm font-semibold">Refresh</button></div>
+        <div class="mt-4 overflow-x-auto"><table class="w-full min-w-[540px] text-left text-sm"><thead class="text-gray-400"><tr><th class="py-3 pr-3">Date</th><th class="py-3 pr-3">Type</th><th class="py-3 pr-3">Amount</th><th class="py-3 pr-3">Method</th><th class="py-3">Status</th></tr></thead><tbody id="transactions"><tr><td colspan="5" class="py-5 text-gray-500">No transaction records loaded.</td></tr></tbody></table></div>
+      </section>
+    </div>
+    <p class="mt-6 text-center text-xs leading-5 text-gray-500">Never share your password or verification link. Transaction requests are reviewed before the secure account balance changes.</p>
+  </main>
+<script>
+(function () {
+  "use strict";
+  const config = { apiKey:"AIzaSyCS-JePIUTBnGu--6oYpMH7KhRqtFFbjkw", authDomain:"grashfx.firebaseapp.com", projectId:"grashfx", storageBucket:"grashfx.firebasestorage.app", messagingSenderId:"420001022752", appId:"1:420001022752:web:db9851dbaeddca247e8d45" };
+  firebase.initializeApp(config);
+  const secure = window.createGrashSecureClient(firebase);
+  const $ = id => document.getElementById(id);
+  let busy = false;
+  function notice(message, error) {
+    const el=$("notice"); el.textContent=message;
+    el.className="mb-5 rounded-xl border p-3 text-sm "+(error?"border-red-700 bg-red-950/40 text-red-200":"border-green-700 bg-green-950/40 text-green-200");
+    el.classList.remove("hidden");
+  }
+  function setBusy(value) { busy=value; ["signOut","refresh","submitRequest","activatePlan"].forEach(id=>$(id).disabled=value); }
+  function money(value) { return new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(value)||0); }
+  function date(value) { if(!value)return "—"; const d=new Date(Number(value)); return Number.isNaN(d.getTime())?"—":d.toLocaleString(); }
+  function render(data,user) {
+    $("signedOut").classList.add("hidden"); $("dashboard").classList.remove("hidden");
+    $("accountName").textContent=data.profile.displayName||user.displayName||"GRASH FX Investor";
+    $("accountEmail").textContent=user.email||"";
+    $("balance").textContent=money(data.profile.balance);
+    $("profit").textContent=money(data.profile.profit);
+    $("totalProfitEarned").textContent=money(data.profile.totalProfitEarned);
+    $("status").textContent=data.profile.isBlocked?"Restricted":"Active";
+    $("referralCode").textContent=data.profile.referralCode||"Not available";
+    const inv=data.profile.activeInvestment;
+    $("activePlan").textContent=inv&&inv.status==="Active"?(inv.planName+" · "+money(inv.principal)):(inv&&inv.status==="Completed"?(inv.planName+" completed"):"No active plan");
+    $("activePlanProgress").textContent=inv?(String(inv.creditedDays||0)+" of 7 daily profit credits · "+String(inv.dailyRate||0)+"% per 24h · status "+String(inv.status||"—")):"Select a plan to get started.";
+    const body=$("transactions"); body.replaceChildren();
+    const rows=Array.isArray(data.transactions)?data.transactions:[];
+    if(!rows.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=5;td.className="py-5 text-gray-500";td.textContent="No transactions yet.";tr.append(td);body.append(tr);return;}
+    rows.forEach(tx=>{const tr=document.createElement("tr");tr.className="border-t border-gray-800";
+      [date(tx.createdAt),String(tx.type||"—"),money(tx.amount),String(tx.method||"—"),String(tx.status||"Pending")].forEach(value=>{const td=document.createElement("td");td.className="py-3 pr-3";td.textContent=value;tr.append(td);});body.append(tr);});
+  }
+  async function refresh() {
+    const user=firebase.auth().currentUser;if(!user)throw new Error("Please sign in first.");
+    await user.reload();if(!firebase.auth().currentUser||!firebase.auth().currentUser.emailVerified)throw new Error("Verify your email before continuing.");
+    const data=await secure.loadAccount();if(data.profile.isBlocked)throw new Error("This account is restricted. Contact support.");
+    render(data,firebase.auth().currentUser);
+  }
+  async function run(action) { if(busy)return;setBusy(true);try{await action();}catch(e){notice(e&&e.message?e.message:"Something went wrong. Please try again.",true);}finally{setBusy(false);} }
+  $("investmentForm").addEventListener("submit",event=>{event.preventDefault();run(async()=>{
+    const planName=$("planName").value,amount=Number($("investmentAmount").value);
+    if(!Number.isFinite(amount)||amount<50||amount>100000)throw new Error("Investment amount must be at least $50 and no more than $100,000.");
+    const result=await secure.activateInvestmentPlan({planName,amount});
+    $("investmentForm").reset();await refresh();notice("Investment plan activated: "+result.investment.planName+". Daily profit processing starts after 24 elapsed hours.",false);
+  });});
+  $("type").addEventListener("change",()=>{$("amount").min=$("type").value==="Deposit"?"20":"50";$("amount").placeholder=$("type").value==="Deposit"?"Minimum $20":"Minimum $50";});
+  $("transactionForm").addEventListener("submit",event=>{event.preventDefault();run(async()=>{
+    const amount=Number($("amount").value),method=$("method").value.trim(),type=$("type").value;
+    if(!Number.isFinite(amount)||amount<=0||amount>100000)throw new Error("Enter an amount above zero and no more than 100,000.");
+    if(!method)throw new Error("Enter a payment method or reference.");
+    const result=type==="Deposit"?await secure.requestDeposit({amount,method}):await secure.requestWithdrawal({amount,method});
+    $("transactionForm").reset();$("amount").min="20";$("amount").placeholder="Minimum $20";await refresh();notice("Request submitted and awaiting administrator review. Reference: "+result.transactionId,false);
+  });});
+  $("copyReferralLink").addEventListener("click",()=>{const code=$("referralCode").textContent;if(!code||code==="—"||code==="Not available"){notice("Referral code is not available yet.",true);return;}const url=new URL("secure-auth.html",window.location.href);url.searchParams.set("ref",code);navigator.clipboard.writeText(url.toString()).then(()=>notice("Referral link copied.",false)).catch(()=>notice(url.toString(),false));});
+  $("refresh").addEventListener("click",()=>run(async()=>{await refresh();notice("Account information refreshed.",false);}));
+  $("signOut").addEventListener("click",()=>run(async()=>{await secure.signOut();$("dashboard").classList.add("hidden");$("signedOut").classList.remove("hidden");notice("You have signed out.",false);}));
+  secure.onAuthStateChanged(user=>{if(!user){$("dashboard").classList.add("hidden");$("signedOut").classList.remove("hidden");return;}run(refresh);});
+})();
+</script>
+</body>
+</html>
