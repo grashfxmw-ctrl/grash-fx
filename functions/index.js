@@ -404,6 +404,9 @@ exports.deleteMyAccount = onCall(async (request) => {
       Number(profile.totalProfitEarned || 0) !== 0) {
     throw new HttpsError("failed-precondition", "Settle all balances and recorded profits with support before deleting this account.");
   }
+  if (Object.keys(profile.withdrawalReservations || {}).length > 0) {
+    throw new HttpsError("failed-precondition", "Release all reserved withdrawal funds before deleting this account.");
+  }
   if (profile.activeInvestment && profile.activeInvestment.status === "Active") {
     throw new HttpsError("failed-precondition", "An active investment must be resolved before account deletion.");
   }
