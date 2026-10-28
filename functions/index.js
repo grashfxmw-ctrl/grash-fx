@@ -205,12 +205,12 @@ exports.requestTransaction = onCall(async (request) => {
       if (!current || current.isBlocked === true) return;
       const reservations = current.withdrawalReservations || {};
       const reserved = Object.values(reservations).reduce((sum, value) => {
-        const n = Number(value);
+        const n = Number(value && typeof value === "object" ? value.amount : value);
         return sum + (Number.isFinite(n) && n > 0 ? n : 0);
       }, 0);
       const available = Math.round((Number(current.balance || 0) - reserved) * 100) / 100;
       if (available < amount) return;
-      current.withdrawalReservations = { ...reservations, [id]: amount };
+      current.withdrawalReservations = { ...reservations, [id]: { amount, createdAt: Date.now() } };
       current.updatedAt = Date.now();
       return current;
     });
