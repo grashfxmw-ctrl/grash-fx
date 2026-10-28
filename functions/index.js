@@ -532,3 +532,28 @@ exports.adminGetLegacyMigration = onCall(async (request) => {
   await writeAudit(admin.uid, "legacy_migration_review_opened", null, { migrationId });
   return record;
 });
+
+/**
+ * Bounded administrator audit viewer. Returns only operational audit fields
+ * and never exposes arbitrary database paths or raw customer credentials.
+ */
+exports.adminListAuditLogs = onCall(async (request) => {
+  const admin = requireAdmin(request);
+  const limit = Math.min(100, Math.max(1, Number.parseInt(request.data?.limit, 10) || 50));
+  const snap = await db.ref("secure_audit").limitToLast(limit).get();
+  const entries = [];
+  snap.forEach((child) => {
+    const item = child.val() || {};
+    entries.push({
+      id: String(child.key || ""),
+      actorUid: String(item.actorUid || ""),
+      action: String(item.action || ""),
+      transactionId: item.transactionId ? String(item.transactionId) : null,
+      detail: item.detail && typeof item.detail === "object" ? item.detail : {},
+      createdAt: Number(item.createdAt || 0)
+    });
+  });
+  entries.sort((a, b) => b.createdAt - a.createdAt);
+  await writeAudit(admin.uid, "admin_audit_log_viewed", null, { count: entries.length });
+  return { entries };
+});
