@@ -82,3 +82,22 @@ test("secure frontend keeps signup unverified until email verification and never
   assert.match(clientSource, /await call\("createMyProfile"/);
   assert.doesNotMatch(clientSource, /\.ref\(["']platform_data|\.set\(.*balance/s);
 });
+
+test("admin audit log reader is server-authorized, bounded, and field-allowlisted", () => {
+  const start = source.indexOf("exports.adminListAuditLogs = onCall(async (request) => {");
+  assert.ok(start >= 0, "Missing admin audit log callable");
+  const end = source.indexOf("\n});", start);
+  assert.ok(end > start, "Could not isolate admin audit log callable");
+  const body = source.slice(start, end + 4);
+  assert.match(body, /requireAdmin\(request\)/);
+  assert.match(body, /Math\.min\(100, Math\.max\(1,/);
+  for (const field of ["actorUid:", "action:", "transactionId:", "detail:", "createdAt:"]) {
+    assert.ok(body.includes(field), `Expected audit field ${field}`);
+  }
+  assert.doesNotMatch(body, /password|authToken|paymentCredentials/i);
+});
+
+test("secure client exposes the protected admin audit log callable", () => {
+  assert.match(clientSource, /async listAdminAuditLogs\(\{ limit \} = \{\}\)/);
+  assert.match(clientSource, /call\("adminListAuditLogs", \{ limit \}\)/);
+});
