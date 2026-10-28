@@ -10,12 +10,15 @@ test("admin customer page uses protected directory and profile methods",()=>{
  assert.match(html,/secure\.getAdminUserProfile/);
  assert.match(html,/View profile/);
 });
-test("admin customer page remains read-only and avoids legacy storage",()=>{
- assert.match(html,/read-only/i);
+test("admin customer page provides audited balance editing without legacy storage",()=>{
+ assert.match(html,/secure\.adminSetAccountBalances/);
+ assert.match(html,/balanceEditForm/);
+ assert.match(html,/Reason for adjustment/);
+ assert.match(html,/audit log/i);
  assert.doesNotMatch(html,/firebase-database-compat\.js/);
  assert.doesNotMatch(html,/platform_data/);
  assert.doesNotMatch(html,/localStorage/);
- assert.doesNotMatch(html,/updateBalance|blockUser|unblockUser/);
+ assert.doesNotMatch(html,/blockUser|unblockUser/);
 });
 test("admin customer page relies on backend authorization",()=>{
  assert.match(html,/backend checks permissions/i);
