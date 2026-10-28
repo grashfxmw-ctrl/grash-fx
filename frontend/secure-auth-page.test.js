@@ -2,7 +2,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
-const path = require("node:path");
+const path = require("node:path");\nconst vm = require("node:vm");
 
 const pagePath = path.join(__dirname, "..", "secure-auth.html");
 const html = fs.readFileSync(pagePath, "utf8");
@@ -27,4 +27,10 @@ test("secure auth page includes email verification and reset-password flows", ()
   assert.match(html, /emailVerified/);
   assert.match(html, /sendPasswordResetEmail/);
   assert.match(html, /verify it before signing in/i);
+});
+
+test("secure auth page inline JavaScript parses", () => {
+  const match = html.match(/<script>([\\s\\S]*?)<\\/script>/);
+  assert.ok(match, "inline application script exists");
+  assert.doesNotThrow(() => new vm.Script(match[1]));
 });
