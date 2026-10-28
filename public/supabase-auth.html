@@ -229,7 +229,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
                  const reference=typeof item.reference==="string"?item.reference:"";
                  await callApi("/admin/review","POST",{transaction_id:item.id,decision,reference,reason});
                }
-               say((group.type==="profile"?"Account":"Financial request")+" "+decision+"d successfully.");
+               say((group.type==="profile"?"Account":"Financial request")+" "+(decision==="approve"?"approved":"rejected")+" successfully.");
                await loadAdminQueue();
              }catch(err){
                say(err.message||"Review could not be completed.");
