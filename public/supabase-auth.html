@@ -44,7 +44,13 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <div id="accountSection" class="hidden account">
 <h2>Your account</h2><div id="accountStatus" class="muted"></div>
 <div class="balance"><div class="tile"><span>Main balance</span><strong id="balance">—</strong></div><div class="tile"><span>Profit balance</span><strong id="profit">—</strong></div></div>
-<p id="accountEmail" class="muted"></p><button id="signout" class="full" type="button">Sign out</button>
+<p id="accountEmail" class="muted"></p>
+<div id="financialActions" class="hidden">
+<h2>Requests</h2><p class="muted">Deposit requests remain pending until an administrator verifies payment. Withdrawal requests reserve your balance until reviewed. Do not send money based only on a submitted request.</p>
+<form id="depositForm"><div class="field"><label for="depositAmount">Deposit amount</label><input id="depositAmount" type="number" min="1" step="0.01" required></div><button class="full" type="submit">Submit deposit request</button></form>
+<form id="withdrawalForm"><div class="field"><label for="withdrawalAmount">Withdrawal amount</label><input id="withdrawalAmount" type="number" min="1" step="0.01" required></div><button class="full" type="submit">Request withdrawal</button></form>
+</div>
+<button id="signout" class="full" type="button">Sign out</button>
 </div>
 <div id="message" class="status" role="status" aria-live="polite">Ready.</div>
 </section>
@@ -94,12 +100,13 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    }catch(err){say(err.message||"Could not sign in.");}finally{busy(e.currentTarget,false);}
  };
  async function loadAccount(){
-   $("accountSection").classList.add("hidden");$("phoneSection").classList.add("hidden");
+   $("accountSection").classList.add("hidden");$("phoneSection").classList.add("hidden");$("financialActions").classList.add("hidden");
    try{
     const data=await callApi("/me");
     if(data.profile){
      $("accountSection").classList.remove("hidden");
      $("accountStatus").textContent="Account status: "+data.profile.status;
+     if(data.profile.status==="active") $("financialActions").classList.remove("hidden");
      $("balance").textContent=Number(data.profile.balance).toFixed(2);
      $("profit").textContent=Number(data.profile.profit_balance).toFixed(2);
      say(data.profile.status==="pending"?"Profile created. Your account is awaiting admin review.":"Signed in successfully.");
@@ -140,7 +147,18 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
   try{const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.href});if(error)throw error;say("If the address is registered, a password reset email has been sent.");}
   catch(err){say(err.message||"Could not request password reset.");}
  };
- $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("phoneSection").classList.add("hidden");mode(false);say("Signed out.");};
+ async function submitFinancialRequest(kind, amountValue) {
+   const key = crypto.randomUUID();
+   try {
+     const result = await callApi("/"+kind, "POST", {amount:Number(amountValue), idempotency_key:key});
+     say(kind==="deposit" ? "Deposit request submitted and awaiting admin review. This is not proof of payment." : "Withdrawal request submitted. The amount is reserved pending admin review.");
+     if(result.transaction) say((kind==="deposit" ? "Deposit request " : "Withdrawal request ") + result.transaction.id + " · status: " + result.transaction.status);
+     await loadAccount();
+   } catch(err) { say(err.message || "Could not submit request."); }
+ }
+ $("depositForm").onsubmit=async e=>{e.preventDefault();busy(e.currentTarget,true);try{await submitFinancialRequest("deposit",$("depositAmount").value);}finally{busy(e.currentTarget,false);}};
+ $("withdrawalForm").onsubmit=async e=>{e.preventDefault();busy(e.currentTarget,true);try{await submitFinancialRequest("withdrawal",$("withdrawalAmount").value);}finally{busy(e.currentTarget,false);}};
+ $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("phoneSection").classList.add("hidden");$("financialActions").classList.add("hidden");mode(false);say("Signed out.");};
  client.auth.getSession().then(({data})=>{if(data.session){$("accountEmail").textContent=data.session.user.email||"";loadAccount();}});
 })();
 </script>
