@@ -147,50 +147,55 @@ exports.reviewTransaction = onCall(async (request) => {
   }
 
   const txRef = db.ref(`secure_transactions/${id}`);
-  const txSnap = await txRef.get();
-  if (!txSnap.exists()) throw new HttpsError("not-found", "Transaction not found.");
-  const tx = txSnap.val();
-  if (tx.status === "Completed" || tx.status === "Rejected") {
-    throw new HttpsError("failed-precondition", "This transaction has already been finalized.");
-  }
+  const initial = await txRef.get();
+  if (!initial.exists()) throw new HttpsError("not-found", "Transaction not found.");
+  const tx = initial.val();
   if (!["Pending", "Processing"].includes(tx.status)) {
     throw new HttpsError("failed-precondition", "Transaction is not in a reviewable state.");
   }
-
-  const userRef = db.ref(`secure_users/${tx.userId}`);
-  const userSnap = await userRef.get();
-  if (!userSnap.exists()) throw new HttpsError("failed-precondition", "User profile not found.");
-
-  // A Processing transaction can be retried after a function interruption.
-  // The profile's server-written processedTransactions marker makes the
-  // balance mutation idempotent across retries and concurrent admin calls.
   if (decision === "reject") {
-    const claim = await txRef.transaction((current) => {
+    const rejected = await txRef.transaction((current) => {
       if (!current || current.status !== "Pending") return;
       return { ...current, status: "Rejected", reviewedBy: admin.uid, reviewNote: note, updatedAt: Date.now() };
     });
-    if (!claim.committed) throw new HttpsError("aborted", "This transaction is already being processed or finalized.");
+    if (!rejected.committed) throw new HttpsError("aborted", "This transaction is already being processed or finalized.");
     await writeAudit(admin.uid, "transaction_rejected", id, { userId: tx.userId, note });
     return { ok: true, status: "Rejected" };
   }
 
+  // Only one reviewer may own a processing lease at a time. A short lease
+  // permits recovery after a crashed invocation without concurrent workers
+  // both claiming the same transaction.
+  const claimToken = randomUUID();
+  const now = Date.now();
+  const leaseMs = 5 * 60 * 1000;
   const claim = await txRef.transaction((current) => {
-    if (!current || !["Pending", "Processing"].includes(current.status)) return;
-    return { ...current, status: "Processing", reviewedBy: admin.uid, reviewNote: note, updatedAt: Date.now() };
+    if (!current) return;
+    if (current.status === "Pending") {
+      return { ...current, status: "Processing", processingToken: claimToken, processingAt: now,
+        reviewedBy: admin.uid, reviewNote: note, updatedAt: now };
+    }
+    if (current.status === "Processing" && Number(current.processingAt || 0) < now - leaseMs) {
+      return { ...current, status: "Processing", processingToken: claimToken, processingAt: now,
+        reviewedBy: admin.uid, reviewNote: note, updatedAt: now };
+    }
+    return;
   });
   if (!claim.committed) {
-    throw new HttpsError("aborted", "This transaction has already been finalized.");
+    throw new HttpsError("aborted", "Another reviewer is processing this transaction. Refresh and retry later.");
   }
 
-  const amount = validAmount(tx.amount);
+  const claimedTx = claim.snapshot.val();
+  const amount = validAmount(claimedTx.amount);
+  const userRef = db.ref(`secure_users/${claimedTx.userId}`);
   const balanceResult = await userRef.transaction((profile) => {
-    if (!profile) return;
+    if (!profile || profile.isBlocked === true) return;
     profile.processedTransactions = profile.processedTransactions || {};
     if (profile.processedTransactions[id] === true) return profile;
     const balance = Number(profile.balance || 0);
-    if (tx.type === "Deposit") {
+    if (claimedTx.type === "Deposit") {
       profile.balance = Math.round((balance + amount) * 100) / 100;
-    } else if (tx.type === "Withdrawal") {
+    } else if (claimedTx.type === "Withdrawal") {
       if (balance < amount) return;
       profile.balance = Math.round((balance - amount) * 100) / 100;
     } else {
@@ -202,7 +207,11 @@ exports.reviewTransaction = onCall(async (request) => {
   });
 
   if (!balanceResult.committed) {
-    await txRef.update({ status: "Pending", reviewError: "Balance update was not committed", updatedAt: Date.now() });
+    await txRef.transaction((current) => {
+      if (!current || current.status !== "Processing" || current.processingToken !== claimToken) return;
+      return { ...current, status: "Pending", processingToken: null, processingAt: null,
+        reviewError: "Balance update was not committed", updatedAt: Date.now() };
+    });
     throw new HttpsError("failed-precondition", "Balance was not changed; transaction returned to pending review.");
   }
 
@@ -211,8 +220,18 @@ exports.reviewTransaction = onCall(async (request) => {
     throw new HttpsError("failed-precondition", "Balance mutation was not recorded; transaction remains available for recovery.");
   }
 
-  await txRef.update({ status: "Completed", reviewError: null, updatedAt: Date.now() });
-  await writeAudit(admin.uid, "transaction_approved", id, { userId: tx.userId, type: tx.type, amount });
+  const finalized = await txRef.transaction((current) => {
+    if (!current || current.status !== "Processing" || current.processingToken !== claimToken) return;
+    return { ...current, status: "Completed", processingToken: null, processingAt: null,
+      reviewError: null, updatedAt: Date.now() };
+  });
+  if (!finalized.committed) {
+    // Do not reverse a balance that already has an idempotency marker. A later
+    // recovery claim can observe the marker and safely finalize the transaction.
+    throw new HttpsError("aborted", "Balance was recorded, but final status needs recovery. Do not approve it again manually.");
+  }
+
+  await writeAudit(admin.uid, "transaction_approved", id, { userId: claimedTx.userId, type: claimedTx.type, amount });
   return { ok: true, status: "Completed" };
 });
 
