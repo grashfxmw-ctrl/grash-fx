@@ -97,9 +97,10 @@ test("verified sign-in creates the server-owned profile and loads account data",
     password: "long-test-password"
   });
 
-  assert.equal(result.profile.uid, "auth-user-1");
+  assert.equal(result.ok, true);
+  assert.equal(result.account.profile.uid, "auth-user-1");
   const callableNames = h.calls.filter((call) => call?.type === "callable").map((call) => call.name);
-  assert.deepEqual(callableNames, ["createMyProfile", "getMyAccountData"]);
+  assert.deepEqual(callableNames, ["inspectLegacyAccount", "createMyProfile", "getMyAccountData"]);
 });
 
 
