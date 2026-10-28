@@ -5,7 +5,7 @@ import vm from "node:vm";
 
 const clientSource = await readFile(new URL("../frontend/secure-client.js", import.meta.url), "utf8");
 
-function createHarness({ verified = true } = {}) {
+function createHarness({ verified = true, legacyStatus = "no_match" } = {}) {
   const calls = [];
   let currentUser = null;
   const user = {
@@ -41,7 +41,7 @@ function createHarness({ verified = true } = {}) {
     httpsCallable(name) {
       return async (payload) => {
         calls.push({ type: "callable", name, payload });
-        if (name === "getMyAccountData") {
+        if (name === "inspectLegacyAccount") {\n          return { data: { status: legacyStatus, message: legacyStatus === "no_match" ? "No matching legacy account." : "Existing account requires review." } };\n        }\n        if (name === "getMyAccountData") {
           return { data: { profile: { uid: user.uid, balance: 0 }, transactions: [] } };
         }
         return { data: { ok: true } };
@@ -97,4 +97,20 @@ test("verified sign-in creates the server-owned profile and loads account data",
   assert.equal(result.profile.uid, "auth-user-1");
   const callableNames = h.calls.filter((call) => call?.type === "callable").map((call) => call.name);
   assert.deepEqual(callableNames, ["createMyProfile", "getMyAccountData"]);
+});
+
+
+test("legacy account match requires review and never creates a replacement profile", async () => {
+  const h = createHarness({ verified: true, legacyStatus: "review_required" });
+  const result = await h.client.signIn({
+    email: "person@example.com",
+    password: "long-test-password"
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.legacyReviewRequired, true);
+  assert.equal(result.legacyStatus, "review_required");
+  assert.ok(h.calls.includes("signOut"));
+  const callableNames = h.calls.filter((call) => call?.type === "callable").map((call) => call.name);
+  assert.deepEqual(callableNames, ["inspectLegacyAccount"]);
 });
