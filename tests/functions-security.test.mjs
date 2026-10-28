@@ -167,3 +167,14 @@ test("referral reward is fixed at $5 and idempotently recorded per referred UID"
   assert.match(body, /REFERRAL_REWARD/);
   assert.match(body, /verified_registration/);
 });
+
+test("admin customer directory supports bounded cursor pagination", () => {
+  const start = source.indexOf("exports.adminListUsers = onCall(async (request) => {");
+  const end = source.indexOf("\n});", start);
+  const body = source.slice(start, end + 4);
+  assert.match(body, /cursorCreatedAt/);
+  assert.match(body, /cursorUid/);
+  assert.match(body, /endAt\(cursorCreatedAt, cursorUid\)/);
+  assert.match(body, /nextCursor: next/);
+  assert.match(body, /hasMore/);
+});
