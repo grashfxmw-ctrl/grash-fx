@@ -5,13 +5,14 @@ import vm from "node:vm";
 
 const clientSource = await readFile(new URL("../frontend/secure-client.js", import.meta.url), "utf8");
 
-function createHarness({ verified = true, legacyStatus = "no_match" } = {}) {
+function createHarness({ verified = true, legacyStatus = "no_match", phoneNumber = "+265991234567" } = {}) {
   const calls = [];
   let currentUser = null;
   const user = {
     uid: "auth-user-1",
     email: "person@example.com",
     emailVerified: verified,
+    phoneNumber,
     displayName: "Test Person",
     async reload() {},
     async updateProfile(profile) { this.displayName = profile.displayName; },
@@ -117,4 +118,11 @@ test("legacy account match requires review and never creates a replacement profi
   assert.ok(h.calls.includes("signOut"));
   const callableNames = h.calls.filter((call) => call?.type === "callable").map((call) => call.name);
   assert.deepEqual(callableNames, ["inspectLegacyAccount"]);
+});
+
+test("verified email without verified phone pauses before secure profile creation", async () => {
+  const h = createHarness({ phoneNumber: null });
+  const result = await h.client.signIn({ email: "person@example.com", password: "password123" });
+  assert.equal(result.phoneVerificationRequired, true);
+  assert.equal(h.calls.some((call) => call?.type === "callable" && call.name === "createMyProfile"), false);
 });
