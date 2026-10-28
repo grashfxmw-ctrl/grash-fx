@@ -178,3 +178,13 @@ test("admin customer directory supports bounded cursor pagination", () => {
   assert.match(body, /nextCursor: next/);
   assert.match(body, /hasMore/);
 });
+
+test("investment maturity returns principal plus accumulated profit exactly once", () => {
+  const start = source.indexOf("exports.processScheduledInvestmentProfits = onSchedule(\"every 15 minutes\", async () => {");
+  const end = source.indexOf("\n});", start);
+  const body = source.slice(start, end + 4);
+  assert.match(body, /balance \+ profitBalance \+ Number\(inv\.principal \|\| 0\)/);
+  assert.match(body, /inv\.principalReturned = true/);
+  assert.match(body, /inv\.status = "Completed"/);
+  assert.match(body, /creditedDays < 7/);
+});
