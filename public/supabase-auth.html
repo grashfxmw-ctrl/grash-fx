@@ -30,6 +30,12 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <button id="resendVerification" class="full" type="button">Resend verification email</button>
 <button id="resetPassword" class="full" type="button">Send password reset email</button>
 </form>
+<div id="adminSection" class="hidden account">
+<h2>Administrator dashboard</h2><p id="adminEmail" class="muted"></p>
+<button id="refreshAdmin" class="full" type="button">Refresh admin queue</button>
+<div id="adminQueue" class="muted"></div>
+<button id="adminSignout" class="full" type="button">Sign out</button>
+</div>
 <div id="accountSection" class="hidden account">
 <h2>Your account</h2><div id="accountStatus" class="muted"></div>
 <div id="balanceCards" class="balance"><div class="tile"><span>Main balance</span><strong id="balance">—</strong></div><div class="tile"><span>Profit balance</span><strong id="profit">—</strong></div></div>
@@ -69,14 +75,25 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    $("signupForm").classList.toggle("hidden",!signup);
    $("signinForm").classList.toggle("hidden",signup);
    $("accountSection").classList.add("hidden");
+   $("adminSection").classList.add("hidden");
    $("showSignup").classList.toggle("primary",signup);
    $("showSignin").classList.toggle("primary",!signup);
  }
- function showAccountView(){
+ function hideAuthForms(){
    $("authTabs").classList.add("hidden");
    $("signupForm").classList.add("hidden");
    $("signinForm").classList.add("hidden");
+ }
+ function showAccountView(){
+   hideAuthForms();
+   $("adminSection").classList.add("hidden");
    $("accountSection").classList.remove("hidden");
+ }
+ function showAdminView(email){
+   hideAuthForms();
+   $("accountSection").classList.add("hidden");
+   $("adminSection").classList.remove("hidden");
+   $("adminEmail").textContent="Administrator signed in as "+email;
  }
  $("showSignup").onclick=()=>mode(true); $("showSignin").onclick=()=>mode(false);
  // Homepage Login / Sign Up links may select the appropriate initial tab.
@@ -107,6 +124,12 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    try{
     const data=await callApi("/me");
     if(data.profile){
+     if(data.profile.role==="admin" && data.profile.status==="active"){
+       showAdminView(data.profile.email || "");
+       await loadAdminQueue();
+       say("Administrator access confirmed.");
+       return;
+     }
      showAccountView();
      $("accountStatus").textContent="Account status: "+data.profile.status;
      if(data.profile.status==="active") {
@@ -162,7 +185,29 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
  }
  $("depositForm").onsubmit=async e=>{e.preventDefault();busy(e.currentTarget,true);try{await submitFinancialRequest("deposit",$("depositAmount").value);}finally{busy(e.currentTarget,false);}};
  $("withdrawalForm").onsubmit=async e=>{e.preventDefault();busy(e.currentTarget,true);try{await submitFinancialRequest("withdrawal",$("withdrawalAmount").value);}finally{busy(e.currentTarget,false);}};
- $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("financialActions").classList.add("hidden");$("balanceCards").classList.add("hidden");mode(false);say("Signed out.");};
+ async function loadAdminQueue(){
+   const box=$("adminQueue");box.textContent="Loading administrator queue…";
+   try{
+     const data=await callApi("/admin/queue");
+     box.innerHTML="";
+     const groups=[["Pending client accounts",data.pending_profiles||[]],["Pending financial requests",data.financial_requests||[]]];
+     for(const [title,items] of groups){
+       const h=document.createElement("h3");h.textContent=title;box.appendChild(h);
+       if(!items.length){const p=document.createElement("p");p.textContent="Nothing waiting for review.";box.appendChild(p);}
+       for(const item of items){
+         const card=document.createElement("div");card.className="tile";card.style.margin="10px 0";
+         const p=document.createElement("p");
+         p.textContent=title==="Pending client accounts"
+          ? (item.full_name||"Client")+" · "+(item.email||"")+" · "+item.status
+          : item.kind+" · "+Number(item.amount).toFixed(2)+" · "+item.status+" · "+item.id;
+         card.appendChild(p);box.appendChild(card);
+       }
+     }
+   }catch(err){box.textContent=err.message||"Could not load administrator queue.";}
+ }
+ $("refreshAdmin").onclick=loadAdminQueue;
+ const signout=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("adminSection").classList.add("hidden");$("financialActions").classList.add("hidden");$("balanceCards").classList.add("hidden");mode(false);say("Signed out.");};
+ $("signout").onclick=signout;$("adminSignout").onclick=signout;
  client.auth.getSession().then(({data})=>{if(data.session){$("accountEmail").textContent=data.session.user.email||"";loadAccount();}});
 })();
 </script>
