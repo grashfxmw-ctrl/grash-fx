@@ -147,6 +147,11 @@
         await requireVerifiedUser();
         return call("adminGetUserProfile", { uid });
       }
+
+      async listAdminAuditLogs({ limit } = {}) {
+        await requireVerifiedUser();
+        return call("adminListAuditLogs", { limit });
+      }
     });
   }
 
