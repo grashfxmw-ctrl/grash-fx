@@ -205,8 +205,8 @@ test("account deletion releases a phone only after auth deletion and blocks unre
   assert.match(body, /activeInvestment && profile\.activeInvestment\.status === "Active"/);
   assert.match(body, /status === "Pending" \|\| status === "Processing"/);
   assert.ok(body.indexOf('await deletionRef.set(deletionRecord)') < body.indexOf("await getAuth().deleteUser(actor.uid)"));
-  assert.match(source, /async function finalizeAccountDeletion\\(record\\)/);
-  assert.match(source, /if \\(String\\(phoneSnap\\.val\\(\\) \\|\\| ""\\) === uid\\)/);
+  assert.match(source, /async function finalizeAccountDeletion\(record\)/);
+  assert.match(source, /if \(String\(phoneSnap\.val\(\) \|\| ""\) === uid\)/);
   assert.match(source, /writeAudit\(uid, "account_deleted"/);
 });
 
