@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const source = await readFile(new URL("../functions/index.js", import.meta.url), "utf8");
 const clientSource = await readFile(new URL("../frontend/secure-client.js", import.meta.url), "utf8");
+const legacyPageSource = await readFile(new URL("../index.html", import.meta.url), "utf8");
 
 test("backend requires Firebase authentication and verified email", () => {
   assert.match(source, /function requireUser\(request\)/);
@@ -220,4 +221,12 @@ test("secure profile creation requires a verified phone claim and unique phone r
   assert.match(body, /secure_phone_numbers/);
   assert.match(body, /createHash\("sha256"\)/);
   assert.match(body, /already linked to another GRASH FX account/);
+});
+
+test("legacy landing page links to the separate secure portal without wiring secure auth into legacy data flows", () => {
+  assert.match(legacyPageSource, /href="\.\/secure-auth\.html"/);
+  assert.match(legacyPageSource, /Open Secure Account Portal/);
+  assert.match(legacyPageSource, /Do not assume legacy balances or account history have transferred/);
+  assert.match(legacyPageSource, /Secure backend client is initialized but not yet used by legacy login\/data flows/);
+  assert.doesNotMatch(legacyPageSource, /secure\.signIn\(|secure\.signUp\(|secure\.getMyAccountData\(/);
 });
