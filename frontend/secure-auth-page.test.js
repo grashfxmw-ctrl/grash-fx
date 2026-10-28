@@ -15,6 +15,9 @@ test("secure auth page uses Firebase Auth and the secure client", () => {
   assert.match(html, /secure\.signUp/);
   assert.match(html, /secure\.signIn/);
   assert.match(html, /secure\.signOut/);
+  assert.match(html, /id="deleteAccount"/);
+  assert.match(html, /secure\.deleteMyAccount/);
+  assert.match(html, /phone number can be reused after deletion/i);
 });
 
 test("secure auth page does not load or write the legacy shared database", () => {
