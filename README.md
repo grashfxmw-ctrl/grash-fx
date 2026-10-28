@@ -19,7 +19,7 @@ Secure frontend/backend work is currently isolated on the `production-backend-in
 - Secure account data and transaction requests are served through Firebase callable Functions.
 - Deposit and withdrawal requests are pending until an authorized administrator reviews them. These pages do not process payments.
 - Legacy account values are review snapshots, not verified opening balances. No automatic legacy balance/profit/referral migration is implemented.
-- Investment-plan returns, scheduled profit credits, and referral reward rules must be approved and implemented separately before they are relied on.
+- Existing Starter/Basic/Premium/VIP rates, seven-day scheduled profit processing, $5 referral reward on verified registration, transaction minimums, and audited admin balance editing are implemented on this development branch only. The scheduled processor and Firebase permissions still require staging verification before reliance.
 - Automated tests do not replace staging tests, Firebase configuration review, payment reconciliation, or an explicit production release decision.
 
 Do not deploy or merge this branch until the release checklist is complete and the production owner has approved the cutover.
