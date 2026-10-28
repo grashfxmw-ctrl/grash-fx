@@ -2,13 +2,19 @@ name: Deploy Firebase Functions
 
 on:
   workflow_dispatch:
+    inputs:
+      deploy_functions:
+        description: "Deploy Functions after checks pass"
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
-  deploy-functions:
+  validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -27,6 +33,24 @@ jobs:
       - name: Check Functions syntax
         working-directory: functions
         run: npm run check
+
+  deploy:
+    needs: validate
+    if: inputs.deploy_functions == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Functions dependencies
+        working-directory: functions
+        run: npm install --no-audit --no-fund
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
