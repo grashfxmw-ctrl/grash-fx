@@ -42,7 +42,7 @@
       </section>
       <section class="panel rounded-2xl p-5 sm:p-7">
         <h2 class="text-xl font-bold">Investment plan</h2>
-        <p class="mt-1 text-sm text-gray-400">Choose one seven-day plan. Profits are calculated at the existing plan rate every 24 hours, held in the profit balance, then transferred to your main balance after day seven.</p>
+        <p class="mt-1 text-sm text-gray-400">Choose one seven-day plan. Profits are calculated at the existing plan rate every 24 hours, held in the profit balance, then transferred to your main balance after day seven together with your original investment principal.</p>
         <div class="mt-4 rounded-xl border border-gray-800 p-4">
           <p class="text-xs text-gray-400">Current plan</p><p id="activePlan" class="mt-1 font-bold">No active plan</p>
           <p id="activePlanProgress" class="mt-1 text-sm text-gray-400">Select a plan to get started.</p>
@@ -52,7 +52,7 @@
           <label class="text-sm font-semibold">Investment amount (USD)<input id="investmentAmount" class="field mt-2 w-full rounded-lg px-3 py-3" type="number" min="50" max="100000" step="0.01" required></label>
           <button id="activatePlan" class="rounded-lg bg-yellow-500 px-5 py-3 font-bold text-gray-950 sm:col-span-2" type="submit">Activate investment plan</button>
         </form>
-        <p class="mt-3 text-xs leading-5 text-gray-500">Plan activation deducts the investment amount from your available balance. The existing legacy logic does not return principal at maturity; only accumulated profits are transferred automatically under these rules.</p>
+        <p class="mt-3 text-xs leading-5 text-gray-500">Plan activation deducts the investment amount from your available balance. At maturity, the system returns your original investment plus the seven days of accumulated profit to your main balance. Profit rates are the existing plan rates; the calculation uses simple daily profit on the original principal.</p>
       </section>
       <section class="panel rounded-2xl p-5 sm:p-7">
         <h2 class="text-xl font-bold">Request a transaction</h2><p class="mt-1 text-sm text-gray-400">Minimum deposit $20; minimum withdrawal $50. No deposit or withdrawal fees. This creates a pending request for administrator review. It does not initiate a payment or immediately change your balance.</p>
