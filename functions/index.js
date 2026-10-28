@@ -430,22 +430,84 @@ exports.deleteMyAccount = onCall(async (request) => {
       throw new HttpsError("failed-precondition", "Phone reservation ownership could not be confirmed. Contact support.");
     }
   }
+  const deletionRef = db.ref("secure_account_deletions/" + actor.uid);
+  const deletionRecord = {
+    uid: actor.uid,
+    phoneKey: phoneKey || null,
+    referralCode: profile.referralCode ? String(profile.referralCode) : null,
+    requestedAt: Date.now(),
+    status: "pending_auth_deletion"
+  };
   await writeAudit(actor.uid, "account_deletion_requested", null, { phoneReservationPresent: Boolean(phoneRef) });
-  await getAuth().deleteUser(actor.uid);
-
-  const updates = {};
-  updates["secure_users/" + actor.uid] = null;
-  if (phoneRef) updates["secure_phone_numbers/" + phoneKey] = null;
-  if (profile.referralCode) {
-    const referralRef = db.ref("secure_referral_codes/" + String(profile.referralCode));
-    const referralSnap = await referralRef.get();
-    if (String(referralSnap.val() || "") === actor.uid) {
-      updates["secure_referral_codes/" + String(profile.referralCode)] = null;
+  // Persist recovery details before deleting Auth so interrupted RTDB cleanup
+  // can be completed by the scheduled reconciler.
+  await deletionRef.set(deletionRecord);
+  try {
+    await getAuth().deleteUser(actor.uid);
+  } catch (error) {
+    try {
+      await deletionRef.remove();
+    } catch (cleanupError) {
+      console.error("Could not remove failed account-deletion queue record", actor.uid, cleanupError);
     }
+    throw error;
+  }
+  await deletionRef.update({ status: "auth_deleted", authDeletedAt: Date.now() });
+  await finalizeAccountDeletion(deletionRecord);
+  return { ok: true, deleted: true };
+});
+
+/**
+ * Complete RTDB cleanup after Firebase Auth deletion has been confirmed.
+ * Ownership checks protect phone/referral mappings that may have been reassigned.
+ */
+async function finalizeAccountDeletion(record) {
+  const uid = String(record.uid || "");
+  if (!uid) throw new Error("Account-deletion record has no uid.");
+  const updates = { ["secure_users/" + uid]: null };
+  if (record.phoneKey) {
+    const phoneRef = db.ref("secure_phone_numbers/" + String(record.phoneKey));
+    const phoneSnap = await phoneRef.get();
+    if (String(phoneSnap.val() || "") === uid) updates["secure_phone_numbers/" + String(record.phoneKey)] = null;
+  }
+  if (record.referralCode) {
+    const referralRef = db.ref("secure_referral_codes/" + String(record.referralCode));
+    const referralSnap = await referralRef.get();
+    if (String(referralSnap.val() || "") === uid) updates["secure_referral_codes/" + String(record.referralCode)] = null;
   }
   await db.ref().update(updates);
-  await writeAudit(actor.uid, "account_deleted", null, { phoneReservationReleased: Boolean(phoneRef) });
-  return { ok: true, deleted: true };
+  await writeAudit(uid, "account_deleted", null, {
+    phoneReservationReleased: Boolean(record.phoneKey),
+    recovered: Boolean(record.recovered)
+  });
+  await db.ref("secure_account_deletions/" + uid).remove();
+}
+
+exports.reconcileAccountDeletions = onSchedule("every 15 minutes", async () => {
+  const queueSnap = await db.ref("secure_account_deletions").get();
+  if (!queueSnap.exists()) return;
+  for (const [uid, recordValue] of Object.entries(queueSnap.val() || {})) {
+    const record = recordValue || {};
+    try {
+      await getAuth().getUser(uid);
+      // A recent record may belong to an in-flight callable. Only discard an
+      // old record when Auth still exists; never delete a live customer's data.
+      const requestedAt = Number(record.requestedAt || 0);
+      if (Date.now() - requestedAt > 30 * 60 * 1000) {
+        await db.ref("secure_account_deletions/" + uid).remove();
+      }
+    } catch (error) {
+      if (error.code === "auth/user-not-found") {
+        try {
+          await finalizeAccountDeletion({ ...record, uid, recovered: true });
+        } catch (cleanupError) {
+          console.error("Account-deletion reconciliation failed", uid, cleanupError);
+        }
+      } else {
+        console.error("Could not verify queued account deletion", uid, error);
+      }
+    }
+  }
 });
 
 exports.getMyAccountData = onCall(async (request) => {
