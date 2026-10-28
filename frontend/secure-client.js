@@ -158,9 +158,9 @@
         return call("adminListTransactions", { limit });
       },
 
-      async listAdminUsers({ limit } = {}) {
+      async listAdminUsers({ limit, cursorCreatedAt, cursorUid } = {}) {
         await requireVerifiedUser();
-        return call("adminListUsers", { limit });
+        return call("adminListUsers", { limit, cursorCreatedAt, cursorUid });
       },
 
       async getAdminUserProfile(uid) {
