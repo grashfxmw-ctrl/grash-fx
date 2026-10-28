@@ -197,11 +197,28 @@ exports.requestTransaction = onCall(async (request) => {
   if (type === "Withdrawal" && amount < MIN_WITHDRAWAL) {
     throw new HttpsError("failed-precondition", "Minimum withdrawal is $50.00.");
   }
-  if (type === "Withdrawal" && Number(profile.balance || 0) < amount) {
-    throw new HttpsError("failed-precondition", "Insufficient available balance.");
+  const id = randomUUID();
+  // Reserve withdrawal funds atomically so multiple pending requests cannot
+  // each pass a stale balance check and collectively exceed the balance.
+  if (type === "Withdrawal") {
+    const reservation = await db.ref(`secure_users/${actor.uid}`).transaction((current) => {
+      if (!current || current.isBlocked === true) return;
+      const reservations = current.withdrawalReservations || {};
+      const reserved = Object.values(reservations).reduce((sum, value) => {
+        const n = Number(value);
+        return sum + (Number.isFinite(n) && n > 0 ? n : 0);
+      }, 0);
+      const available = Math.round((Number(current.balance || 0) - reserved) * 100) / 100;
+      if (available < amount) return;
+      current.withdrawalReservations = { ...reservations, [id]: amount };
+      current.updatedAt = Date.now();
+      return current;
+    });
+    if (!reservation.committed) {
+      throw new HttpsError("failed-precondition", "Insufficient available balance after pending withdrawal reservations.");
+    }
   }
 
-  const id = randomUUID();
   const record = {
     id,
     userId: actor.uid,
@@ -212,7 +229,21 @@ exports.requestTransaction = onCall(async (request) => {
     createdAt: Date.now(),
     updatedAt: Date.now()
   };
-  await db.ref(`secure_transactions/${id}`).set(record);
+  try {
+    await db.ref(`secure_transactions/${id}`).set(record);
+  } catch (error) {
+    if (type === "Withdrawal") {
+      await db.ref(`secure_users/${actor.uid}`).transaction((current) => {
+        if (!current?.withdrawalReservations?.[id]) return current;
+        const reservations = { ...current.withdrawalReservations };
+        delete reservations[id];
+        current.withdrawalReservations = reservations;
+        current.updatedAt = Date.now();
+        return current;
+      });
+    }
+    throw error;
+  }
   await writeAudit(actor.uid, "transaction_requested", id, { type, amount });
   return { ok: true, transactionId: id, status: "Pending" };
 });
@@ -251,6 +282,16 @@ exports.reviewTransaction = onCall(async (request) => {
       return { ...current, status: "Rejected", reviewedBy: admin.uid, reviewNote: note, updatedAt: Date.now() };
     });
     if (!rejected.committed) throw new HttpsError("aborted", "This transaction is already being processed or finalized.");
+    if (tx.type === "Withdrawal") {
+      await db.ref(`secure_users/${tx.userId}`).transaction((profile) => {
+        if (!profile?.withdrawalReservations?.[id]) return profile;
+        const reservations = { ...profile.withdrawalReservations };
+        delete reservations[id];
+        profile.withdrawalReservations = reservations;
+        profile.updatedAt = Date.now();
+        return profile;
+      });
+    }
     await writeAudit(admin.uid, "transaction_rejected", id, { userId: tx.userId, note });
     return { ok: true, status: "Rejected" };
   }
@@ -283,13 +324,25 @@ exports.reviewTransaction = onCall(async (request) => {
   const balanceResult = await userRef.transaction((profile) => {
     if (!profile || profile.isBlocked === true) return;
     profile.processedTransactions = profile.processedTransactions || {};
-    if (profile.processedTransactions[id] === true) return profile;
+    if (profile.processedTransactions[id] === true) {
+      if (claimedTx.type === "Withdrawal" && profile.withdrawalReservations?.[id]) {
+        const reservations = { ...profile.withdrawalReservations };
+        delete reservations[id];
+        profile.withdrawalReservations = reservations;
+        profile.updatedAt = Date.now();
+        return profile;
+      }
+      return profile;
+    }
     const balance = Number(profile.balance || 0);
     if (claimedTx.type === "Deposit") {
       profile.balance = Math.round((balance + amount) * 100) / 100;
     } else if (claimedTx.type === "Withdrawal") {
       if (balance < amount) return;
       profile.balance = Math.round((balance - amount) * 100) / 100;
+      const reservations = { ...(profile.withdrawalReservations || {}) };
+      delete reservations[id];
+      profile.withdrawalReservations = reservations;
     } else {
       return;
     }
