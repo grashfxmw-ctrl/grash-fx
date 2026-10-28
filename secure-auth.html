@@ -148,7 +148,16 @@
       $("loginForm").addEventListener("submit", (event) => {
         event.preventDefault();
         run(async () => {
-          handlingAuthAction = true;\n          let result;\n          try { result = await secure.signIn({ email: $("loginEmail").value, password: $("loginPassword").value }); }\n          finally { handlingAuthAction = false; }
+          handlingAuthAction = true;
+          let result;
+          try {
+            result = await secure.signIn({
+              email: $("loginEmail").value,
+              password: $("loginPassword").value
+            });
+          } finally {
+            handlingAuthAction = false;
+          }
           if (result.verificationRequired) {
             notice("Please verify your email using the link we sent, then sign in again.", "error");
             return;
@@ -165,14 +174,19 @@
       $("signupForm").addEventListener("submit", (event) => {
         event.preventDefault();
         run(async () => {
-          await secure.signUp({
-            name: $("signupName").value,
-            email: $("signupEmail").value,
-            password: $("signupPassword").value
-          });
-          $("signupForm").reset();
-          showMode("login");
-          notice("Account created. Check your email and verify it before signing in.", "success");
+          handlingAuthAction = true;
+          try {
+            await secure.signUp({
+              name: $("signupName").value,
+              email: $("signupEmail").value,
+              password: $("signupPassword").value
+            });
+            $("signupForm").reset();
+            showMode("login");
+            notice("Account created. Check your email and verify it before signing in.", "success");
+          } finally {
+            handlingAuthAction = false;
+          }
         });
       });
       $("resetPassword").addEventListener("click", () => run(async () => {
