@@ -188,3 +188,13 @@ test("investment maturity returns principal plus accumulated profit exactly once
   assert.match(body, /inv\.status = "Completed"/);
   assert.match(body, /creditedDays < 7/);
 });
+
+test("secure profile creation requires a verified phone claim and unique phone registry", () => {
+  const start = source.indexOf("exports.createMyProfile = onCall(async (request) => {");
+  const end = source.indexOf("\n});", start);
+  const body = source.slice(start, end + 4);
+  assert.match(body, /request\.auth\.token\.phone_number/);
+  assert.match(body, /secure_phone_numbers/);
+  assert.match(body, /createHash\("sha256"\)/);
+  assert.match(body, /already linked to another GRASH FX account/);
+});
