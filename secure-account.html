@@ -36,6 +36,7 @@
           <div class="rounded-xl bg-gray-950 p-4"><p class="text-xs text-gray-400">Recorded profit (USD)</p><p id="profit" class="mt-2 text-2xl font-extrabold">$0.00</p></div>
           <div class="rounded-xl bg-gray-950 p-4"><p class="text-xs text-gray-400">Account status</p><p id="status" class="mt-2 text-xl font-bold">Active</p></div>
         </div>
+        <div class="mt-4 rounded-xl border border-gray-800 p-4"><p class="text-xs text-gray-400">Your referral code</p><p id="referralCode" class="mt-1 break-all font-bold">—</p><div class="mt-3 flex flex-wrap gap-2"><button id="copyReferralLink" type="button" class="rounded-lg border border-gray-700 px-3 py-2 text-sm">Copy referral link</button><span id="referralHint" class="self-center text-xs text-gray-500">Invite a friend; the $5 reward is credited after their verified registration.</span></div></div>
         <p class="mt-4 text-xs leading-5 text-gray-500">Values are from the secure account record only. Existing legacy balances are not automatically imported; contact support if your old account needs reconciliation.</p>
       </section>
       <section class="panel rounded-2xl p-5 sm:p-7">
@@ -91,6 +92,7 @@
     $("balance").textContent=money(data.profile.balance);
     $("profit").textContent=money(data.profile.profit);
     $("status").textContent=data.profile.isBlocked?"Restricted":"Active";
+    $("referralCode").textContent=data.profile.referralCode||"Not available";
     const inv=data.profile.activeInvestment;
     $("activePlan").textContent=inv&&inv.status==="Active"?(inv.planName+" · "+money(inv.principal)):(inv&&inv.status==="Completed"?(inv.planName+" completed"):"No active plan");
     $("activePlanProgress").textContent=inv?(String(inv.creditedDays||0)+" of 7 daily profit credits · "+String(inv.dailyRate||0)+"% per 24h · status "+String(inv.status||"—")):"Select a plan to get started.";
@@ -121,6 +123,7 @@
     const result=type==="Deposit"?await secure.requestDeposit({amount,method}):await secure.requestWithdrawal({amount,method});
     $("transactionForm").reset();await refresh();notice("Request submitted and awaiting administrator review. Reference: "+result.transactionId,false);
   });});
+  $("copyReferralLink").addEventListener("click",()=>{const code=$("referralCode").textContent;if(!code||code==="—"||code==="Not available"){notice("Referral code is not available yet.",true);return;}const url=new URL("secure-auth.html",window.location.href);url.searchParams.set("ref",code);navigator.clipboard.writeText(url.toString()).then(()=>notice("Referral link copied.",false)).catch(()=>notice(url.toString(),false));});
   $("refresh").addEventListener("click",()=>run(async()=>{await refresh();notice("Account information refreshed.",false);}));
   $("signOut").addEventListener("click",()=>run(async()=>{await secure.signOut();$("dashboard").classList.add("hidden");$("signedOut").classList.remove("hidden");notice("You have signed out.",false);}));
   secure.onAuthStateChanged(user=>{if(!user){$("dashboard").classList.add("hidden");$("signedOut").classList.remove("hidden");return;}run(refresh);});
