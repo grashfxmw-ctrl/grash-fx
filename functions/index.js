@@ -648,14 +648,26 @@ exports.adminSetAccountBalances = onCall(async (request) => {
   }
   const profileRef = db.ref("secure_users/" + uid);
   let before = null;
+  let reservedBalanceConflict = false;
   const result = await profileRef.transaction((current) => {
     if (!current) return;
+    const reserved = Object.values(current.withdrawalReservations || {}).reduce((sum, value) => {
+      const n = Number(value);
+      return sum + (Number.isFinite(n) && n > 0 ? n : 0);
+    }, 0);
+    if (supplied.includes("balance") && values.balance < reserved) {
+      reservedBalanceConflict = true;
+      return;
+    }
     before = {};
     for (const field of supplied) before[field] = Math.round(Number(current[field] || 0) * 100) / 100;
     const next = { ...current, updatedAt: Date.now() };
     for (const field of supplied) next[field] = values[field];
     return next;
   });
+  if (!result.committed && reservedBalanceConflict) {
+    throw new HttpsError("failed-precondition", "Balance cannot be set below funds reserved for pending withdrawals.");
+  }
   if (!result.committed) throw new HttpsError("not-found", "Customer account not found or no change was committed.");
   await writeAudit(admin.uid, "admin_balance_adjustment", null, { uid, reason, before, after: values });
   return { ok: true, uid, before, after: values };
