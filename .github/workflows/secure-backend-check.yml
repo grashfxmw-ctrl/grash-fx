@@ -30,4 +30,4 @@ jobs:
           test -f public/secure-auth.html
           test -f public/secure-account.html
           test -f public/frontend/secure-client.js
-          node -e "const c=require('./firebase.json'); if(c.hosting.public!=='public') process.exit(1); if(c.hosting.ignore.some(x=>x==='functions/**')) process.exit(1)"
+          node -e "const c=require('./firebase.json'); if(c.hosting.public!=='public') throw Error('Hosting must serve only public/'); if(!c.functions || c.functions[0].source!=='functions') throw Error('Functions source must be functions/');"
