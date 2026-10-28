@@ -416,3 +416,119 @@ exports.inspectLegacyAccount = onCall(async (request) => {
           : "This legacy account is restricted. Contact support."
   };
 });
+
+
+/**
+ * Stage a legacy account for an administrator's financial reconciliation.
+ * This is the first migration operation: it preserves reviewable business
+ * fields without trusting them as authoritative or crediting a new profile.
+ * Passwords and authentication secrets are never copied.
+ */
+exports.adminStageLegacyMigration = onCall(async (request) => {
+  const admin = requireAdmin(request);
+  const email = String(request.data?.email || "").trim().toLowerCase();
+  if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    throw new HttpsError("invalid-argument", "Enter a valid legacy customer email.");
+  }
+
+  const legacySnap = await db.ref("platform_data/users").get();
+  const raw = legacySnap.val();
+  const legacyUsers = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === "object" ? Object.values(raw) : [];
+  const matches = legacyUsers.filter((entry) =>
+    entry && typeof entry === "object" &&
+    String(entry.email || "").trim().toLowerCase() === email
+  );
+
+  if (matches.length === 0) {
+    throw new HttpsError("not-found", "No legacy customer matches that email.");
+  }
+  if (matches.length !== 1) {
+    throw new HttpsError("failed-precondition", "Multiple legacy records match. Resolve duplicates manually before staging.");
+  }
+
+  const legacy = matches[0];
+  if (legacy.isBlocked === true) {
+    throw new HttpsError("failed-precondition", "This legacy account is blocked and requires a separate support review.");
+  }
+
+  const migrationId = Buffer.from(email).toString("base64url");
+  const stageRef = db.ref(`migration_review/${migrationId}`);
+  const existing = await stageRef.get();
+  if (existing.exists()) {
+    const saved = existing.val();
+    await writeAudit(admin.uid, "legacy_migration_stage_reopened", null, { migrationId });
+    return {
+      ok: true,
+      alreadyStaged: true,
+      migrationId,
+      status: saved.status || "needs_reconciliation",
+      message: "This account is already staged. Existing review data was not overwritten."
+    };
+  }
+
+  const now = Date.now();
+  const staged = {
+    migrationId,
+    legacyId: String(legacy.id || ""),
+    email,
+    displayName: String(legacy.name || "").trim().slice(0, 100),
+    // These values are snapshots for comparison only; none are credited.
+    legacySnapshot: {
+      balance: Number.isFinite(Number(legacy.balance)) ? Number(legacy.balance) : null,
+      profit: Number.isFinite(Number(legacy.profit)) ? Number(legacy.profit) : null,
+      referralBonus: Number.isFinite(Number(legacy.refBonus)) ? Number(legacy.refBonus) : null,
+      referredBy: legacy.referredBy ? String(legacy.referredBy).slice(0, 120) : null,
+      referralCode: legacy.referralCode ? String(legacy.referralCode).slice(0, 40) : null,
+      activePlan: legacy.activePlan ? String(legacy.activePlan).slice(0, 80) : "None",
+      planAmount: Number.isFinite(Number(legacy.planAmount)) ? Number(legacy.planAmount) : null,
+      planRate: Number.isFinite(Number(legacy.planRate)) ? Number(legacy.planRate) : null,
+      planStartTime: legacy.planStartTime || null,
+      lastProfitTime: legacy.lastProfitTime || null,
+      isBlocked: legacy.isBlocked === true,
+      warningMsg: String(legacy.warningMsg || "").slice(0, 500)
+    },
+    status: "needs_reconciliation",
+    balanceVerified: false,
+    profitVerified: false,
+    planVerified: false,
+    referralVerified: false,
+    stagedBy: admin.uid,
+    stagedAt: now,
+    updatedAt: now
+  };
+
+  await stageRef.set(staged);
+  await writeAudit(admin.uid, "legacy_migration_staged", null, {
+    migrationId,
+    legacyId: staged.legacyId,
+    status: staged.status
+  });
+
+  return {
+    ok: true,
+    alreadyStaged: false,
+    migrationId,
+    status: staged.status,
+    message: "Legacy account staged for review. No secure profile or balance was changed."
+  };
+});
+
+/**
+ * Return the staged migration record to an administrator for reconciliation.
+ * Financial values remain explicitly marked unverified until a separate,
+ * audited approval operation is implemented.
+ */
+exports.adminGetLegacyMigration = onCall(async (request) => {
+  const admin = requireAdmin(request);
+  const migrationId = String(request.data?.migrationId || "").trim();
+  if (!migrationId || migrationId.length > 256) {
+    throw new HttpsError("invalid-argument", "A valid migration ID is required.");
+  }
+  const snap = await db.ref(`migration_review/${migrationId}`).get();
+  if (!snap.exists()) throw new HttpsError("not-found", "Migration review record not found.");
+  const record = snap.val();
+  await writeAudit(admin.uid, "legacy_migration_review_opened", null, { migrationId });
+  return record;
+});
