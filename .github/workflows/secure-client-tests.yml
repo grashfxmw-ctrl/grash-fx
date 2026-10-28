@@ -34,6 +34,7 @@ on:
       - "admin-review.html"
       - "admin-users.html"
       - "admin-legacy-review.html"
+      - "admin-audit.html"
       - ".github/workflows/secure-client-tests.yml"
 
 permissions:
