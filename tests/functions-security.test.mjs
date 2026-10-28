@@ -189,6 +189,29 @@ test("investment maturity returns principal plus accumulated profit exactly once
   assert.match(body, /creditedDays < 7/);
 });
 
+
+test("account deletion releases a phone only after auth deletion and blocks unresolved financial activity", () => {
+  const start = source.indexOf("exports.deleteMyAccount = onCall(async (request) => {");
+  assert.ok(start >= 0, "Missing secure account deletion callable");
+  const end = source.indexOf("\\n});", start);
+  const body = source.slice(start, end + 4);
+  assert.match(body, /Number\\(profile\\.balance \\|\\| 0\\) !== 0/);
+  assert.match(body, /Number\\(profile\\.profit \\|\\| 0\\) !== 0/);
+  assert.match(body, /activeInvestment && profile\\.activeInvestment\\.status === "Active"/);
+  assert.match(body, /status === "Pending" \\|\\| status === "Processing"/);
+  assert.ok(body.indexOf("await getAuth().deleteUser(actor.uid)") < body.indexOf('updates["secure_phone_numbers/" + phoneKey] = null'));
+  assert.match(body, /account_deleted/);
+});
+
+test("new account registrations record hashed IP reuse as a review signal, not an automatic block", () => {
+  assert.match(source, /request\\.rawRequest\\?\\.ip/);
+  assert.match(source, /secure_ip_signals/);
+  assert.match(source, /createHash\\("sha256"\\)\\.update\\(ip\\)/);
+  assert.match(source, /registration_ip_reused/);
+  assert.match(source, /flag_for_review_not_auto_block/);
+  assert.match(source, /if \\(created\\) \\{\\s*await writeAudit\\(actor\\.uid, "secure_profile_created"[\\s\\S]*?await recordRegistrationIp\\(request, actor\\.uid\\)/);
+});
+
 test("secure profile creation requires a verified phone claim and unique phone registry", () => {
   const start = source.indexOf("exports.createMyProfile = onCall(async (request) => {");
   const end = source.indexOf("\n});", start);
