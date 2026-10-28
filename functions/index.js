@@ -1,6 +1,7 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { initializeApp } = require("firebase-admin/app");
+const { getAuth } = require("firebase-admin/auth");
 const { getDatabase } = require("firebase-admin/database");
 const { randomUUID, createHash } = require("node:crypto");
 
@@ -52,6 +53,37 @@ function validAmount(value) {
     throw new HttpsError("invalid-argument", "Amount must be greater than zero and within the allowed limit.");
   }
   return Math.round(amount * 100) / 100;
+}
+
+function getRequestIp(request) {
+  // Use the platform-provided client IP only; do not trust a caller-supplied
+  // X-Forwarded-For header. IP is a risk signal, not a unique identity.
+  const ip = String(request.rawRequest?.ip || "").trim();
+  return ip && ip.length <= 64 ? ip : null;
+}
+
+async function recordRegistrationIp(request, uid) {
+  const ip = getRequestIp(request);
+  if (!ip) return;
+  const ipKey = createHash("sha256").update(ip).digest("hex");
+  const signalRef = db.ref("secure_ip_signals/" + ipKey);
+  let reusedByOtherUid = false;
+  await signalRef.transaction((current) => {
+    const previous = current && typeof current === "object" ? current : {};
+    const priorUids = previous.recentUids && typeof previous.recentUids === "object" ? previous.recentUids : {};
+    reusedByOtherUid = Object.keys(priorUids).some((knownUid) => knownUid !== uid);
+    const recentUids = { ...priorUids, [uid]: Date.now() };
+    const retained = Object.entries(recentUids)
+      .sort((a, b) => Number(b[1]) - Number(a[1]))
+      .slice(0, 10);
+    return { recentUids: Object.fromEntries(retained), lastSeenAt: Date.now() };
+  });
+  if (reusedByOtherUid) {
+    await writeAudit(uid, "registration_ip_reused", null, {
+      signal: "hashed_ip_seen_with_another_uid",
+      policy: "flag_for_review_not_auto_block"
+    });
+  }
 }
 
 async function writeAudit(actorUid, action, transactionId, detail = {}) {
@@ -128,6 +160,7 @@ exports.createMyProfile = onCall(async (request) => {
     }
   }
   if (created) await writeAudit(actor.uid, "secure_profile_created", null, { referralApplied: Boolean(referrerUid) });
+  await recordRegistrationIp(request, actor.uid);
   return { ok: true, created, referralCode: profile.referralCode || null };
 });
 
@@ -297,6 +330,66 @@ exports.reviewTransaction = onCall(async (request) => {
  * Admin SDK reads the protected paths, but the callable returns only this
  * caller's records and explicitly selected fields.
  */
+/**
+ * Deletes a secure account only when it has no money or unresolved activity.
+ * Historical transaction/audit records remain for reconciliation. The phone
+ * reservation is released only after Firebase Auth account deletion succeeds.
+ */
+exports.deleteMyAccount = onCall(async (request) => {
+  const actor = requireUser(request);
+  const profileRef = db.ref("secure_users/" + actor.uid);
+  const profileSnap = await profileRef.get();
+  if (!profileSnap.exists()) {
+    throw new HttpsError("not-found", "Secure account profile not found.");
+  }
+  const profile = profileSnap.val() || {};
+  if (Number(profile.balance || 0) !== 0 ||
+      Number(profile.profit || 0) !== 0 ||
+      Number(profile.referralBonus || 0) !== 0 ||
+      Number(profile.totalProfitEarned || 0) !== 0) {
+    throw new HttpsError("failed-precondition", "Settle all balances and recorded profits with support before deleting this account.");
+  }
+  if (profile.activeInvestment && profile.activeInvestment.status === "Active") {
+    throw new HttpsError("failed-precondition", "An active investment must be resolved before account deletion.");
+  }
+  const transactions = await db.ref("secure_transactions")
+    .orderByChild("userId").equalTo(actor.uid).get();
+  let unresolvedTransaction = false;
+  transactions.forEach((child) => {
+    const status = String(child.val()?.status || "");
+    if (status === "Pending" || status === "Processing") unresolvedTransaction = true;
+  });
+  if (unresolvedTransaction) {
+    throw new HttpsError("failed-precondition", "Resolve pending transactions before deleting this account.");
+  }
+
+  const phoneNumber = String(profile.phoneNumber || "").trim();
+  const phoneKey = phoneNumber ? createHash("sha256").update(phoneNumber).digest("hex") : "";
+  const phoneRef = phoneKey ? db.ref("secure_phone_numbers/" + phoneKey) : null;
+  if (phoneRef) {
+    const phoneSnap = await phoneRef.get();
+    if (phoneSnap.exists() && String(phoneSnap.val()) !== actor.uid) {
+      throw new HttpsError("failed-precondition", "Phone reservation ownership could not be confirmed. Contact support.");
+    }
+  }
+  await writeAudit(actor.uid, "account_deletion_requested", null, { phoneReservationPresent: Boolean(phoneRef) });
+  await getAuth().deleteUser(actor.uid);
+
+  const updates = {};
+  updates["secure_users/" + actor.uid] = null;
+  if (phoneRef) updates["secure_phone_numbers/" + phoneKey] = null;
+  if (profile.referralCode) {
+    const referralRef = db.ref("secure_referral_codes/" + String(profile.referralCode));
+    const referralSnap = await referralRef.get();
+    if (String(referralSnap.val() || "") === actor.uid) {
+      updates["secure_referral_codes/" + String(profile.referralCode)] = null;
+    }
+  }
+  await db.ref().update(updates);
+  await writeAudit(actor.uid, "account_deleted", null, { phoneReservationReleased: Boolean(phoneRef) });
+  return { ok: true, deleted: true };
+});
+
 exports.getMyAccountData = onCall(async (request) => {
   const actor = requireUser(request);
   const profileSnap = await db.ref(`secure_users/${actor.uid}`).get();
