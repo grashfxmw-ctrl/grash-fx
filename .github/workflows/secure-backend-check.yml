@@ -1,0 +1,33 @@
+name: Secure backend checks
+
+on:
+  push:
+    branches:
+      - production-backend-integration
+  pull_request:
+    branches:
+      - production-backend-integration
+
+jobs:
+  syntax-and-hosting-layout:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Functions dependencies
+        working-directory: functions
+        run: npm install --no-audit --no-fund
+      - name: Check Functions JavaScript syntax
+        working-directory: functions
+        run: npm run check
+      - name: Verify Hosting entry points
+        run: |
+          test -f public/index.html
+          test -f public/secure-auth.html
+          test -f public/secure-account.html
+          test -f public/frontend/secure-client.js
+          node -e "const c=require('./firebase.json'); if(c.hosting.public!=='public') process.exit(1); if(c.hosting.ignore.some(x=>x==='functions/**')) process.exit(1)"
