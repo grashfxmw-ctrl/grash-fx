@@ -181,6 +181,12 @@ exports.reviewTransaction = onCall(async (request) => {
   const initial = await txRef.get();
   if (!initial.exists()) throw new HttpsError("not-found", "Transaction not found.");
   const tx = initial.val();
+  if (decision === "approve" && tx.type === "Deposit" && validAmount(tx.amount) < MIN_DEPOSIT) {
+    throw new HttpsError("failed-precondition", "Minimum deposit is $20.00.");
+  }
+  if (decision === "approve" && tx.type === "Withdrawal" && validAmount(tx.amount) < MIN_WITHDRAWAL) {
+    throw new HttpsError("failed-precondition", "Minimum withdrawal is $50.00.");
+  }
   if (!["Pending", "Processing"].includes(tx.status)) {
     throw new HttpsError("failed-precondition", "Transaction is not in a reviewable state.");
   }
@@ -451,6 +457,9 @@ exports.adminSetAccountBalances = onCall(async (request) => {
   const admin = requireAdmin(request);
   const uid = String(request.data?.uid || "").trim();
   const reason = String(request.data?.reason || "").trim().slice(0, 500);
+  if (uid && !/^[A-Za-z0-9_-]{1,128}$/.test(uid)) {
+    throw new HttpsError("invalid-argument", "Customer UID format is invalid.");
+  }
   if (!uid || !reason) throw new HttpsError("invalid-argument", "Customer UID and adjustment reason are required.");
   const fields = ["balance", "profit", "referralBonus"];
   const supplied = fields.filter((field) => Object.prototype.hasOwnProperty.call(request.data || {}, field));
