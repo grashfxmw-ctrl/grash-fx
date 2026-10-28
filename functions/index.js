@@ -159,8 +159,10 @@ exports.createMyProfile = onCall(async (request) => {
       await writeAudit(actor.uid, "referral_reward_credited", null, { referrerUid, referredUid: actor.uid, amount: REFERRAL_REWARD, trigger: "verified_registration" });
     }
   }
-  if (created) await writeAudit(actor.uid, "secure_profile_created", null, { referralApplied: Boolean(referrerUid) });
-  await recordRegistrationIp(request, actor.uid);
+  if (created) {
+    await writeAudit(actor.uid, "secure_profile_created", null, { referralApplied: Boolean(referrerUid) });
+    await recordRegistrationIp(request, actor.uid);
+  }
   return { ok: true, created, referralCode: profile.referralCode || null };
 });
 
