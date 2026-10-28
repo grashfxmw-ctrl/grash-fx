@@ -556,7 +556,12 @@ exports.activateInvestmentPlan = onCall(async (request) => {
     if (!current || current.isBlocked === true) return;
     if (current.activeInvestment && current.activeInvestment.status === "Active") return;
     const balance = Math.round(Number(current.balance || 0) * 100) / 100;
-    if (balance < amount) return;
+    const reservedWithdrawals = Object.values(current.withdrawalReservations || {}).reduce((sum, value) => {
+      const n = Number(value);
+      return sum + (Number.isFinite(n) && n > 0 ? n : 0);
+    }, 0);
+    const availableBalance = Math.round((balance - reservedWithdrawals) * 100) / 100;
+    if (availableBalance < amount) return;
     const now = Date.now();
     activation = { id: randomUUID(), planName, principal: amount, dailyRate: plan.rate, durationDays: 7, startAt: now, lastProfitAt: now, creditedDays: 0, accumulatedProfit: 0, status: "Active" };
     return { ...current, balance: Math.round((balance - amount) * 100) / 100, activeInvestment: activation, updatedAt: now };
@@ -566,7 +571,7 @@ exports.activateInvestmentPlan = onCall(async (request) => {
     if (!latest) throw new HttpsError("failed-precondition", "Secure account profile not found.");
     if (latest.isBlocked === true) throw new HttpsError("permission-denied", "This account is restricted.");
     if (latest.activeInvestment && latest.activeInvestment.status === "Active") throw new HttpsError("failed-precondition", "An investment plan is already active.");
-    throw new HttpsError("failed-precondition", "Insufficient available balance.");
+    throw new HttpsError("failed-precondition", "Insufficient available balance after pending withdrawal reservations.");
   }
   await writeAudit(actor.uid, "investment_plan_activated", activation.id, { planName, principal: amount, dailyRate: plan.rate, durationDays: 7 });
   return { ok: true, investment: activation };
