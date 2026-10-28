@@ -1,4 +1,5 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { initializeApp } = require("firebase-admin/app");
 const { getDatabase } = require("firebase-admin/database");
 const { randomUUID } = require("node:crypto");
@@ -9,6 +10,17 @@ const db = getDatabase();
 const ADMIN_EMAIL = "grashfxmw@gmail.com";
 const MAX_REQUEST_AMOUNT = 100000;
 const ALLOWED_TYPES = new Set(["Deposit", "Withdrawal"]);
+const MIN_DEPOSIT = 20;
+const MIN_INVESTMENT = 50;
+const MIN_WITHDRAWAL = 50;
+const REFERRAL_REWARD = 5;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const INVESTMENT_PLANS = Object.freeze({
+  "Starter Plan": { rate: 10, min: 50, max: 500 },
+  "Basic Plan": { rate: 20, min: 501, max: 2000 },
+  "Premium Plan": { rate: 30, min: 2001, max: 5000 },
+  "VIP Plan": { rate: 40, min: 5001, max: 100000 }
+});
 
 /**
  * Require a verified Firebase Auth identity. Admin authorization is checked
@@ -111,6 +123,12 @@ exports.requestTransaction = onCall(async (request) => {
     throw new HttpsError("permission-denied", "This account is restricted.");
   }
 
+  if (type === "Deposit" && amount < MIN_DEPOSIT) {
+    throw new HttpsError("failed-precondition", "Minimum deposit is $20.00.");
+  }
+  if (type === "Withdrawal" && amount < MIN_WITHDRAWAL) {
+    throw new HttpsError("failed-precondition", "Minimum withdrawal is $50.00.");
+  }
   if (type === "Withdrawal" && Number(profile.balance || 0) < amount) {
     throw new HttpsError("failed-precondition", "Insufficient available balance.");
   }
@@ -325,6 +343,40 @@ exports.adminListTransactions = onCall(async (request) => {
  * Admin can inspect a single user's safe public profile fields. This is
  * intentionally narrow; do not expose a global all-users endpoint.
  */
+/**
+ * Admin-only balance editor. Each supplied field is set to an absolute USD
+ * amount; a reason and before/after values are recorded in the audit log.
+ */
+exports.adminSetAccountBalances = onCall(async (request) => {
+  const admin = requireAdmin(request);
+  const uid = String(request.data?.uid || "").trim();
+  const reason = String(request.data?.reason || "").trim().slice(0, 500);
+  if (!uid || !reason) throw new HttpsError("invalid-argument", "Customer UID and adjustment reason are required.");
+  const fields = ["balance", "profit", "referralBonus"];
+  const supplied = fields.filter((field) => Object.prototype.hasOwnProperty.call(request.data || {}, field));
+  if (!supplied.length) throw new HttpsError("invalid-argument", "Provide at least one balance field to update.");
+  const values = {};
+  for (const field of supplied) {
+    const amount = Number(request.data[field]);
+    if (!Number.isFinite(amount) || amount < 0 || amount > 100000000) {
+      throw new HttpsError("invalid-argument", field + " must be between 0 and 100,000,000.");
+    }
+    values[field] = Math.round(amount * 100) / 100;
+  }
+  const profileRef = db.ref("secure_users/" + uid);
+  let before = null;
+  const result = await profileRef.transaction((current) => {
+    if (!current) return;
+    before = {};
+    for (const field of supplied) before[field] = Math.round(Number(current[field] || 0) * 100) / 100;
+    const next = { ...current, updatedAt: Date.now() };
+    for (const field of supplied) next[field] = values[field];
+    return next;
+  });
+  if (!result.committed) throw new HttpsError("not-found", "Customer account not found or no change was committed.");
+  await writeAudit(admin.uid, "admin_balance_adjustment", null, { uid, reason, before, after: values });
+  return { ok: true, uid, before, after: values };
+});
 exports.adminGetUserProfile = onCall(async (request) => {
   requireAdmin(request);
   const uid = String(request.data?.uid || "").trim();
