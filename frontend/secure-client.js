@@ -90,6 +90,16 @@
         return call("inspectLegacyAccount");
       },
 
+      async stageLegacyMigration(email) {
+        await requireVerifiedUser();
+        return call("adminStageLegacyMigration", { email });
+      },
+
+      async getLegacyMigration(migrationId) {
+        await requireVerifiedUser();
+        return call("adminGetLegacyMigration", { migrationId });
+      },
+
       async loadAccount() {
         await requireVerifiedUser();
         return call("getMyAccountData");
