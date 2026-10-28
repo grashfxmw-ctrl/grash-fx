@@ -622,7 +622,8 @@ exports.activateInvestmentPlan = onCall(async (request) => {
     if (current.activeInvestment && current.activeInvestment.status === "Active") return;
     const balance = Math.round(Number(current.balance || 0) * 100) / 100;
     const reservedWithdrawals = Object.values(current.withdrawalReservations || {}).reduce((sum, value) => {
-      const n = Number(value);
+      // New reservations are objects; tolerate legacy numeric reservations too.
+      const n = Number(value && typeof value === "object" ? value.amount : value);
       return sum + (Number.isFinite(n) && n > 0 ? n : 0);
     }, 0);
     const availableBalance = Math.round((balance - reservedWithdrawals) * 100) / 100;
@@ -765,7 +766,8 @@ exports.adminSetAccountBalances = onCall(async (request) => {
   const result = await profileRef.transaction((current) => {
     if (!current) return;
     const reserved = Object.values(current.withdrawalReservations || {}).reduce((sum, value) => {
-      const n = Number(value);
+      // New reservations are objects; tolerate legacy numeric reservations too.
+      const n = Number(value && typeof value === "object" ? value.amount : value);
       return sum + (Number.isFinite(n) && n > 0 ? n : 0);
     }, 0);
     if (supplied.includes("balance") && values.balance < reserved) {
