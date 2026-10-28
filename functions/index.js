@@ -630,6 +630,54 @@ exports.processScheduledInvestmentProfits = onSchedule("every 15 minutes", async
   });
   await Promise.all(tasks);
 });
+/**
+ * Repairs orphaned withdrawal reservations after interrupted requests/reviews.
+ * Reservations are only released when their transaction is missing or terminal;
+ * pending/processing withdrawals remain reserved.
+ */
+exports.reconcileWithdrawalReservations = onSchedule("every 15 minutes", async () => {
+  const usersSnap = await db.ref("secure_users").get();
+  const tasks = [];
+  usersSnap.forEach((child) => {
+    const uid = child.key;
+    const profile = child.val() || {};
+    const reservations = profile.withdrawalReservations || {};
+    for (const [transactionId, reservationValue] of Object.entries(reservations)) {
+      tasks.push((async () => {
+        const amount = typeof reservationValue === "number"
+          ? reservationValue : Number(reservationValue?.amount);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          console.error("Invalid withdrawal reservation requires manual review", uid, transactionId);
+          return;
+        }
+        const txSnap = await db.ref("secure_transactions/" + transactionId).get();
+        const tx = txSnap.exists() ? txSnap.val() : null;
+        const missing = !tx;
+        const terminal = tx && ["Completed", "Rejected", "Cancelled"].includes(tx.status);
+        if (!missing && !terminal) return;
+        if (missing && typeof reservationValue === "object" &&
+            Date.now() - Number(reservationValue.createdAt || 0) < 15 * 60 * 1000) return;
+        const profileRef = db.ref("secure_users/" + uid);
+        const result = await profileRef.transaction((current) => {
+          if (!current?.withdrawalReservations?.[transactionId]) return current;
+          const currentReservation = current.withdrawalReservations[transactionId];
+          if (typeof reservationValue === "object" &&
+              (typeof currentReservation !== "object" ||
+               Number(currentReservation.createdAt || 0) !== Number(reservationValue.createdAt || 0))) return current;
+          const nextReservations = { ...current.withdrawalReservations };
+          delete nextReservations[transactionId];
+          return { ...current, withdrawalReservations: nextReservations, updatedAt: Date.now() };
+        });
+        if (result.committed) {
+          await writeAudit("system:withdrawal-reconciler", "withdrawal_reservation_released", transactionId,
+            { uid, amount, reason: missing ? "orphaned_reservation" : "terminal_transaction" });
+        }
+      })().catch((error) => console.error("Withdrawal reservation reconciliation failed", uid, transactionId, error)));
+    }
+  });
+  await Promise.all(tasks);
+});
+
 exports.adminSetAccountBalances = onCall(async (request) => {
   const admin = requireAdmin(request);
   const uid = String(request.data?.uid || "").trim();
