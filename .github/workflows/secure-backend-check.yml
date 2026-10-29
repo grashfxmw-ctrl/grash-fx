@@ -1,4 +1,4 @@
-name: Secure backend checks
+name: Supabase backend checks
 
 on:
   workflow_dispatch:
@@ -13,41 +13,20 @@ permissions:
   contents: read
 
 jobs:
-  syntax-and-hosting-layout:
+  repository-layout:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install Functions dependencies
-        working-directory: functions
-        run: npm install --no-audit --no-fund
-      - name: Check Functions JavaScript syntax
-        working-directory: functions
-        run: npm run check
-      - name: Verify frontend callable names match backend exports
-        run: |
-          node <<'NODE'
-          const fs = require('node:fs');
-          const client = fs.readFileSync('public/frontend/secure-client.js', 'utf8');
-          const backend = fs.readFileSync('functions/index.js', 'utf8');
-          const calls = [...client.matchAll(/call\(["']([^"']+)["']/g)].map(match => match[1]);
-          const exports = new Set([...backend.matchAll(/exports\.([A-Za-z0-9_]+)\s*=/g)].map(match => match[1]));
-          const missing = [...new Set(calls)].filter(name => !exports.has(name));
-          if (missing.length) {
-            console.error('Missing backend callable exports:', missing.join(', '));
-            process.exit(1);
-          }
-          console.log('All', new Set(calls).size, 'frontend callable names match backend exports.');
-          NODE
-      - name: Verify Hosting entry points
+      - name: Verify Supabase application files
         run: |
           test -f public/index.html
-          test -f public/secure-auth.html
-          test -f public/secure-account.html
-          test -f public/frontend/secure-client.js
-          node -e "const c=require('./firebase.json'); if(c.hosting.public!=='public') throw Error('Hosting must serve only public/'); if(!c.functions || c.functions[0].source!=='functions') throw Error('Functions source must be functions/');"
+          test -f public/supabase-auth.html
+          test -f public/admin-dashboard.html
+          test -f supabase/functions/account-api/index.ts
+          test -d supabase/migrations
+          if grep -Rni --exclude-dir=.git --exclude='README.md' 'firebase' .; then
+            echo "Unexpected Firebase reference remains in application files."
+            exit 1
+          fi
