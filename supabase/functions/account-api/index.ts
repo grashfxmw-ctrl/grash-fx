@@ -209,8 +209,8 @@ Deno.serve(async (req: Request) => {
         if (!withdrawal && clientReference.length < 3) return json({ error: "Enter the transfer reference so finance can match your deposit." }, 400);
         if (withdrawal) {
           const payout = details as Record<string, unknown>;
-          if (!clean(payout.account_holder, 120) || !clean(payout.account_number, 160) || !clean(payout.country, 80)) {
-            return json({ error: "Provide recipient name, destination details, and country for the withdrawal." }, 400);
+          if (!clean(payout.account_holder, 120) || !clean(payout.account_number, 160)) {
+            return json({ error: "Provide the recipient name and destination details for the withdrawal." }, 400);
           }
           if (["bank_transfer", "eft"].includes(paymentMethod) && !clean(payout.bank_name, 120)) {
             return json({ error: "Enter the bank name for this withdrawal method." }, 400);
