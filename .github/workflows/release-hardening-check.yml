@@ -1,0 +1,56 @@
+name: GRASH FX release hardening checks
+
+on:
+  push:
+    branches: [release-hardening-financial-ops]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  release-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check required files and production hardening features
+        run: |
+          test -f public/index.html
+          test -f public/supabase-auth.html
+          test -f public/admin-dashboard.html
+          test -f supabase/functions/account-api/index.ts
+          test -f supabase/migrations/20261029195000_release_hardening_financial_ops.sql
+          test -f supabase/migrations/20261029195500_referral_rewards_and_codes.sql
+          grep -q 'admin_adjust_balance' supabase/functions/account-api/index.ts
+          grep -q 'process_my_referral_reward' supabase/functions/account-api/index.ts
+          grep -q 'LOGIN_NOTIFICATION_WEBHOOK_URL' supabase/functions/account-api/index.ts
+          grep -q 'shared_ip_accounts' supabase/functions/account-api/index.ts
+          grep -q 'Starter plan maximum' supabase/functions/account-api/index.ts
+          grep -q 'id="signupPhone"' public/supabase-auth.html
+          grep -q 'id="referralCode"' public/supabase-auth.html
+          grep -q 'data-balance-user' public/admin-dashboard.html
+      - name: Parse inline browser JavaScript
+        run: |
+          python - <<'PY'
+          import pathlib, re, subprocess, tempfile
+          pages = ["public/index.html", "public/supabase-auth.html", "public/admin-dashboard.html"]
+          with tempfile.TemporaryDirectory() as temp:
+              count = 0
+              for page in pages:
+                  html = pathlib.Path(page).read_text(encoding="utf-8")
+                  for match in re.finditer(r"<script\\b([^>]*)>(.*?)</script\\s*>", html, re.I | re.S):
+                      attrs, code = match.group(1), match.group(2)
+                      if re.search(r"\\bsrc\\s*=", attrs, re.I) or not code.strip():
+                          continue
+                      path = pathlib.Path(temp) / f"inline-{count}.js"
+                      path.write_text(code, encoding="utf-8")
+                      subprocess.run(["node", "--check", str(path)], check=True)
+                      count += 1
+              if count < 3:
+                  raise SystemExit(f"Expected inline JavaScript on all pages; parsed only {count} blocks")
+              print(f"Parsed {count} inline JavaScript blocks successfully.")
+          PY
