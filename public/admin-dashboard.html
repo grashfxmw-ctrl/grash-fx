@@ -26,6 +26,7 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
 <div class="panel"><div class="section-head"><div><h2>Pending customer registrations</h2><p class="muted">Approve only after checking the submitted customer details.</p></div><span id="profileCount" class="pill">0 awaiting review</span></div><div id="profiles" class="grid"></div></div>
 <div class="panel"><div class="section-head"><div><h2>Deposit and withdrawal requests</h2><p class="muted">Verify deposits independently before approval. A submitted request is not proof of payment.</p></div><span id="transactionCount" class="pill">0 requests</span></div><div id="transactions" class="grid"></div></div>
 <div class="panel"><div class="section-head"><div><h2>Customer directory and balance controls</h2><p class="muted">Adjustments create permanent ledger entries and audit records. Debits cannot use funds reserved for pending withdrawals.</p></div><span id="customerCount" class="pill">0 customers</span></div><div id="customers" class="grid"></div></div>
+<div class="panel"><div class="section-head"><div><h2>Referral program overview</h2><p class="muted">Read-only attribution and reward audit. Reward totals come from the ledger, not estimated referral counts.</p></div><span id="referralCount" class="pill">0 referrals</span></div><div id="referralSummary" class="status">Loading referral totals…</div><div id="referrals" class="grid"></div></div>
 <div class="panel"><div class="section-head"><div><h2>Recent login activity and shared-IP flags</h2><p class="muted">IP addresses are stored as one-way hashes. A shared IP is a review signal, not automatic proof of duplicate ownership.</p></div></div><div id="loginEvents" class="grid"></div><div id="sharedIpFlags" class="status">No shared-IP flags.</div></div>
 <div class="panel"><div class="section-head"><div><h2>Active investments and maturity monitoring</h2><p class="muted">Read-only monitoring. Matured investments are paid by the scheduled server process, not by an admin button.</p></div><span id="investmentCount" class="pill">0 active investments</span></div><div id="investments" class="grid"></div></div>
 <div id="message" class="status" role="status" aria-live="polite">Ready.</div>
@@ -61,7 +62,7 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
    say("Loading admin queue…");
    try {
      const queue=await api("/admin/queue");
-     const profiles=queue.pending_profiles||[], transactions=queue.financial_requests||[], investments=queue.investments||[], customers=queue.customers||[];
+     const profiles=queue.pending_profiles||[], transactions=queue.financial_requests||[], investments=queue.investments||[], customers=queue.customers||[], referralOverview=queue.referral_overview||{totals:{},rows:[]};
      $("profileCount").textContent=profiles.length+" awaiting review";
      $("transactionCount").textContent=transactions.length+" requests";
      $("investmentCount").textContent=investments.length+" active investments";
@@ -106,6 +107,17 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
         <p class="muted">Matures: ${esc(new Date(i.matures_at).toLocaleString())}</p>
        </article>`).join(""):empty("No active investments awaiting maturity.");
      const loginEvents=queue.login_events||[];
+     const rt=referralOverview.totals||{}, rr=referralOverview.rows||[];
+     $("referralCount").textContent=(rt.referrals||0)+" referrals";
+     $("referralSummary").textContent=`Pending: ${rt.pending||0} · Rewarded: ${rt.rewarded||0} · Rejected: ${rt.rejected||0} · Ledger rewards credited: ${money(rt.reward_total)} USD`;
+     $("referrals").innerHTML=rr.length?rr.map(r=>`
+       <article class="item">
+         <h3>${esc(r.referrer_name)} → ${esc(r.referred_name)}</h3>
+         <p class="muted">Referrer: ${esc(r.referrer_email||"Email unavailable")}</p>
+         <p class="muted">Referred account: ${esc(r.referred_email||"Email unavailable")}</p>
+         <p>Code: ${esc(r.referral_code)} · <span class="pill ${r.status==="pending"?"warn":""}">${esc(r.status)}</span></p>
+         <p class="muted">Created: ${esc(r.created_at?new Date(r.created_at).toLocaleString():"Unknown")} ${r.rewarded_at?"· Rewarded: "+esc(new Date(r.rewarded_at).toLocaleString()):""}</p>
+       </article>`).join(""):empty("No referral records yet. This is normal until someone registers using a valid referral code.");
      $("loginEvents").innerHTML=loginEvents.length?loginEvents.map(e=>`
        <article class="item"><h3>${esc(e.country_code||"Country unavailable")} · ${esc(new Date(e.created_at).toLocaleString())}</h3>
        <p class="muted">Account ID: ${esc(e.user_id)}</p><p class="muted">IP hash: ${esc((e.ip_hash||"unavailable").slice(0,16))}…</p>
