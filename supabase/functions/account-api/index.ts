@@ -50,19 +50,32 @@ Deno.serve(async (req: Request) => {
       return (data || []).length > 0;
     };
     const getBalances = async () => {
-      const { data, error } = await adminClient.from("ledger_entries").select("entry_type,amount,currency")
-        .eq("user_id", user.id).eq("currency", "USD");
-      if (error) throw error;
+      const [ledgerResult, pendingResult, referralCreditsResult, referralTransfersResult] = await Promise.all([
+        adminClient.from("ledger_entries").select("entry_type,amount,currency").eq("user_id", user.id).eq("currency", "USD"),
+        adminClient.from("money_requests").select("amount").eq("user_id", user.id).eq("request_type", "withdrawal")
+          .in("status", ["submitted", "under_review", "approved"]),
+        adminClient.from("ledger_entries").select("amount").eq("user_id", user.id)
+          .eq("entry_type", "referral_bonus_credit").eq("currency", "USD"),
+        adminClient.from("referral_transfers").select("amount").eq("user_id", user.id)
+      ]);
+      if (ledgerResult.error) throw ledgerResult.error;
+      if (pendingResult.error) throw pendingResult.error;
+      if (referralCreditsResult.error) throw referralCreditsResult.error;
+      if (referralTransfersResult.error) throw referralTransfersResult.error;
       let balance = 0, profit = 0;
-      for (const row of data || []) {
+      for (const row of ledgerResult.data || []) {
         balance += Number(row.amount || 0);
         if (row.entry_type === "profit_credit") profit += Number(row.amount || 0);
       }
-      const { data: pending, error: pendingError } = await adminClient.from("money_requests").select("amount")
-        .eq("user_id", user.id).eq("request_type", "withdrawal").in("status", ["submitted", "under_review", "approved"]);
-      if (pendingError) throw pendingError;
-      const reserved = (pending || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
-      return { balance: Math.round(balance * 100) / 100, available_balance: Math.round((balance - reserved) * 100) / 100, profit_balance: Math.round(profit * 100) / 100 };
+      const reserved = (pendingResult.data || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
+      const referralEarned = (referralCreditsResult.data || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
+      const referralTransferred = (referralTransfersResult.data || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
+      return {
+        balance: Math.round(balance * 100) / 100,
+        available_balance: Math.round((balance - reserved) * 100) / 100,
+        profit_balance: Math.round(profit * 100) / 100,
+        referral_balance: Math.round((referralEarned - referralTransferred) * 100) / 100
+      };
     };
 
     if (req.method === "GET" && path.endsWith("/plans")) {
@@ -91,15 +104,18 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "GET" && path.endsWith("/referrals")) {
       if (!profile) return json({ error: "Complete account registration first." }, 403);
-      const [referralsResult, rewardsResult] = await Promise.all([
+      const [referralsResult, rewardsResult, transfersResult] = await Promise.all([
         adminClient.from("referrals").select("id,referred_user_id,referral_code,status,created_at,rewarded_at")
           .eq("referrer_user_id", user.id).order("created_at", { ascending: false }).limit(500),
         adminClient.from("ledger_entries").select("amount,created_at")
           .eq("user_id", user.id).eq("entry_type", "referral_bonus_credit").eq("currency", "USD")
-          .order("created_at", { ascending: false }).limit(500)
+          .order("created_at", { ascending: false }).limit(500),
+        adminClient.from("referral_transfers").select("amount,created_at")
+          .eq("user_id", user.id).order("created_at", { ascending: false }).limit(500)
       ]);
       if (referralsResult.error) throw referralsResult.error;
       if (rewardsResult.error) throw rewardsResult.error;
+      if (transfersResult.error) throw transfersResult.error;
       const referrals = referralsResult.data || [];
       const referredIds = referrals.map(r => r.referred_user_id);
       let referredProfiles: Array<{user_id:string;full_name:string|null}> = [];
@@ -116,7 +132,11 @@ Deno.serve(async (req: Request) => {
           eligible: referrals.filter(r => r.status === "eligible").length,
           rewarded: referrals.filter(r => r.status === "rewarded").length,
           rejected: referrals.filter(r => r.status === "rejected").length,
-          reward_total: Math.round(rewards.reduce((sum, r) => sum + Number(r.amount || 0), 0) * 100) / 100
+          reward_total: Math.round(rewards.reduce((sum, r) => sum + Number(r.amount || 0), 0) * 100) / 100,
+          transferred_total: Math.round((transfersResult.data || []).reduce((sum, r) => sum + Number(r.amount || 0), 0) * 100) / 100,
+          available_balance: Math.round((rewards.reduce((sum, r) => sum + Number(r.amount || 0), 0)
+            - (transfersResult.data || []).reduce((sum, r) => sum + Number(r.amount || 0), 0)) * 100) / 100,
+          transfer_threshold: 60
         },
         referrals: referrals.map(r => ({ id:r.id, referral_code:r.referral_code, status:r.status,
           created_at:r.created_at, rewarded_at:r.rewarded_at, referred_name:nameById.get(r.referred_user_id) || "Referred client" }))
@@ -287,6 +307,14 @@ Deno.serve(async (req: Request) => {
       let body: Record<string, unknown>;
       try { body = await req.json(); } catch { return json({ error: "Invalid JSON body." }, 400); }
       if (!profile) return json({ error: "Your profile is not ready yet. Sign in again shortly." }, 403);
+
+      if (path.endsWith("/referrals/transfer")) {
+        const idempotencyKey = keyOf(req, body);
+        if (idempotencyKey.length < 8) return json({ error: "A valid transfer request key is required." }, 400);
+        const { data, error } = await userClient.rpc("transfer_referral_gains", { p_idempotency_key: idempotencyKey });
+        if (error) return json({ error: error.message }, 400);
+        return json({ transferred_amount: Number(data || 0), status: "transferred" });
+      }
 
       if (path.endsWith("/login-event")) {
         await tryReferralReward();
