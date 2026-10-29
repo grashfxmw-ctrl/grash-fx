@@ -7,7 +7,7 @@ const adminPage = await readFile(new URL("../public/admin-dashboard.html", impor
 const apiSource = await readFile(new URL("../supabase/functions/account-api/index.ts", import.meta.url), "utf8");
 
 test("client portal points to the active Supabase project and account API", () => {
-  assert.match(authPage, /https:\/\/vsearqlfvrhkckyndwtv\.supabase\.co/);
+  assert.match(authPage, /https:\/\/vwghcjkgzeausfxqphmf\.supabase\.co/);
   assert.match(authPage, /\/functions\/v1\/account-api/);
   assert.match(authPage, /signUp\(/);
   assert.match(authPage, /signInWithPassword\(/);
