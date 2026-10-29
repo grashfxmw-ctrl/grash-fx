@@ -274,7 +274,8 @@ Deno.serve(async (req: Request) => {
         } else return json({ error: "Unsupported review decision." }, 400);
         const { data, error } = await userClient.rpc("review_money_request", {
           p_request_id: requestId, p_action: action, p_reason: reason,
-          p_external_payment_reference: clean(body.reference || body.reason, 160),
+          p_external_payment_reference: decision === "complete" || (decision === "approve" && action === "confirm_deposit")
+            ? clean(body.reference, 160) || null : null,
         });
         if (error) return json({ error: error.message }, 400);
         return json({ request_id: data, status: "reviewed" });
