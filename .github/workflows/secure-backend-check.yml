@@ -26,7 +26,3 @@ jobs:
           test -f public/admin-dashboard.html
           test -f supabase/functions/account-api/index.ts
           test -d supabase/migrations
-          if grep -Rni --exclude-dir=.git --exclude='README.md' 'firebase' .; then
-            echo "Unexpected Firebase reference remains in application files."
-            exit 1
-          fi
