@@ -39,6 +39,24 @@ This is only a calculation rule, not a claim that the profit will be earned or p
 - Website ledger totals do not prove that external funds exist.
 - Reconcile the ledger against external bank/payment records every day.
 
+## Step 8 — Investment records, maturity and cash availability
+
+The backend foundation records the principal, approved plan ID/version snapshot, daily-rate snapshot, rate basis, server-generated start timestamp, seven-day maturity timestamp and lifecycle status. The server-side maturity function in `schema/004_server_side_financial_engine.sql` calculates simple daily profit as:
+
+`profit = round(principal × saved_daily_rate × saved_term_days, 2)`
+
+It uses row locks and deterministic ledger idempotency keys to avoid duplicate principal/profit credits when the worker retries. This calculation is only the contractual amount recorded by the internal ledger; it is not proof that external cash exists.
+
+**Critical launch gap:** the current maturity function credits principal and profit into the client ledger at maturity, and the withdrawal function checks that internal ledger. There is not yet a separate, reconciled treasury/liquidity control that proves enough external funds are available to pay all matured liabilities. Until that control exists, an internal balance or displayed profit must not be described as cash available for withdrawal, and real-money withdrawals must not be enabled.
+
+Before Step 8 can be considered complete:
+1. Keep the investment's maturity amount/obligation separate from the withdrawable cash balance.
+2. Add a server-controlled treasury balance or reconciliation record sourced from verified external bank/payment records; clients must never edit it.
+3. Reserve/consume treasury liquidity transactionally when a payout is approved/completed, preventing concurrent requests from promising the same cash twice.
+4. Make withdrawal approval fail safely when reconciled available liquidity is insufficient; record the reason and alert the finance operator.
+5. Configure and monitor a scheduled worker for `private.mature_due_investments()`, with retry-safe failure alerts and reconciliation.
+6. Test calculations, rounding, time-zone boundaries, duplicate runs, concurrent withdrawals, insufficient treasury liquidity and failed external payouts in staging.
+
 ## Not implemented yet
 
 The schema does not itself implement account authentication, row-level security, available-balance checks, investment creation, deposit confirmation, withdrawal payout, maturity worker scheduling, notifications or payment integrations. These require provider-specific server-side code and tests.
