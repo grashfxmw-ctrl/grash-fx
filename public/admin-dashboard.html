@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080b12">
+<title>GRASH FX — Admin Dashboard</title>
+<style>
+:root{color-scheme:dark;--bg:#080b12;--panel:#111827;--line:#273449;--text:#f3f6fb;--muted:#9aa9bd;--accent:#48d6a5;--danger:#ff8585;--warn:#f4c66a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#16263a 0,var(--bg) 55%);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text);min-height:100vh;padding:20px}
+main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px}.brand h1{font-size:24px;letter-spacing:.1em;margin:0}.brand p{color:var(--muted);margin:3px 0}.panel{background:rgba(17,24,39,.96);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px}h2{font-size:19px;margin:0 0 12px}.muted{color:var(--muted);font-size:13px}.field{margin:12px 0}label{display:block;color:#c7d2e1;font-size:13px;margin-bottom:6px}input{width:100%;padding:11px 12px;border-radius:9px;border:1px solid var(--line);background:#0a111d;color:var(--text);font:inherit}button{border:1px solid var(--line);border-radius:9px;padding:10px 13px;background:#1c2b3d;color:var(--text);font:600 13px system-ui;cursor:pointer}button.primary{background:var(--accent);color:#05261d;border-color:transparent}button.danger{color:#2b0707;background:var(--danger);border-color:transparent}button:disabled{opacity:.55;cursor:wait}.hidden{display:none!important}.status{white-space:pre-wrap;margin-top:12px;padding:10px;border-radius:9px;background:#0a111d;color:#d7e5f4;min-height:40px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.item{border:1px solid var(--line);background:#0a111d;border-radius:12px;padding:14px;min-width:0}.item h3{font-size:15px;margin:0 0 5px;overflow-wrap:anywhere}.item p{margin:5px 0;overflow-wrap:anywhere}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.pill{display:inline-block;padding:3px 8px;border-radius:999px;background:#263449;color:#d7e5f4;font-size:12px}.pill.warn{color:#241a04;background:var(--warn)}.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.empty{padding:18px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:10px}.login{max-width:440px;margin:40px auto}.top-actions{display:flex;gap:8px;flex-wrap:wrap}
+</style>
+</head>
+<body><main>
+<header class="brand"><div><h1>GRASH FX · ADMIN</h1><p>Customer onboarding and financial request review</p></div><div class="top-actions"><button id="refresh" class="hidden">Refresh queue</button><button id="signout" class="hidden">Sign out</button></div></header>
+<section id="loginPanel" class="panel login">
+<h2>Administrator sign in</h2>
+<p class="muted">Use the verified administrator account. Admin access is checked again by the server for every protected request.</p>
+<form id="loginForm">
+<div class="field"><label for="email">Administrator email</label><input id="email" type="email" autocomplete="username" required></div>
+<div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
+<button class="primary" type="submit">Sign in securely</button>
+</form>
+<div id="loginMessage" class="status" role="status">Sign in to continue.</div>
+</section>
+<section id="dashboard" class="hidden">
+<div class="panel"><div class="section-head"><div><h2>Pending customer registrations</h2><p class="muted">Approve only after checking the submitted customer details.</p></div><span id="profileCount" class="pill">0 awaiting review</span></div><div id="profiles" class="grid"></div></div>
+<div class="panel"><div class="section-head"><div><h2>Deposit and withdrawal requests</h2><p class="muted">Verify deposits independently before approval. A submitted request is not proof of payment.</p></div><span id="transactionCount" class="pill">0 requests</span></div><div id="transactions" class="grid"></div></div>
+<div class="panel"><div class="section-head"><div><h2>Customer directory</h2><p class="muted">Read-only customer records and balances.</p></div><span id="customerCount" class="pill">0 customers</span></div><div id="customers" class="grid"></div></div>
+<div class="panel"><div class="section-head"><div><h2>Active investments and maturity monitoring</h2><p class="muted">Read-only monitoring. Matured investments are paid by the scheduled server process, not by an admin button.</p></div><span id="investmentCount" class="pill">0 active investments</span></div><div id="investments" class="grid"></div></div>
+<div id="message" class="status" role="status" aria-live="polite">Ready.</div>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+ const SUPABASE_URL = "https://vwghcjkgzeausfxqphmf.supabase.co";
+ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_gn3ndWb6xAtoaZ4FYFaHug_sbnCJI33";
+ const API = SUPABASE_URL + "/functions/v1/account-api";
+ const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+ const $ = id => document.getElementById(id);
+ const money = value => Number(value || 0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+ const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ const say = message => $("message").textContent = message;
+ async function api(path, method="GET", body) {
+   const {data:{session}} = await client.auth.getSession();
+   if(!session) throw new Error("Session expired. Please sign in again.");
+   const response = await fetch(API+path,{method,headers:{Authorization:"Bearer "+session.access_token,apikey:SUPABASE_PUBLISHABLE_KEY,"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined});
+   const data = await response.json().catch(()=>({}));
+   if(!response.ok) throw new Error(data.error || "Request failed.");
+   return data;
+ }
+ function setLoggedIn(yes) {
+   $("loginPanel").classList.toggle("hidden",yes);
+   $("dashboard").classList.toggle("hidden",!yes);
+   $("refresh").classList.toggle("hidden",!yes);
+   $("signout").classList.toggle("hidden",!yes);
+ }
+ function empty(message){return '<div class="empty">'+esc(message)+'</div>'}
+ async function loadQueue(){
+   say("Loading admin queue…");
+   try {
+     const queue=await api("/admin/queue");
+     const profiles=queue.pending_profiles||[], transactions=queue.financial_requests||[], investments=queue.investments||[], customers=queue.customers||[];
+     $("profileCount").textContent=profiles.length+" awaiting review";
+     $("transactionCount").textContent=transactions.length+" requests";
+     $("investmentCount").textContent=investments.length+" active investments";
+     $("customerCount").textContent=customers.length+" customers";
+     $("profiles").innerHTML=profiles.length?profiles.map(p=>`
+       <article class="item">
+        <h3>${esc(p.full_name||"Name not supplied")}</h3>
+        <p class="muted">${esc(p.email)}</p><p>${esc(p.phone_e164||"No phone")} · <span class="pill warn">${esc(p.status)}</span></p>
+        <p class="muted">Registered: ${esc(new Date(p.created_at).toLocaleString())}</p>
+        <p>Main balance: ${money(p.balance)} · Profit: ${money(p.profit_balance)}</p>
+        <div class="actions"><button class="primary" data-profile="${esc(p.id)}" data-decision="approve">Approve account</button><button class="danger" data-profile="${esc(p.id)}" data-decision="reject">Reject / block</button></div>
+       </article>`).join(""):empty("No customer registrations awaiting review.");
+     $("transactions").innerHTML=transactions.length?transactions.map(t=>`
+       <article class="item">
+        <h3>${esc(t.kind.toUpperCase())} · ${money(t.amount)}</h3>
+        <p><span class="pill warn">${esc(t.status)}</span></p>
+        <p class="muted">Customer ID: ${esc(t.user_id)}</p>
+        <p class="muted">Request ID: ${esc(t.id)}</p>
+        <p class="muted">${esc(t.description||"No description")} · ${esc(new Date(t.created_at).toLocaleString())}</p>
+        <div class="field"><label for="reason-${esc(t.id)}">Review note / payment reference</label><input id="reason-${esc(t.id)}" maxlength="250" placeholder="Enter verification note"></div>
+        <div class="actions"><button class="primary" data-transaction="${esc(t.id)}" data-decision="approve">Approve</button>${t.kind === "withdrawal" && t.status === "approved" ? `<button class="primary" data-transaction="${esc(t.id)}" data-decision="complete">Mark paid</button>` : ""}<button class="danger" data-transaction="${esc(t.id)}" data-decision="reject">Reject / release reservation</button></div>
+       </article>`).join(""):empty("No deposit or withdrawal requests awaiting review.");
+     $("customers").innerHTML=customers.length?customers.map(c=>`
+       <article class="item">
+        <h3>${esc(c.full_name||"Name not supplied")}</h3>
+        <p class="muted">${esc(c.email)}</p>
+        <p><span class="pill">${esc(c.status)}</span></p>
+        <p>Main balance: ${money(c.balance)} · Profit balance: ${money(c.profit_balance)}</p>
+        <p class="muted">Customer ID: ${esc(c.id)}</p>
+        <p class="muted">Phone: ${esc(c.phone_e164||"Not verified / not supplied")}</p>
+       </article>`).join(""):empty("No customer profiles found.");
+     $("investments").innerHTML=investments.length?investments.map(i=>`
+       <article class="item">
+        <h3>${esc(i.plan_code.toUpperCase())} · ${money(i.principal)}</h3>
+        <p><span class="pill">${esc(i.status)}</span> · <span class="pill">${esc(i.last_processed_day)}/7 days processed</span></p>
+        <p class="muted">Customer ID: ${esc(i.user_id)}</p>
+        <p class="muted">Investment ID: ${esc(i.id)}</p>
+        <p>Daily rate: ${(Number(i.daily_rate)*100).toFixed(2)}% · Profit paid: ${money(i.profit_paid)}</p>
+        <p class="muted">Started: ${esc(new Date(i.started_at).toLocaleString())}</p>
+        <p class="muted">Matures: ${esc(new Date(i.matures_at).toLocaleString())}</p>
+       </article>`).join(""):empty("No active investments awaiting maturity.");
+     say("Queue refreshed. Review details carefully before approving any money movement.");
+   } catch(error) {
+     if((error.message||"").includes("Admin access required")) {
+       await client.auth.signOut();
+       setLoggedIn(false);
+       $("loginMessage").textContent="This account is not an active administrator. You have been signed out.";
+       return;
+     }
+     say(error.message||"Could not load the admin queue.");
+   }
+ }
+ $("loginForm").onsubmit=async event=>{
+   event.preventDefault(); const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
+   try {
+     const {data,error}=await client.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+     if(error) throw error;
+     if((data.user?.email||"").toLowerCase()!=="grashfxmw@gmail.com") throw new Error("This page is restricted to the configured administrator email.");
+     setLoggedIn(true);
+     await loadQueue();
+   } catch(error) {
+     await client.auth.signOut();
+     setLoggedIn(false);
+     $("loginMessage").textContent=error.message||"Sign in failed.";
+   }
+   finally {button.disabled=false;}
+ };
+ $("refresh").onclick=loadQueue;
+ $("signout").onclick=async()=>{await client.auth.signOut();setLoggedIn(false);$("loginMessage").textContent="Signed out.";};
+ document.addEventListener("click",async event=>{
+   const button=event.target.closest("button[data-profile],button[data-transaction]");
+   if(!button)return;
+   const decision=button.dataset.decision;
+   if(decision==="reject"&&!confirm("Confirm rejection? This action will be recorded in the audit log."))return;
+   button.disabled=true;
+   try {
+     if(button.dataset.profile) {
+       const note=prompt(decision==="approve"?"Optional approval note:":"Reason for rejecting/blocking this account:")||"";
+       await api("/admin/profile-review","POST",{user_id:button.dataset.profile,decision,reason:note});
+     } else {
+       const id=button.dataset.transaction;
+       const note=$("reason-"+id)?.value||"";
+       if(decision==="complete" && note.trim().length<3) throw new Error("Enter the external payment reference before marking a withdrawal paid.");
+       await api("/admin/review","POST",{transaction_id:id,decision,reference:note,reason:note});
+     }
+     say("Review saved successfully. Refreshing queue…");
+     await loadQueue();
+   } catch(error) {say(error.message||"Review action failed.");button.disabled=false;}
+ });
+ client.auth.getSession().then(async({data})=>{
+   if(data.session&&(data.session.user?.email||"").toLowerCase()==="grashfxmw@gmail.com"){
+     setLoggedIn(true);await loadQueue();
+   }
+ });
+})();
+</script>
+</body></html>
