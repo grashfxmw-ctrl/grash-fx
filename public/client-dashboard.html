@@ -97,6 +97,6 @@ message("Account information loaded.");
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 $("profileForm").onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{await api("/profile-update","POST",{full_name:$("fullName").value.trim(),phone:$("phone").value.trim()});const {error}=await sb.auth.updateUser({data:{full_name:$("fullName").value.trim()}});if(error)throw error;message("Profile updated successfully.");await load();}catch(err){message(err.message);}finally{b.disabled=false;}};
 $("passwordForm").onsubmit=async e=>{e.preventDefault();const a=$("newPassword").value,c=$("confirmPassword").value;if(a!==c){message("The passwords do not match.");return;}const b=e.submitter;b.disabled=true;try{const {error}=await sb.auth.updateUser({password:a});if(error)throw error;$("passwordForm").reset();message("Password updated successfully.");}catch(err){message(err.message);}finally{b.disabled=false;}};
-lucide.createIcons();sb.auth.onAuthStateChange((event)=>{if(event==="SIGNED_OUT")location.replace("supabase-auth.html?mode=signin");});load();
+lucide.createIcons();sb.auth.onAuthStateChange((event)=>{if(event==="SIGNED_OUT")location.replace("supabase-auth.html?mode=signin");});if(["#funds","#depositForm","#withdrawalForm"].includes(location.hash))show("funds");load();
 })();
 </script></body></html>
