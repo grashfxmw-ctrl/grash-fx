@@ -195,8 +195,8 @@ Deno.serve(async (req: Request) => {
         if (withdrawal && value < 50) return json({ error: "The minimum withdrawal is $50.00." }, 400);
         const clientReference = clean(body.client_reference || body.reference, 120);
         const paymentMethod = clean(body.payment_method || (withdrawal ? "bank_transfer" : ""), 40);
-        const allowedDepositMethods = ["usdt_ethereum", "usdc_ethereum", "bitcoin", "airtel_money"];
-        const allowedWithdrawalMethods = ["bank_transfer", "eft", "airtel_money", "mpamba", "mtn_mobile_money", "cashsend_cardless"];
+        const allowedDepositMethods = ["usdt_ethereum", "usdc_ethereum", "bitcoin", "airtel_money", "cashsend_cardless"];
+        const allowedWithdrawalMethods = ["bank_transfer", "eft", "airtel_money", "mpamba", "mtn_mobile_money", "cashsend_cardless", "usdt_ethereum", "usdc_ethereum", "bitcoin"];
         if ((!withdrawal && !allowedDepositMethods.includes(paymentMethod)) ||
             (withdrawal && !allowedWithdrawalMethods.includes(paymentMethod))) {
           return json({ error: "Choose a supported payment method for this request." }, 400);
@@ -204,9 +204,14 @@ Deno.serve(async (req: Request) => {
         const details = body.payment_details && typeof body.payment_details === "object" && !Array.isArray(body.payment_details)
           ? body.payment_details : {};
         if (!withdrawal && clientReference.length < 3) return json({ error: "Enter the transfer reference so finance can match your deposit." }, 400);
-        if (withdrawal && (!clean((details as Record<string, unknown>).account_holder, 120) ||
-          !clean((details as Record<string, unknown>).account_number, 120))) {
-          return json({ error: "Provide the bank account holder and account number for the withdrawal." }, 400);
+        if (withdrawal) {
+          const payout = details as Record<string, unknown>;
+          if (!clean(payout.account_holder, 120) || !clean(payout.account_number, 160) || !clean(payout.country, 80)) {
+            return json({ error: "Provide recipient name, destination details, and country for the withdrawal." }, 400);
+          }
+          if (["bank_transfer", "eft"].includes(paymentMethod) && !clean(payout.bank_name, 120)) {
+            return json({ error: "Enter the bank name for this withdrawal method." }, 400);
+          }
         }
         const { data, error } = await userClient.rpc("submit_money_request", {
           p_request_type: withdrawal ? "withdrawal" : "deposit", p_amount: value, p_currency: "USD",
