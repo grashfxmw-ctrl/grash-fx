@@ -35,7 +35,7 @@ begin
   end if;
   if resolved_phone is not null and exists (
     select 1 from public.profiles p
-    where lower(regexp_replace(trim(p.phone), '\s+', '', 'g')) = lower(resolved_phone)
+    where p.user_id <> new.id and lower(regexp_replace(trim(p.phone), '\s+', '', 'g')) = lower(resolved_phone)
   ) then
     raise exception 'This phone number is already linked to an account. Contact support if you need account recovery.';
   end if;
