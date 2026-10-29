@@ -27,6 +27,7 @@ jobs:
           test -f supabase/migrations/20261029195000_release_hardening_financial_ops.sql
           test -f supabase/migrations/20261029195500_referral_rewards_and_codes.sql
           test -f supabase/migrations/20261029200000_harden_balance_adjustment_idempotency.sql
+          test -f supabase/migrations/20261029201500_deep_referral_hardening.sql
           grep -q 'admin_adjust_balance' supabase/functions/account-api/index.ts
           grep -q 'process_my_referral_reward' supabase/functions/account-api/index.ts
           grep -q 'LOGIN_NOTIFICATION_WEBHOOK_URL' supabase/functions/account-api/index.ts
@@ -34,6 +35,11 @@ jobs:
           grep -q 'Starter plan maximum' supabase/functions/account-api/index.ts
           grep -q 'id="signupPhone"' public/supabase-auth.html
           grep -q 'id="referralCode"' public/supabase-auth.html
+          grep -q 'id="referralLink"' public/supabase-auth.html
+          grep -q 'async function loadReferrals' public/supabase-auth.html
+          grep -q 'path.endsWith("/referrals")' supabase/functions/account-api/index.ts
+          grep -q 'referral_overview:' supabase/functions/account-api/index.ts
+          grep -q 'referral-code is invalid' supabase/migrations/20261029201500_deep_referral_hardening.sql
           grep -q 'data-balance-user' public/admin-dashboard.html
       - name: Parse inline browser JavaScript
         run: |
