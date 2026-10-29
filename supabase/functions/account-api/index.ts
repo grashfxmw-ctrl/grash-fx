@@ -117,7 +117,7 @@ Deno.serve(async (req: Request) => {
       if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
       const [profiles, requests, investments] = await Promise.all([
         adminClient.from("profiles").select("user_id,full_name,email,phone,status,created_at").order("created_at").limit(200),
-        adminClient.from("money_requests").select("id,user_id,request_type,amount,currency,status,client_reference,payment_method,submitted_at,created_at")
+        adminClient.from("money_requests").select("id,user_id,request_type,amount,currency,status,client_reference,payment_method,payment_details,submitted_at,created_at")
           .in("status", ["submitted", "under_review", "approved"]).order("created_at").limit(200),
         adminClient.from("investments").select("id,user_id,plan_id,principal_amount,currency,daily_rate_snapshot,term_days_snapshot,status,started_at,matures_at,matured_at,created_at")
           .in("status", ["active", "under_review", "pending"]).order("matures_at").limit(200),
@@ -157,6 +157,10 @@ Deno.serve(async (req: Request) => {
         pending_profiles: (profiles.data || []).filter(p => p.status === "pending").map(p => ({ id: p.user_id, ...p })),
         financial_requests: (requests.data || []).map(r => ({ id: r.id, user_id: r.user_id, kind: r.request_type,
           amount: Number(r.amount), status: r.status, reference: r.client_reference, description: r.payment_method,
+          payout_details: r.request_type === "withdrawal" ? {
+            account_holder: String((r.payment_details || {}).account_holder || ""),
+            account_number: String((r.payment_details || {}).account_number || "")
+          } : null,
           created_at: r.created_at || r.submitted_at })),
         investments: (investments.data || []).map(i => ({ id: i.id, user_id: i.user_id, plan_code: plans[i.plan_id] || "investment",
           principal: Number(i.principal_amount), daily_rate: Number(i.daily_rate_snapshot), duration_days: i.term_days_snapshot,
@@ -190,7 +194,13 @@ Deno.serve(async (req: Request) => {
         if (!withdrawal && value < 20) return json({ error: "The minimum deposit is $20.00." }, 400);
         if (withdrawal && value < 50) return json({ error: "The minimum withdrawal is $50.00." }, 400);
         const clientReference = clean(body.client_reference || body.reference, 120);
-        const paymentMethod = clean(body.payment_method || "bank_transfer", 40);
+        const paymentMethod = clean(body.payment_method || (withdrawal ? "bank_transfer" : ""), 40);
+        const allowedDepositMethods = ["usdt_ethereum", "usdc_ethereum", "bitcoin", "airtel_money"];
+        const allowedWithdrawalMethods = ["bank_transfer", "eft"];
+        if ((!withdrawal && !allowedDepositMethods.includes(paymentMethod)) ||
+            (withdrawal && !allowedWithdrawalMethods.includes(paymentMethod))) {
+          return json({ error: "Choose a supported payment method for this request." }, 400);
+        }
         const details = body.payment_details && typeof body.payment_details === "object" && !Array.isArray(body.payment_details)
           ? body.payment_details : {};
         if (!withdrawal && clientReference.length < 3) return json({ error: "Enter the transfer reference so finance can match your deposit." }, 400);
