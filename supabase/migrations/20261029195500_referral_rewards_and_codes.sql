@@ -3,6 +3,21 @@ alter table public.profiles add column if not exists referral_code text;
 create unique index if not exists profiles_referral_code_unique
   on public.profiles (upper(referral_code)) where referral_code is not null;
 
+do $backfill$
+declare
+  profile_row record;
+  generated_code text;
+begin
+  for profile_row in select user_id from public.profiles where referral_code is null loop
+    loop
+      generated_code := 'GRASH' || lpad(floor(random()*10000)::integer::text,4,'0');
+      exit when not exists (select 1 from public.profiles where upper(referral_code)=generated_code);
+    end loop;
+    update public.profiles set referral_code=generated_code where user_id=profile_row.user_id;
+  end loop;
+end;
+$backfill$;
+
 create or replace function public.handle_new_auth_user()
 returns trigger
 language plpgsql
