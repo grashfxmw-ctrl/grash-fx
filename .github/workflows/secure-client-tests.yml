@@ -1,47 +1,32 @@
-name: Secure client regression tests
+name: Supabase client regression tests
 
 on:
   pull_request:
     paths:
-      - "frontend/secure-client.js"
-      - "frontend/secure-client.test.js"
-      - "frontend/secure-auth-page.test.js"
-      - "frontend/secure-account-page.test.js"
-      - "frontend/admin-review-page.test.js"
-      - "frontend/admin-users-page.test.js"
-      - "frontend/admin-legacy-review-page.test.js"
-      - "frontend/admin-audit-page.test.js"
-      - "secure-auth.html"
-      - "secure-account.html"
-      - "admin-review.html"
-      - "admin-users.html"
-      - "admin-legacy-review.html"
-      - "admin-audit.html"
+      - "public/supabase-auth.html"
+      - "public/admin-dashboard.html"
+      - "public/admin.html"
+      - "supabase/functions/**"
+      - "supabase/migrations/**"
+      - "tests/**"
       - ".github/workflows/secure-client-tests.yml"
   push:
     branches:
       - production-backend-integration
     paths:
-      - "frontend/secure-client.js"
-      - "frontend/secure-client.test.js"
-      - "frontend/secure-auth-page.test.js"
-      - "frontend/secure-account-page.test.js"
-      - "frontend/admin-review-page.test.js"
-      - "frontend/admin-users-page.test.js"
-      - "frontend/admin-legacy-review-page.test.js"
-      - "secure-auth.html"
-      - "secure-account.html"
-      - "admin-review.html"
-      - "admin-users.html"
-      - "admin-legacy-review.html"
-      - "admin-audit.html"
+      - "public/supabase-auth.html"
+      - "public/admin-dashboard.html"
+      - "public/admin.html"
+      - "supabase/functions/**"
+      - "supabase/migrations/**"
+      - "tests/**"
       - ".github/workflows/secure-client-tests.yml"
 
 permissions:
   contents: read
 
 jobs:
-  secure-client-tests:
+  supabase-client-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -50,7 +35,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Run secure client regression tests
-        run: node --test frontend/secure-client.test.js frontend/secure-auth-page.test.js frontend/secure-account-page.test.js frontend/admin-review-page.test.js frontend/admin-users-page.test.js frontend/admin-legacy-review-page.test.js frontend/admin-audit-page.test.js
-      - name: Check backend JavaScript syntax
-        run: node --check functions/index.js
+      - name: Run current client regression tests
+        run: node --test tests/secure-client.test.mjs
+      - name: Verify required Supabase files exist
+        run: |
+          test -s public/supabase-auth.html
+          test -s public/admin-dashboard.html
+          test -s supabase/functions/account-api/index.ts
+          test -s supabase/migrations/20261029093429_enforce_financial_request_minimums.sql
+          test -s supabase/migrations/20261029093809_require_deposit_reference_for_approval.sql
