@@ -187,8 +187,6 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
  function updateWithdrawalFields() {
   const method = $("withdrawalMethod").value;
   const bank = ["bank_transfer","eft"].includes(method);
-  const mobile = ["airtel_money","mpamba","mtn_mobile_money"].includes(method);
-  const crypto = ["usdt_ethereum","usdc_ethereum","bitcoin"].includes(method);
   const labels = {
     bank_transfer: ["Account holder name", "Bank account number", "Enter account number"],
     eft: ["Account holder name", "Bank account number", "Enter account number"],
@@ -207,6 +205,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
   $("withdrawalBankField").classList.toggle("hidden", !bank);
   $("withdrawalBank").required = bank;
   $("withdrawalBank").disabled = !bank;
+  if (!bank) $("withdrawalBank").value = "";
   $("withdrawalAccount").inputMode = mobile || method === "cashsend_cardless" ? "tel" : "text";
   $("withdrawalAccount").autocomplete = bank ? "off" : "off";
  }
