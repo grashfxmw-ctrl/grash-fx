@@ -23,13 +23,13 @@ test("administrator portal calls protected Supabase endpoints", () => {
 });
 
 test("account API validates bearer tokens and gates administrative actions", () => {
-  assert.match(apiSource, /userClient\\.auth\\.getUser\\(token\\)/);
+  assert.match(apiSource, /userClient\.auth\.getUser\(token\)/);
   assert.match(apiSource, /if \(!\(await isAdmin\(\)\)\) return json\(\{ error: "Admin access required\." \}, 403\)/);
   assert.match(apiSource, /\/admin\/queue/);
   assert.match(apiSource, /\/deposit/);
   assert.match(apiSource, /\/withdrawal/);
-  assert.match(apiSource, /The minimum deposit is \\$20\\.00/);
-  assert.match(apiSource, /The minimum withdrawal is \\$50\\.00/);
+  assert.match(apiSource, /The minimum deposit is \$20\.00/);
+  assert.match(apiSource, /The minimum withdrawal is \$50\.00/);
   assert.match(apiSource, /\/investment/);
 });
 
