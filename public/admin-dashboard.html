@@ -25,6 +25,7 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
 <section id="dashboard" class="hidden">
 <div class="panel"><div class="section-head"><div><h2>Pending customer registrations</h2><p class="muted">Approve only after checking the submitted customer details.</p></div><span id="profileCount" class="pill">0 awaiting review</span></div><div id="profiles" class="grid"></div></div>
 <div class="panel"><div class="section-head"><div><h2>Deposit and withdrawal requests</h2><p class="muted">Verify deposits independently before approval. A submitted request is not proof of payment.</p></div><span id="transactionCount" class="pill">0 requests</span></div><div id="transactions" class="grid"></div></div>
+<div class="panel"><div class="section-head"><div><h2>Customer directory</h2><p class="muted">Read-only customer records and balances.</p></div><span id="customerCount" class="pill">0 customers</span></div><div id="customers" class="grid"></div></div>
 <div class="panel"><div class="section-head"><div><h2>Active investments and maturity monitoring</h2><p class="muted">Read-only monitoring. Matured investments are paid by the scheduled server process, not by an admin button.</p></div><span id="investmentCount" class="pill">0 active investments</span></div><div id="investments" class="grid"></div></div>
 <div id="message" class="status" role="status" aria-live="polite">Ready.</div>
 </section>
@@ -59,10 +60,11 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
    say("Loading admin queue…");
    try {
      const queue=await api("/admin/queue");
-     const profiles=queue.pending_profiles||[], transactions=queue.financial_requests||[], investments=queue.investments||[];
+     const profiles=queue.pending_profiles||[], transactions=queue.financial_requests||[], investments=queue.investments||[], customers=queue.customers||[];
      $("profileCount").textContent=profiles.length+" awaiting review";
      $("transactionCount").textContent=transactions.length+" requests";
      $("investmentCount").textContent=investments.length+" active investments";
+     $("customerCount").textContent=customers.length+" customers";
      $("profiles").innerHTML=profiles.length?profiles.map(p=>`
        <article class="item">
         <h3>${esc(p.full_name||"Name not supplied")}</h3>
@@ -81,6 +83,15 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
         <div class="field"><label for="reason-${esc(t.id)}">Review note / payment reference</label><input id="reason-${esc(t.id)}" maxlength="250" placeholder="Enter verification note"></div>
         <div class="actions"><button class="primary" data-transaction="${esc(t.id)}" data-decision="approve">Approve</button><button class="danger" data-transaction="${esc(t.id)}" data-decision="reject">Reject</button></div>
        </article>`).join(""):empty("No deposit or withdrawal requests awaiting review.");
+     $("customers").innerHTML=customers.length?customers.map(c=>`
+       <article class="item">
+        <h3>${esc(c.full_name||"Name not supplied")}</h3>
+        <p class="muted">${esc(c.email)}</p>
+        <p><span class="pill">${esc(c.status)}</span></p>
+        <p>Main balance: ${money(c.balance)} · Profit balance: ${money(c.profit_balance)}</p>
+        <p class="muted">Customer ID: ${esc(c.id)}</p>
+        <p class="muted">Phone: ${esc(c.phone_e164||"Not verified / not supplied")}</p>
+       </article>`).join(""):empty("No customer profiles found.");
      $("investments").innerHTML=investments.length?investments.map(i=>`
        <article class="item">
         <h3>${esc(i.plan_code.toUpperCase())} · ${money(i.principal)}</h3>
