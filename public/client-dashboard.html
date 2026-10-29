@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111318"><title>GRASH FX | Client Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/lucide@latest"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box}body{font-family:Inter,system-ui,sans-serif;background:#f1f5f9;color:#1e293b}
+.nav-active{background:#252a35;color:#fff}.nav-active i{color:#f59e0b}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:20px;box-shadow:0 1px 2px #0f172a08}
+.field{width:100%;border:1px solid #cbd5e1;border-radius:9px;padding:11px 12px;background:#fff;font:inherit;font-size:13px}
+.field:focus{outline:2px solid #fbbf24;outline-offset:1px}
+.ticker{white-space:nowrap;overflow:hidden}.ticker-track{display:inline-flex;gap:34px;animation:move 32s linear infinite}@keyframes move{to{transform:translateX(-50%)}}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:6px}
+</style></head>
+<body class="min-h-screen">
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-[#111318] border-r border-[#252a35] flex flex-col -translate-x-full md:translate-x-0 transition-transform">
+ <div class="h-16 px-5 flex items-center gap-3 border-b border-white/10"><div class="w-9 h-9 rounded-xl bg-amber-500 grid place-items-center text-xl">🐈‍⬛</div><div><b class="text-white text-sm tracking-wider">GRASH <span class="text-amber-400">FX</span></b><p class="text-[10px] text-slate-400 tracking-widest">CLIENT PORTAL</p></div></div>
+ <nav class="p-4 space-y-1 text-sm text-slate-300 flex-1">
+  <button data-view="overview" class="nav w-full nav-active flex items-center gap-3 px-3 py-3 rounded-lg"><i data-lucide="layout-dashboard"></i>Dashboard</button>
+  <button data-view="investments" class="nav w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/5"><i data-lucide="chart-no-axes-combined"></i>My Investments</button>
+  <button data-view="funds" class="nav w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/5"><i data-lucide="wallet"></i>Deposits & Withdrawals</button>
+  <button data-view="transactions" class="nav w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/5"><i data-lucide="receipt-text"></i>Transactions</button>
+  <button data-view="referrals" class="nav w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/5"><i data-lucide="users"></i>Refer & Earn</button>
+  <div class="pt-5 pb-2 px-3 text-[10px] tracking-[.2em] text-amber-400 font-bold">ACCOUNT</div>
+  <button data-view="settings" class="nav w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/5"><i data-lucide="settings"></i>Settings</button>
+  <button id="logout" class="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 mt-3"><i data-lucide="log-out"></i>Sign out</button>
+ </nav>
+ <div class="p-4 border-t border-white/10 text-center text-[10px] text-slate-500">GRASH FX Client Portal</div>
+</aside>
+<div class="md:pl-64 min-h-screen flex flex-col">
+ <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30">
+  <div class="flex items-center gap-3"><button id="menu" class="md:hidden p-2"><i data-lucide="menu"></i></button><div><div class="font-bold text-sm">Client Dashboard</div><div class="text-[10px] text-slate-500">Your account at a glance</div></div></div>
+  <div class="flex items-center gap-3"><span id="headerEmail" class="text-xs text-slate-600 hidden sm:block"></span><div class="w-9 h-9 rounded-full bg-slate-800 text-amber-300 grid place-items-center"><i data-lucide="user-round"></i></div></div>
+ </header>
+ <div class="bg-white border-b border-slate-200 py-2 px-4 text-xs font-semibold ticker"><div class="ticker-track"><span>GRASH FX · CLIENT PORTAL</span><span>Trade and investment information</span><span>Account security matters</span><span>GRASH FX · CLIENT PORTAL</span><span>Trade and investment information</span></div></div>
+ <main class="w-full max-w-7xl mx-auto p-4 md:p-8 flex-1 space-y-6">
+  <div id="notice" class="hidden rounded-lg p-3 text-sm bg-amber-50 text-amber-800 border border-amber-200"></div>
+  <section id="view-overview" class="view space-y-6">
+   <div class="flex flex-wrap justify-between items-end gap-3"><div><p class="text-xs text-slate-500">Welcome back</p><h1 id="welcomeName" class="text-2xl font-extrabold text-slate-900">Client</h1><p class="text-xs text-slate-500 mt-1">Here is your account overview.</p></div><button id="refresh" class="px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold">Refresh data</button></div>
+   <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div class="card"><p class="text-xs font-semibold text-slate-500">Total balance</p><p id="balance" class="text-2xl font-extrabold mt-2">$0.00</p><p class="text-[11px] text-slate-400 mt-3">USD account balance</p></div>
+    <div class="card"><p class="text-xs font-semibold text-slate-500">Available balance</p><p id="available" class="text-2xl font-extrabold mt-2">$0.00</p><p class="text-[11px] text-slate-400 mt-3">After pending withdrawals</p></div>
+    <div class="card"><p class="text-xs font-semibold text-slate-500">Profit balance</p><p id="profit" class="text-2xl font-extrabold mt-2">$0.00</p><p class="text-[11px] text-slate-400 mt-3">Recorded profit credits</p></div>
+    <div class="card"><p class="text-xs font-semibold text-slate-500">Account status</p><p id="status" class="text-xl font-extrabold mt-2">Checking…</p><p class="text-[11px] text-slate-400 mt-3">Email-verified account</p></div>
+   </div>
+   <div class="grid lg:grid-cols-3 gap-4"><div class="card lg:col-span-2"><div class="flex justify-between items-center mb-4"><h2 class="font-bold">Recent investments</h2><button data-jump="investments" class="text-xs text-amber-700 font-bold">View all</button></div><div id="recentInvestments" class="space-y-2 text-sm text-slate-500">Loading…</div></div><div class="card"><h2 class="font-bold mb-3">Your referral code</h2><div id="refCode" class="text-2xl font-extrabold tracking-wider">—</div><p class="text-xs text-slate-500 mt-2">Share your code with friends.</p><button id="copyReferral" class="mt-4 w-full rounded-lg bg-slate-900 text-white p-2.5 text-xs font-bold">Copy referral link</button></div></div>
+  </section>
+  <section id="view-investments" class="view hidden space-y-4"><h1 class="text-xl font-extrabold">My Investments</h1><div class="card"><div id="investmentList" class="space-y-3">Loading investments…</div></div><p class="text-xs text-slate-500">Investment availability and terms are subject to platform status and applicable disclosures.</p></section>
+  <section id="view-funds" class="view hidden space-y-4"><h1 class="text-xl font-extrabold">Deposits & Withdrawals</h1><div class="grid md:grid-cols-2 gap-4"><div class="card"><h2 class="font-bold mb-2">Deposit</h2><p class="text-sm text-slate-500">Minimum deposit: $20.00. Submit a deposit request through the secure account portal.</p><a href="supabase-auth.html#deposit" class="inline-block mt-4 rounded-lg bg-slate-900 text-white px-4 py-2 text-xs font-bold">Open deposit form</a></div><div class="card"><h2 class="font-bold mb-2">Withdrawal</h2><p class="text-sm text-slate-500">Minimum withdrawal: $50.00. Requests are subject to review and available balance.</p><a href="supabase-auth.html#withdrawal" class="inline-block mt-4 rounded-lg bg-slate-900 text-white px-4 py-2 text-xs font-bold">Open withdrawal form</a></div></div></section>
+  <section id="view-transactions" class="view hidden space-y-4"><h1 class="text-xl font-extrabold">Transaction History</h1><div class="card"><div id="transactionList" class="space-y-2">Loading transactions…</div></div></section>
+  <section id="view-referrals" class="view hidden space-y-4"><h1 class="text-xl font-extrabold">Refer & Earn</h1><div class="card"><p class="text-sm text-slate-500">Your referral code</p><div id="refCodeLarge" class="text-2xl font-extrabold my-2">—</div><p id="refStats" class="text-sm text-slate-600">Loading referral summary…</p><div id="refHistory" class="mt-4 space-y-2"></div></div></section>
+  <section id="view-settings" class="view hidden space-y-4"><h1 class="text-xl font-extrabold">Account Settings</h1><div class="card max-w-2xl space-y-4"><div><h2 class="font-bold">Personal information</h2><p class="text-xs text-slate-500">Update your name and phone number. Your login email is managed separately.</p></div><form id="profileForm" class="space-y-3"><label class="block text-xs font-semibold">Full name<input id="fullName" class="field mt-1" minlength="2" maxlength="100" required></label><label class="block text-xs font-semibold">Phone number<input id="phone" class="field mt-1" maxlength="20" placeholder="+265…"></label><button class="rounded-lg bg-slate-900 text-white px-4 py-2.5 text-xs font-bold">Save profile</button></form><hr><div><h2 class="font-bold">Change password</h2><p class="text-xs text-slate-500 mb-3">Choose a new password of at least 8 characters.</p><form id="passwordForm" class="space-y-3"><label class="block text-xs font-semibold">New password<input id="newPassword" type="password" class="field mt-1" minlength="8" autocomplete="new-password" required></label><label class="block text-xs font-semibold">Confirm new password<input id="confirmPassword" type="password" class="field mt-1" minlength="8" autocomplete="new-password" required></label><button class="rounded-lg bg-amber-500 text-slate-950 px-4 py-2.5 text-xs font-bold">Update password</button></form></div><p class="text-xs text-slate-500">For account security, never share your password or verification codes.</p></div></section>
+  <p id="message" class="text-xs text-slate-500" role="status"></p>
+ </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(()=>{
+const URL="https://vwghcjkgzeausfxqphmf.supabase.co",KEY="sb_publishable_gn3ndWb6xAtoaZ4FYFaHug_sbnCJI33",API=URL+"/functions/v1/account-api";
+const sb=window.supabase.createClient(URL,KEY),$=id=>document.getElementById(id);
+let profile=null,referralLink="";
+const money=n=>"$"+Number(n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const message=t=>$("message").textContent=t;
+async function api(path,method="GET",body){const {data:{session}}=await sb.auth.getSession();if(!session)throw Error("Your session has expired. Sign in again.");const r=await fetch(API+path,{method,headers:{Authorization:"Bearer "+session.access_token,apikey:KEY,"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Request failed.");return d;}
+function show(tab){document.querySelectorAll(".view").forEach(x=>x.classList.add("hidden"));$("view-"+tab).classList.remove("hidden");document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("nav-active",x.dataset.view===tab));$("sidebar").classList.add("-translate-x-full");}
+document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>show(b.dataset.view));document.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>show(b.dataset.jump));
+$("menu").onclick=()=>$("sidebar").classList.toggle("-translate-x-full");
+$("logout").onclick=async()=>{await sb.auth.signOut();location.href="supabase-auth.html?mode=signin";};
+$("refresh").onclick=()=>load();
+$("copyReferral").onclick=async()=>{try{await navigator.clipboard.writeText(referralLink);message("Referral link copied.");}catch{message(referralLink);}};
+async function load(){try{const {data:{user},error}=await sb.auth.getUser();if(error||!user){location.replace("supabase-auth.html?mode=signin&next=dashboard");return;}
+$("headerEmail").textContent=user.email||"";const me=await api("/me");profile=me.profile;if(!profile){location.replace("supabase-auth.html?mode=signin");return;}
+$("welcomeName").textContent=profile.full_name||"Client";$("fullName").value=profile.full_name||"";$("phone").value=profile.phone||"";
+$("balance").textContent=money(profile.balance);$("available").textContent=money(profile.available_balance);$("profit").textContent=money(profile.profit_balance);
+$("status").textContent=profile.status||"Unknown";$("status").className="text-xl font-extrabold mt-2 "+(profile.status==="active"?"text-emerald-600":"text-amber-600");
+$("refCode").textContent=profile.referral_code||"—";$("refCodeLarge").textContent=profile.referral_code||"—";referralLink=location.origin+location.pathname.replace("client-dashboard.html","supabase-auth.html")+"?ref="+encodeURIComponent(profile.referral_code||"");
+const history=await api("/history");const inv=history.investments||[];$("investmentList").innerHTML=inv.length?inv.map(i=>'<div class="border-b border-slate-100 py-3 flex flex-wrap justify-between gap-2"><div><b>'+esc(i.plan_code.toUpperCase())+'</b><div class="text-xs text-slate-500">Started '+new Date(i.started_at).toLocaleDateString()+' · Matures '+new Date(i.matures_at).toLocaleDateString()+'</div></div><div class="text-right"><b>'+money(i.principal)+'</b><div class="text-xs text-slate-500">'+esc(i.status)+' · '+Number(i.last_processed_day||0)+'/7 days</div></div></div>').join(""):"<p class='text-sm text-slate-500'>No investments recorded yet.</p>";
+$("recentInvestments").innerHTML=inv.slice(0,3).map(i=>'<div class="flex justify-between border-b border-slate-100 py-2 text-xs"><b>'+esc(i.plan_code.toUpperCase())+'</b><span>'+money(i.principal)+' · '+esc(i.status)+'</span></div>').join("")||"No investments yet.";
+const tx=history.transactions||[];$("transactionList").innerHTML=tx.length?tx.map(t=>'<div class="flex flex-wrap justify-between gap-2 border-b border-slate-100 py-3 text-xs"><div><b>'+esc(String(t.kind).replaceAll("_"," ").toUpperCase())+'</b><div class="text-slate-500">'+new Date(t.created_at).toLocaleString()+'</div></div><div class="text-right"><b>'+money(t.amount)+'</b><div class="text-slate-500">'+esc(t.status)+'</div></div></div>').join(""):"<p class='text-sm text-slate-500'>No transactions yet.</p>";
+const refs=await api("/referrals"),s=refs.stats||{};$("refStats").textContent=(s.total||0)+" referrals · "+(s.pending||0)+" pending · "+(s.rewarded||0)+" rewarded · "+money(s.reward_total)+" credited";
+$("refHistory").innerHTML=(refs.referrals||[]).map(r=>'<div class="rounded-lg bg-slate-50 p-3 text-xs"><b>'+esc(r.referred_name||"Referred client")+'</b><span class="float-right">'+esc(r.status)+'</span></div>').join("")||"<p class='text-xs text-slate-500'>No referrals yet.</p>";
+if(profile.status!=="active"){$("notice").classList.remove("hidden");$("notice").textContent="Your account status is "+profile.status+". Some account actions remain unavailable until your account is active.";}
+else $("notice").classList.add("hidden");
+message("Account information loaded.");
+}catch(e){message(e.message||"Unable to load your dashboard.");}}
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+$("profileForm").onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{await api("/profile-update","POST",{full_name:$("fullName").value.trim(),phone:$("phone").value.trim()});const {error}=await sb.auth.updateUser({data:{full_name:$("fullName").value.trim()}});if(error)throw error;message("Profile updated successfully.");await load();}catch(err){message(err.message);}finally{b.disabled=false;}};
+$("passwordForm").onsubmit=async e=>{e.preventDefault();const a=$("newPassword").value,c=$("confirmPassword").value;if(a!==c){message("The passwords do not match.");return;}const b=e.submitter;b.disabled=true;try{const {error}=await sb.auth.updateUser({password:a});if(error)throw error;$("passwordForm").reset();message("Password updated successfully.");}catch(err){message(err.message);}finally{b.disabled=false;}};
+lucide.createIcons();sb.auth.onAuthStateChange((event)=>{if(event==="SIGNED_OUT")location.replace("supabase-auth.html?mode=signin");});load();
+})();
+</script></body></html>
