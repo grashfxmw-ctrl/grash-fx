@@ -21,13 +21,13 @@ begin
   if resolved_name is null then resolved_name := nullif(split_part(coalesce(new.email, ''), '@', 1), ''); end if;
   if resolved_name is null then resolved_name := 'New Client'; end if;
 
-  resolved_phone := nullif(regexp_replace(trim(coalesce(new.raw_user_meta_data ->> 'phone', '')), '\\s+', '', 'g'), '');
-  if resolved_phone is not null and resolved_phone !~ '^\\+[1-9][0-9]{7,14}$' then
+  resolved_phone := nullif(regexp_replace(trim(coalesce(new.raw_user_meta_data ->> 'phone', '')), '\s+', '', 'g'), '');
+  if resolved_phone is not null and resolved_phone !~ '^\+[1-9][0-9]{7,14}$' then
     raise exception 'Enter a valid phone number in international format, for example +265XXXXXXXXX';
   end if;
   if resolved_phone is not null and exists (
     select 1 from public.profiles p
-    where lower(regexp_replace(trim(p.phone), '\\s+', '', 'g')) = lower(resolved_phone)
+    where lower(regexp_replace(trim(p.phone), '\s+', '', 'g')) = lower(resolved_phone)
   ) then
     raise exception 'This phone number is already linked to an account. Contact support if you need account recovery.';
   end if;
