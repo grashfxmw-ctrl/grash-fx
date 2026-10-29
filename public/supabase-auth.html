@@ -42,7 +42,12 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <div class="field"><label for="depositReference">Transaction reference / TXID</label><input id="depositReference" maxlength="120" required placeholder="Paste the transaction ID or Airtel receipt reference"></div>
 <p class="muted">Minimum deposit: $20. No platform deposit fee is configured. Make sure the destination and network match before sending. A request is not credited until finance verifies receipt.</p>
 <button class="full" type="submit">Submit deposit request</button></form>
-<form id="withdrawalForm"><div class="field"><label for="withdrawalAmount">Withdrawal amount (USD)</label><input id="withdrawalAmount" type="number" min="50" step="0.01" required></div><div class="field"><label for="withdrawalHolder">Bank account holder</label><input id="withdrawalHolder" maxlength="120" required autocomplete="name"></div><div class="field"><label for="withdrawalAccount">Bank account number</label><input id="withdrawalAccount" maxlength="120" required autocomplete="off"></div><button class="full" type="submit">Request withdrawal</button></form>
+<form id="withdrawalForm"><div class="field"><label for="withdrawalAmount">Withdrawal amount (USD)</label><input id="withdrawalAmount" type="number" min="50" step="0.01" required></div>
+<div class="field"><label for="withdrawalMethod">Withdrawal payout method</label><select id="withdrawalMethod" required><option value="bank_transfer">Bank transfer</option><option value="eft">EFT</option><option value="airtel_money">Airtel Money</option><option value="mpamba">Mpamba</option><option value="mtn_mobile_money">MTN Mobile Money</option><option value="cashsend_cardless">CashSend / Cardless</option></select></div>
+<div class="field"><label id="withdrawalHolderLabel" for="withdrawalHolder">Account holder / recipient name</label><input id="withdrawalHolder" maxlength="120" required autocomplete="name"></div>
+<div class="field"><label id="withdrawalAccountLabel" for="withdrawalAccount">Bank account number</label><input id="withdrawalAccount" maxlength="120" required autocomplete="off" placeholder="Account or payout identifier"></div>
+<p class="muted">Minimum withdrawal: $50. No platform withdrawal fee is configured. Never enter your banking password, mobile money PIN, or card PIN.</p>
+<button class="full" type="submit">Request withdrawal</button></form>
 </div>
 <section id="investmentActions" class="hidden account">
 <h2>Investment plan</h2>
@@ -186,7 +191,24 @@ function updateDepositInstructions() {
 $("depositMethod").addEventListener("change", updateDepositInstructions);
 updateDepositInstructions();
 $("depositForm").onsubmit=async e=>{e.preventDefault();busy(e.currentTarget,true);try{await submitFinancialRequest("deposit",$("depositAmount").value,{client_reference:$("depositReference").value.trim(),payment_method:$("depositMethod").value,payment_details:{}});}finally{busy(e.currentTarget,false);}};
- $("withdrawalForm").onsubmit=async e=>{e.preventDefault();busy(e.currentTarget,true);try{await submitFinancialRequest("withdrawal",$("withdrawalAmount").value,{payment_method:"bank_transfer",payment_details:{account_holder:$("withdrawalHolder").value.trim(),account_number:$("withdrawalAccount").value.trim()}});}finally{busy(e.currentTarget,false);}};
+ function updateWithdrawalLabels() {
+  const method = $("withdrawalMethod").value;
+  const labels = {
+    bank_transfer: ["Account holder / recipient name", "Bank account number", "Enter the bank account number"],
+    eft: ["Account holder / recipient name", "Bank account number", "Enter the bank account number"],
+    airtel_money: ["Airtel Money recipient name", "Airtel Money number", "Enter the recipient mobile number"],
+    mpamba: ["Mpamba recipient name", "Mpamba number", "Enter the recipient mobile number"],
+    mtn_mobile_money: ["MTN Mobile Money recipient name", "MTN Mobile Money number", "Enter the recipient mobile number"],
+    cashsend_cardless: ["Recipient full name", "Recipient phone / payout identifier", "Enter the recipient phone number"]
+  };
+  const selected = labels[method] || labels.bank_transfer;
+  $("withdrawalHolderLabel").textContent = selected[0];
+  $("withdrawalAccountLabel").textContent = selected[1];
+  $("withdrawalAccount").placeholder = selected[2];
+}
+$("withdrawalMethod").addEventListener("change", updateWithdrawalLabels);
+updateWithdrawalLabels();
+$("withdrawalForm").onsubmit=async e=>{e.preventDefault();busy(e.currentTarget,true);try{await submitFinancialRequest("withdrawal",$("withdrawalAmount").value,{payment_method:$("withdrawalMethod").value,payment_details:{account_holder:$("withdrawalHolder").value.trim(),account_number:$("withdrawalAccount").value.trim()}});}finally{busy(e.currentTarget,false);}};
  $("investmentForm").onsubmit=async e=>{
    e.preventDefault();busy(e.currentTarget,true);
    try{
