@@ -37,7 +37,7 @@ Deno.serve(async (req: Request) => {
     if (!user.email_confirmed_at) return json({ error: "Verify your email before using your account." }, 403);
 
     const { data: profile, error: profileError } = await adminClient.from("profiles")
-      .select("user_id,full_name,email,phone,status,country_code,created_at,updated_at")
+      .select("user_id,full_name,email,phone,referral_code,status,country_code,created_at,updated_at")
       .eq("user_id", user.id).maybeSingle();
     if (profileError) throw profileError;
 
@@ -116,7 +116,7 @@ Deno.serve(async (req: Request) => {
     if (req.method === "GET" && path.endsWith("/admin/queue")) {
       if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
       const [profiles, requests, investments, loginEvents] = await Promise.all([
-        adminClient.from("profiles").select("user_id,full_name,email,phone,status,created_at").order("created_at").limit(200),
+        adminClient.from("profiles").select("user_id,full_name,email,phone,referral_code,status,created_at").order("created_at").limit(200),
         adminClient.from("money_requests").select("id,user_id,request_type,amount,currency,status,client_reference,payment_method,payment_details,submitted_at,created_at")
           .in("status", ["submitted", "under_review", "approved"]).order("created_at").limit(200),
         adminClient.from("investments").select("id,user_id,plan_id,principal_amount,currency,daily_rate_snapshot,term_days_snapshot,status,started_at,matures_at,matured_at,created_at")
@@ -200,6 +200,8 @@ Deno.serve(async (req: Request) => {
       if (!profile) return json({ error: "Your profile is not ready yet. Sign in again shortly." }, 403);
 
       if (path.endsWith("/login-event")) {
+        const { error: referralError } = await userClient.rpc("process_my_referral_reward");
+        if (referralError) throw referralError;
         const forwarded = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") ||
           (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
         let ipHash: string | null = null;
