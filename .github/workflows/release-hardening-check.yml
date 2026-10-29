@@ -39,7 +39,7 @@ jobs:
           grep -q 'async function loadReferrals' public/supabase-auth.html
           grep -q 'path.endsWith("/referrals")' supabase/functions/account-api/index.ts
           grep -q 'referral_overview:' supabase/functions/account-api/index.ts
-          grep -q 'referral-code is invalid' supabase/migrations/20261029201500_deep_referral_hardening.sql
+          grep -q 'That referral code is invalid' supabase/migrations/20261029201500_deep_referral_hardening.sql
           grep -q 'data-balance-user' public/admin-dashboard.html
       - name: Parse inline browser JavaScript
         run: |
