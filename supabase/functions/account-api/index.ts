@@ -196,7 +196,7 @@ Deno.serve(async (req: Request) => {
         const clientReference = clean(body.client_reference || body.reference, 120);
         const paymentMethod = clean(body.payment_method || (withdrawal ? "bank_transfer" : ""), 40);
         const allowedDepositMethods = ["usdt_ethereum", "usdc_ethereum", "bitcoin", "airtel_money"];
-        const allowedWithdrawalMethods = ["bank_transfer", "eft"];
+        const allowedWithdrawalMethods = ["bank_transfer", "eft", "airtel_money", "mpamba", "mtn_mobile_money", "cashsend_cardless"];
         if ((!withdrawal && !allowedDepositMethods.includes(paymentMethod)) ||
             (withdrawal && !allowedWithdrawalMethods.includes(paymentMethod))) {
           return json({ error: "Choose a supported payment method for this request." }, 400);
