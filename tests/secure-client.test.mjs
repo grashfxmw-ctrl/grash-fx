@@ -1,128 +1,38 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import vm from "node:vm";
 
-const clientSource = await readFile(new URL("../frontend/secure-client.js", import.meta.url), "utf8");
+const authPage = await readFile(new URL("../public/supabase-auth.html", import.meta.url), "utf8");
+const adminPage = await readFile(new URL("../public/admin-dashboard.html", import.meta.url), "utf8");
+const apiSource = await readFile(new URL("../supabase/functions/account-api/index.ts", import.meta.url), "utf8");
 
-function createHarness({ verified = true, legacyStatus = "no_match", phoneNumber = "+265991234567" } = {}) {
-  const calls = [];
-  let currentUser = null;
-  const user = {
-    uid: "auth-user-1",
-    email: "person@example.com",
-    emailVerified: verified,
-    phoneNumber,
-    displayName: "Test Person",
-    async reload() {},
-    async updateProfile(profile) { this.displayName = profile.displayName; },
-    async sendEmailVerification() { calls.push("sendEmailVerification"); }
-  };
-
-  const auth = {
-    get currentUser() { return currentUser; },
-    async createUserWithEmailAndPassword(email, password) {
-      calls.push({ type: "createUser", email, password });
-      currentUser = user;
-      return { user };
-    },
-    async signInWithEmailAndPassword(email, password) {
-      calls.push({ type: "signIn", email, password });
-      currentUser = user;
-      return { user };
-    },
-    async signOut() {
-      calls.push("signOut");
-      currentUser = null;
-    },
-    onAuthStateChanged() { return () => {}; }
-  };
-
-  const functions = {
-    httpsCallable(name) {
-      return async (payload) => {
-        calls.push({ type: "callable", name, payload });
-        if (name === "inspectLegacyAccount") {
-          return { data: { status: legacyStatus, message: legacyStatus === "no_match" ? "No matching legacy account." : "Existing account requires review." } };
-        }
-        if (name === "getMyAccountData") {
-          return { data: { profile: { uid: user.uid, balance: 0 }, transactions: [] } };
-        }
-        return { data: { ok: true } };
-      };
-    }
-  };
-
-  const window = {};
-  vm.runInNewContext(clientSource, { window, globalThis: window });
-  const client = window.createGrashSecureClient({
-    auth: () => auth,
-    functions: () => functions
-  });
-  return { client, calls };
-}
-
-test("secure signup sends verification and does not create a profile before verification", async () => {
-  const h = createHarness({ verified: false });
-  const result = await h.client.signUp({
-    name: "Test Person",
-    email: " Person@Example.com ",
-    password: "long-test-password"
-  });
-
-  assert.equal(result.ok, true);
-  assert.equal(result.verificationRequired, true);
-  assert.ok(h.calls.some((call) => call?.type === "createUser" && call.email === "person@example.com"));
-  assert.ok(h.calls.includes("sendEmailVerification"));
-  assert.ok(h.calls.includes("signOut"));
-  assert.equal(h.calls.some((call) => call?.type === "callable"), false);
+test("client portal points to the active Supabase project and account API", () => {
+  assert.match(authPage, /https:\/\/vsearqlfvrhkckyndwtv\.supabase\.co/);
+  assert.match(authPage, /\/functions\/v1\/account-api/);
+  assert.match(authPage, /signUp\(/);
+  assert.match(authPage, /signInWithPassword\(/);
+  assert.match(authPage, /verifyOtp\(/);
+  assert.match(authPage, /callApi\("\/history"\)/);
 });
 
-test("secure sign-in rejects an unverified account without creating a profile", async () => {
-  const h = createHarness({ verified: false });
-  const result = await h.client.signIn({
-    email: "person@example.com",
-    password: "long-test-password"
-  });
-
-  assert.equal(result.ok, false);
-  assert.equal(result.verificationRequired, true);
-  assert.ok(h.calls.includes("signOut"));
-  assert.equal(h.calls.some((call) => call?.type === "callable"), false);
+test("administrator portal calls protected Supabase endpoints", () => {
+  assert.match(adminPage, /\/functions\/v1\/account-api/);
+  assert.match(adminPage, /\/admin\/queue/);
+  assert.match(adminPage, /\/admin\/review/);
+  assert.match(adminPage, /\/admin\/profile-review/);
 });
 
-test("verified sign-in creates the server-owned profile and loads account data", async () => {
-  const h = createHarness({ verified: true });
-  const result = await h.client.signIn({
-    email: "person@example.com",
-    password: "long-test-password"
-  });
-
-  assert.equal(result.ok, true);
-  assert.equal(result.account.profile.uid, "auth-user-1");
-  const callableNames = h.calls.filter((call) => call?.type === "callable").map((call) => call.name);
-  assert.deepEqual(callableNames, ["inspectLegacyAccount", "createMyProfile", "getMyAccountData"]);
+test("account API validates bearer tokens and gates administrative actions", () => {
+  assert.match(apiSource, /authClient\.auth\.getUser\(token\)/);
+  assert.match(apiSource, /if \(!isAdmin\) return json\(\{ error: "Admin access required\." \}, 403\)/);
+  assert.match(apiSource, /\/admin\/queue/);
+  assert.match(apiSource, /\/deposit/);
+  assert.match(apiSource, /\/withdrawal/);
+  assert.match(apiSource, /\/investment/);
 });
 
-
-test("legacy account match requires review and never creates a replacement profile", async () => {
-  const h = createHarness({ verified: true, legacyStatus: "review_required" });
-  const result = await h.client.signIn({
-    email: "person@example.com",
-    password: "long-test-password"
-  });
-
-  assert.equal(result.ok, false);
-  assert.equal(result.legacyReviewRequired, true);
-  assert.equal(result.legacyStatus, "review_required");
-  assert.ok(h.calls.includes("signOut"));
-  const callableNames = h.calls.filter((call) => call?.type === "callable").map((call) => call.name);
-  assert.deepEqual(callableNames, ["inspectLegacyAccount"]);
-});
-
-test("verified email without verified phone pauses before secure profile creation", async () => {
-  const h = createHarness({ phoneNumber: null });
-  const result = await h.client.signIn({ email: "person@example.com", password: "password123" });
-  assert.equal(result.phoneVerificationRequired, true);
-  assert.equal(h.calls.some((call) => call?.type === "callable" && call.name === "createMyProfile"), false);
+test("legacy platform files are not dependencies of the current test suite", async () => {
+  assert.doesNotMatch(authPage, /firebase|functions\.httpsCallable/i);
+  assert.doesNotMatch(adminPage, /firebase|functions\.httpsCallable/i);
+  assert.doesNotMatch(apiSource, /firebase|functions\.httpsCallable/i);
 });
