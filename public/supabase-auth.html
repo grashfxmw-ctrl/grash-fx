@@ -32,7 +32,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <button id="resetPassword" class="full" type="button">Send password reset email</button>
 </form>
 <div id="accountSection" class="hidden account">
-<h2>Your account</h2><div id="accountStatus" class="muted"></div><div class="tile"><span>Your referral code · Refer &amp; Earn $5 after email verification</span><strong id="myReferralCode">Loading…</strong></div><button id="refreshAccount" class="full" type="button">Refresh account status</button>
+<h2>Your account</h2><div id="accountStatus" class="muted"></div><div class="tile"><span>Your referral code · $5 simulated reward after the referred user verifies email and signs in</span><strong id="myReferralCode">Loading…</strong><div class="field"><label for="referralLink">Personal referral link</label><input id="referralLink" readonly value="Loading…"></div><button id="copyReferralLink" type="button" class="full">Copy referral link</button><p class="muted">The code fills automatically when someone opens your link.</p></div><div class="tile"><span>Referral overview</span><div id="referralStats" class="muted">Loading…</div></div><div id="referralHistory" class="muted">Loading referral history…</div><button id="refreshAccount" class="full" type="button">Refresh account status</button>
 <div class="balance"><div class="tile"><span>Main balance</span><strong id="balance">—</strong></div><div class="tile"><span>Profit balance</span><strong id="profit">—</strong></div></div>
 <p id="accountEmail" class="muted"></p>
 <div id="financialActions" class="hidden">
@@ -95,6 +95,42 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
  $("showSignup").onclick=()=>mode(true); $("showSignin").onclick=()=>mode(false);
  const query = new URLSearchParams(window.location.search);
  const requestedMode = query.get("mode");
+ const incomingReferral = (query.get("ref") || "").trim().toUpperCase();
+ if (/^GRASH[0-9]{4}$/.test(incomingReferral)) $("referralCode").value = incomingReferral;
+ $("referralCode").addEventListener("input", () => {
+   $("referralCode").value = $("referralCode").value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0,9);
+ });
+ $("copyReferralLink").onclick = async () => {
+   const link = $("referralLink").value;
+   if (!link || link === "Loading…") { say("Your referral link is not ready yet. Refresh your account."); return; }
+   try {
+     if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(link);
+     else { $("referralLink").focus(); $("referralLink").select(); if (!document.execCommand("copy")) throw new Error("Copy not available"); }
+     say("Referral link copied. Share it with someone who does not already have an account.");
+   } catch (_) { $("referralLink").focus(); $("referralLink").select(); say("Select the link and copy it manually."); }
+ };
+ function escapeHtml(value) {
+   return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ }
+ function setReferralLink(code) {
+   $("referralLink").value = code ? window.location.origin + window.location.pathname + "?ref=" + encodeURIComponent(code) : "";
+ }
+ async function loadReferrals() {
+   try {
+     const data = await callApi("/referrals");
+     const stats = data.stats || {};
+     $("referralStats").textContent = `${stats.total || 0} referred · ${stats.pending || 0} pending · ${stats.rewarded || 0} rewarded · ${Number(stats.reward_total || 0).toFixed(2)} USD credited`;
+     const rows = data.referrals || [];
+     $("referralHistory").innerHTML = rows.length ? "<h3>Referral history</h3>" + rows.map(r =>
+       "<div class=\"tile\"><strong>" + escapeHtml(r.referred_name || "Referred client") + "</strong><span>" +
+       escapeHtml(r.status) + " · " + escapeHtml(r.created_at ? new Date(r.created_at).toLocaleDateString() : "") +
+       (r.rewarded_at ? " · Rewarded " + escapeHtml(new Date(r.rewarded_at).toLocaleDateString()) : "") + "</span></div>"
+     ).join("") : "<p class=\"muted\">No referrals yet. Share your personal link to get started.</p>";
+   } catch (_) {
+     $("referralStats").textContent = "Referral summary temporarily unavailable. Try refreshing.";
+     $("referralHistory").textContent = "Referral history could not be loaded.";
+   }
+ }
  const requestedPlan = (query.get("plan") || "").toLowerCase();
  if (["starter","basic","premium","vip"].includes(requestedPlan)) $("planCode").value = requestedPlan;
  mode(requestedMode !== "signin");
@@ -145,6 +181,8 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
      $("accountSection").classList.remove("hidden");
      $("accountStatus").textContent="Account status: "+data.profile.status;
      $("myReferralCode").textContent=data.profile.referral_code||"Not assigned";
+     setReferralLink(data.profile.referral_code);
+     await loadReferrals();
      if(data.profile.status==="active") { $("financialActions").classList.remove("hidden"); $("investmentActions").classList.remove("hidden"); }
      $("balance").textContent=Number(data.profile.balance).toFixed(2);
      $("profit").textContent=Number(data.profile.profit_balance).toFixed(2);
@@ -159,6 +197,8 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
      $("accountSection").classList.remove("hidden");
      $("accountStatus").textContent="Account status: "+created.profile.status;
      $("myReferralCode").textContent=created.profile.referral_code||"Not assigned";
+     setReferralLink(created.profile.referral_code);
+     await loadReferrals();
      $("balance").textContent=Number(created.profile.balance||0).toFixed(2);
      $("profit").textContent=Number(created.profile.profit_balance||0).toFixed(2);
      $("accountEmail").textContent=created.profile.email||user.email||"";
