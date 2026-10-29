@@ -78,6 +78,8 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    $("showSignup").classList.toggle("primary",signup); $("showSignin").classList.toggle("primary",!signup);
  }
  $("showSignup").onclick=()=>mode(true); $("showSignin").onclick=()=>mode(false);
+ const requestedMode = new URLSearchParams(window.location.search).get("mode");
+ mode(requestedMode !== "signin");
  $("signupForm").onsubmit=async e=>{
    e.preventDefault();busy(e.currentTarget,true);
    try{
