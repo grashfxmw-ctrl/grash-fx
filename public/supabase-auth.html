@@ -18,7 +18,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <div class="tabs"><button id="showSignup" class="primary" type="button">Create account</button><button id="showSignin" type="button">Sign in</button></div>
 <form id="signupForm">
 <div class="field"><label for="fullName">Full name</label><input id="fullName" autocomplete="name" minlength="2" maxlength="100" required></div>
-<div class="field"><label for="signupPhone">Phone number (international format)</label><input id="signupPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" required pattern="\+[1-9][0-9]{7,14}" placeholder="+265XXXXXXXXX"><p class="muted">Include your country code, e.g. +265. One account per phone number.</p></div>
+<div class="field"><label for="signupPhone">Phone number (international format)</label><input id="signupPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" required pattern="\+[1-9][0-9]{7,14}" placeholder="International number, including country code"><p class="muted">Enter your own country's calling code and number. One account per phone number.</p></div>
 <div class="field"><label for="referralCode">Referral code (optional)</label><input id="referralCode" maxlength="9" autocomplete="off" pattern="GRASH[0-9]{4}" placeholder="GRASH1234"></div>
 <div class="field"><label for="signupEmail">Email address</label><input id="signupEmail" type="email" autocomplete="email" required></div>
 <div class="field"><label for="signupPassword">Password (at least 8 characters)</label><input id="signupPassword" type="password" minlength="8" autocomplete="new-password" required></div>
