@@ -324,9 +324,9 @@ Deno.serve(async (req: Request) => {
       if (path.endsWith("/profile-update")) {
         if (!profile) return json({ error: "Complete account registration first." }, 403);
         const fullName = clean(body.full_name, 100);
-        const phone = clean(body.phone, 20).replace(/\\s+/g, "");
+        const phone = clean(body.phone, 20).replace(/\s+/g, "");
         if (fullName.length < 2) return json({ error: "Enter your full name (at least 2 characters)." }, 400);
-        if (phone && !/^\\+[1-9][0-9]{7,14}$/.test(phone)) return json({ error: "Enter your phone number in international format, for example +265XXXXXXXXX." }, 400);
+        if (phone && !/^\+[1-9][0-9]{7,14}$/.test(phone)) return json({ error: "Enter your phone number in international format, for example +265XXXXXXXXX." }, 400);
         const { data: updated, error } = await adminClient.from("profiles")
           .update({ full_name: fullName, phone: phone || null, updated_at: new Date().toISOString() })
           .eq("user_id", user.id).select("user_id,full_name,email,phone,referral_code,status,created_at,updated_at").single();
