@@ -42,7 +42,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <h2>Investment plan</h2>
 <p class="muted">Seven-day term. Activating a plan deducts principal from your available balance. Profit and principal return to your main balance at maturity under the configured rules.</p>
 <form id="investmentForm">
-<div class="field"><label for="planCode">Plan</label><select id="planCode"><option value="starter">Starter · 10% daily · $50–$500</option><option value="basic">Basic · 20% daily · $501–$2,000</option><option value="premium">Premium · 30% daily · $2,001–$5,000</option><option value="vip">VIP · 40% daily · $5,001–$100,000</option></select></div>
+<div class="field"><label for="planCode">Plan</label><select id="planCode"><option value="starter">Starter · 10% daily · $50–$500</option><option value="basic">Basic · 20% daily · minimum $500</option><option value="premium">Premium · 30% daily · minimum $1,000</option><option value="vip">VIP · 40% daily · minimum $5,000</option></select></div>
 <div class="field"><label for="investmentAmount">Investment amount (USD)</label><input id="investmentAmount" type="number" min="50" max="100000" step="0.01" required></div>
 <button class="full" type="submit">Activate investment</button>
 </form>
