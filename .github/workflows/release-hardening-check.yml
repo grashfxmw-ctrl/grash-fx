@@ -2,9 +2,10 @@ name: GRASH FX release hardening checks
 
 on:
   push:
-    branches: [release-hardening-financial-ops]
+    branches: [main, release-hardening-financial-ops]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
