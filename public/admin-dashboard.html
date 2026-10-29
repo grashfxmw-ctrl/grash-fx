@@ -79,8 +79,9 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
         <p><span class="pill warn">${esc(t.status)}</span></p>
         <p class="muted">Customer ID: ${esc(t.user_id)}</p>
         <p class="muted">Request ID: ${esc(t.id)}</p>
-        <p class="muted">${esc(t.description||"No description")} · ${esc(new Date(t.created_at).toLocaleString())}</p>
-        <div class="field"><label for="reason-${esc(t.id)}">Review note / payment reference</label><input id="reason-${esc(t.id)}" maxlength="250" placeholder="Enter verification note"></div>
+        <p class="muted">Payment method: ${esc(t.description||"Not supplied")} · ${esc(new Date(t.created_at).toLocaleString())}</p>
+        ${t.kind === "deposit" ? `<p><strong>Client transfer reference / TXID:</strong> <span>${esc(t.reference||"Not supplied")}</span></p>` : `<div class="item"><h3>Withdrawal payout details</h3><p>Recipient: ${esc(t.payout_details?.account_holder||"Not supplied")}</p><p>Account / phone / payout identifier: ${esc(t.payout_details?.account_number||"Not supplied")}</p></div>`}
+        <div class="field"><label for="reason-${esc(t.id)}">${t.kind === "deposit" ? "Verified incoming payment reference / TXID" : "External payout reference"} </label><input id="reason-${esc(t.id)}" maxlength="250" placeholder="${t.kind === "deposit" ? "Match against the actual incoming payment" : "Enter payout receipt/reference"}"></div>
         <div class="actions"><button class="primary" data-transaction="${esc(t.id)}" data-decision="approve">Approve</button>${t.kind === "withdrawal" && t.status === "approved" ? `<button class="primary" data-transaction="${esc(t.id)}" data-decision="complete">Mark paid</button>` : ""}<button class="danger" data-transaction="${esc(t.id)}" data-decision="reject">Reject / release reservation</button></div>
        </article>`).join(""):empty("No deposit or withdrawal requests awaiting review.");
      $("customers").innerHTML=customers.length?customers.map(c=>`
