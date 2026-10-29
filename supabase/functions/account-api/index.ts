@@ -37,7 +37,7 @@ Deno.serve(async (req: Request) => {
     if (!user.email_confirmed_at) return json({ error: "Verify your email before using your account." }, 403);
 
     const { data: profile, error: profileError } = await adminClient.from("profiles")
-      .select("user_id,full_name,email,phone,status,country_code,created_at,updated_at")
+      .select("user_id,full_name,email,phone,referral_code,status,country_code,created_at,updated_at")
       .eq("user_id", user.id).maybeSingle();
     if (profileError) throw profileError;
 
@@ -115,16 +115,18 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "GET" && path.endsWith("/admin/queue")) {
       if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
-      const [profiles, requests, investments] = await Promise.all([
-        adminClient.from("profiles").select("user_id,full_name,email,phone,status,created_at").order("created_at").limit(200),
+      const [profiles, requests, investments, loginEvents] = await Promise.all([
+        adminClient.from("profiles").select("user_id,full_name,email,phone,referral_code,status,created_at").order("created_at").limit(200),
         adminClient.from("money_requests").select("id,user_id,request_type,amount,currency,status,client_reference,payment_method,payment_details,submitted_at,created_at")
           .in("status", ["submitted", "under_review", "approved"]).order("created_at").limit(200),
         adminClient.from("investments").select("id,user_id,plan_id,principal_amount,currency,daily_rate_snapshot,term_days_snapshot,status,started_at,matures_at,matured_at,created_at")
           .in("status", ["active", "under_review", "pending"]).order("matures_at").limit(200),
+        adminClient.from("login_events").select("id,user_id,ip_hash,country_code,user_agent,created_at").order("created_at", {ascending:false}).limit(100),
       ]);
       if (profiles.error) throw profiles.error;
       if (requests.error) throw requests.error;
       if (investments.error) throw investments.error;
+      if (loginEvents.error) throw loginEvents.error;
       const planIds = [...new Set((investments.data || []).map(i => i.plan_id).filter(Boolean))];
       let plans: Record<string, string> = {};
       if (planIds.length) {
@@ -175,6 +177,20 @@ Deno.serve(async (req: Request) => {
           return { id:p.user_id, ...p, phone_e164:p.phone, balance:item.balance,
             available_balance:item.balance-reserved, profit_balance:item.profit_balance };
         }),
+        login_events: (loginEvents.data || []).map(e => ({
+          id:e.id, user_id:e.user_id, ip_hash:e.ip_hash, country_code:e.country_code,
+          user_agent:e.user_agent, created_at:e.created_at
+        })),
+        shared_ip_accounts: (() => {
+          const grouped = new Map<string, Set<string>>();
+          for (const e of loginEvents.data || []) {
+            if (!e.ip_hash) continue;
+            const users = grouped.get(e.ip_hash) || new Set<string>();
+            users.add(e.user_id); grouped.set(e.ip_hash, users);
+          }
+          return [...grouped.entries()].filter(([, users]) => users.size > 1)
+            .map(([ip_hash, users]) => ({ ip_hash, account_count: users.size, user_ids: [...users] }));
+        })(),
       });
     }
 
@@ -182,6 +198,64 @@ Deno.serve(async (req: Request) => {
       let body: Record<string, unknown>;
       try { body = await req.json(); } catch { return json({ error: "Invalid JSON body." }, 400); }
       if (!profile) return json({ error: "Your profile is not ready yet. Sign in again shortly." }, 403);
+
+      if (path.endsWith("/login-event")) {
+        const { error: referralError } = await userClient.rpc("process_my_referral_reward");
+        if (referralError) throw referralError;
+        const forwarded = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") ||
+          (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
+        let ipHash: string | null = null;
+        if (forwarded) {
+          const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(forwarded));
+          ipHash = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2,"0")).join("");
+        }
+        const country = clean(req.headers.get("cf-ipcountry") || req.headers.get("x-vercel-ip-country") || "", 2).toUpperCase();
+        const { error } = await adminClient.from("login_events").insert({
+          user_id: user.id, ip_hash: ipHash, country_code: /^[A-Z]{2}$/.test(country) ? country : null,
+          user_agent: clean(req.headers.get("user-agent") || "", 300)
+        });
+        if (error) throw error;
+        const notificationUrl = Deno.env.get("LOGIN_NOTIFICATION_WEBHOOK_URL");
+        if (notificationUrl) {
+          try {
+            await fetch(notificationUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                event: "grash_fx.client_login",
+                user_id: user.id,
+                email: user.email || null,
+                country_code: /^[A-Z]{2}$/.test(country) ? country : null,
+                ip_hash: ipHash,
+                occurred_at: new Date().toISOString()
+              }),
+              signal: AbortSignal.timeout(2500)
+            });
+          } catch (notificationError) {
+            console.error("Login notification webhook failed", notificationError);
+          }
+        }
+        return json({ recorded: true, notification_configured: Boolean(notificationUrl) });
+      }
+
+      if (path.endsWith("/admin/balance-adjustment")) {
+        if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
+        const targetUserId = clean(body.user_id, 64);
+        const direction = clean(body.direction, 16).toLowerCase();
+        const value = money(body.amount);
+        const reason = clean(body.reason, 500);
+        const key = keyOf(req, body);
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetUserId) ||
+            !["credit","debit"].includes(direction) || value === null || reason.length < 5 || key.length < 8) {
+          return json({ error: "Customer, credit/debit direction, positive amount, reason (5+ characters), and idempotency key are required." }, 400);
+        }
+        const { data, error } = await userClient.rpc("admin_adjust_balance", {
+          p_target_user_id: targetUserId, p_direction: direction, p_amount: value,
+          p_reason: reason, p_idempotency_key: key
+        });
+        if (error) return json({ error: error.message }, 400);
+        return json({ ledger_entry_id: data, status: "adjusted" }, 201);
+      }
 
       if (path.endsWith("/profile") || path.endsWith("/me")) {
         return json({ error: "A profile is created automatically at signup. Contact support if it is missing." }, 409);
@@ -231,6 +305,7 @@ Deno.serve(async (req: Request) => {
         const key = keyOf(req, body);
         const planCode = clean(body.plan_code, 32).toLowerCase();
         if (value === null || key.length < 8 || !planCode) return json({ error: "A valid amount, plan, and idempotency key are required." }, 400);
+        if (planCode === "starter" && value > 500) return json({ error: "Starter plan maximum is $500.00." }, 400);
         const { data: plan, error: planError } = await adminClient.from("investment_plans").select("id,plan_code")
           .eq("plan_code", planCode).eq("is_active", true).eq("approval_status", "approved").maybeSingle();
         if (planError) throw planError;

@@ -25,7 +25,8 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
 <section id="dashboard" class="hidden">
 <div class="panel"><div class="section-head"><div><h2>Pending customer registrations</h2><p class="muted">Approve only after checking the submitted customer details.</p></div><span id="profileCount" class="pill">0 awaiting review</span></div><div id="profiles" class="grid"></div></div>
 <div class="panel"><div class="section-head"><div><h2>Deposit and withdrawal requests</h2><p class="muted">Verify deposits independently before approval. A submitted request is not proof of payment.</p></div><span id="transactionCount" class="pill">0 requests</span></div><div id="transactions" class="grid"></div></div>
-<div class="panel"><div class="section-head"><div><h2>Customer directory</h2><p class="muted">Read-only customer records and balances.</p></div><span id="customerCount" class="pill">0 customers</span></div><div id="customers" class="grid"></div></div>
+<div class="panel"><div class="section-head"><div><h2>Customer directory and balance controls</h2><p class="muted">Adjustments create permanent ledger entries and audit records. Debits cannot use funds reserved for pending withdrawals.</p></div><span id="customerCount" class="pill">0 customers</span></div><div id="customers" class="grid"></div></div>
+<div class="panel"><div class="section-head"><div><h2>Recent login activity and shared-IP flags</h2><p class="muted">IP addresses are stored as one-way hashes. A shared IP is a review signal, not automatic proof of duplicate ownership.</p></div></div><div id="loginEvents" class="grid"></div><div id="sharedIpFlags" class="status">No shared-IP flags.</div></div>
 <div class="panel"><div class="section-head"><div><h2>Active investments and maturity monitoring</h2><p class="muted">Read-only monitoring. Matured investments are paid by the scheduled server process, not by an admin button.</p></div><span id="investmentCount" class="pill">0 active investments</span></div><div id="investments" class="grid"></div></div>
 <div id="message" class="status" role="status" aria-live="polite">Ready.</div>
 </section>
@@ -91,7 +92,8 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
         <p><span class="pill">${esc(c.status)}</span></p>
         <p>Main balance: ${money(c.balance)} · Profit balance: ${money(c.profit_balance)}</p>
         <p class="muted">Customer ID: ${esc(c.id)}</p>
-        <p class="muted">Phone: ${esc(c.phone_e164||"Not verified / not supplied")}</p>
+        <p class="muted">Phone: ${esc(c.phone_e164||"Not verified / not supplied")}</p><p class="muted">Referral code: ${esc(c.referral_code||"Not assigned")}</p>
+        <div class="actions"><button class="primary" data-balance-user="${esc(c.id)}" data-customer-name="${esc(c.full_name||c.email||c.id)}">Adjust simulated balance</button></div>
        </article>`).join(""):empty("No customer profiles found.");
      $("investments").innerHTML=investments.length?investments.map(i=>`
        <article class="item">
@@ -103,6 +105,13 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
         <p class="muted">Started: ${esc(new Date(i.started_at).toLocaleString())}</p>
         <p class="muted">Matures: ${esc(new Date(i.matures_at).toLocaleString())}</p>
        </article>`).join(""):empty("No active investments awaiting maturity.");
+     const loginEvents=queue.login_events||[];
+     $("loginEvents").innerHTML=loginEvents.length?loginEvents.map(e=>`
+       <article class="item"><h3>${esc(e.country_code||"Country unavailable")} · ${esc(new Date(e.created_at).toLocaleString())}</h3>
+       <p class="muted">Account ID: ${esc(e.user_id)}</p><p class="muted">IP hash: ${esc((e.ip_hash||"unavailable").slice(0,16))}…</p>
+       <p class="muted">${esc(e.user_agent||"Device information unavailable")}</p></article>`).join(""):empty("No login events recorded yet.");
+     const shared=queue.shared_ip_accounts||[];
+     $("sharedIpFlags").textContent=shared.length?shared.map(f=>f.account_count+" accounts share an IP hash prefix "+f.ip_hash.slice(0,12)+" ("+f.user_ids.join(", ")+")").join("\\n"):"No shared-IP flags in the latest login events.";
      say("Queue refreshed. Review details carefully before approving any money movement.");
    } catch(error) {
      if((error.message||"").includes("Admin access required")) {
@@ -132,8 +141,25 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
  $("refresh").onclick=loadQueue;
  $("signout").onclick=async()=>{await client.auth.signOut();setLoggedIn(false);$("loginMessage").textContent="Signed out.";};
  document.addEventListener("click",async event=>{
-   const button=event.target.closest("button[data-profile],button[data-transaction]");
+   const button=event.target.closest("button[data-profile],button[data-transaction],button[data-balance-user]");
    if(!button)return;
+   if(button.dataset.balanceUser) {
+     const direction=(prompt("Type CREDIT to add simulated balance, or DEBIT to subtract it:")||"").trim().toLowerCase();
+     if(!["credit","debit"].includes(direction)) return;
+     if(direction==="debit"&&!confirm("Confirm this simulated balance debit? It will be permanent and audited.")) return;
+     const rawAmount=prompt("Amount in USD (positive number):");
+     const amount=Number(rawAmount);
+     if(!Number.isFinite(amount)||amount<=0||amount>10000000||Math.round(amount*100)!==amount*100) { say("Enter a valid positive amount with up to two decimals."); return; }
+     const reason=(prompt("Reason for this balance adjustment (required):")||"").trim();
+     if(reason.length<5) { say("Enter a reason of at least 5 characters."); return; }
+     button.disabled=true;
+     try {
+       await api("/admin/balance-adjustment","POST",{user_id:button.dataset.balanceUser,direction,amount,reason,idempotency_key:crypto.randomUUID()});
+       say("Balance adjustment recorded in the ledger and audit log. Refreshing queue…");
+       await loadQueue();
+     } catch(error) { say(error.message||"Balance adjustment failed."); button.disabled=false; }
+     return;
+   }
    const decision=button.dataset.decision;
    if(decision==="reject"&&!confirm("Confirm rejection? This action will be recorded in the audit log."))return;
    button.disabled=true;
