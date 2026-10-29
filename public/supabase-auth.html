@@ -50,7 +50,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <form id="depositForm"><div class="field"><label for="depositAmount">Deposit amount</label><input id="depositAmount" type="number" min="1" step="0.01" required></div><button class="full" type="submit">Submit deposit request</button></form>
 <form id="withdrawalForm"><div class="field"><label for="withdrawalAmount">Withdrawal amount</label><input id="withdrawalAmount" type="number" min="1" step="0.01" required></div><button class="full" type="submit">Request withdrawal</button></form>
 </div>
-<section class="account">
+<section id="investmentActions" class="hidden account">
 <h2>Investment plan</h2>
 <p class="muted">Seven-day term. Activating a plan deducts principal from your available balance. Profit and principal return to your main balance at maturity under the configured rules.</p>
 <form id="investmentForm">
@@ -117,7 +117,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
     if(data.profile){
      $("accountSection").classList.remove("hidden");
      $("accountStatus").textContent="Account status: "+data.profile.status;
-     if(data.profile.status==="active") $("financialActions").classList.remove("hidden");
+     if(data.profile.status==="active") { $("financialActions").classList.remove("hidden"); $("investmentActions").classList.remove("hidden"); }
      $("balance").textContent=Number(data.profile.balance).toFixed(2);
      $("profit").textContent=Number(data.profile.profit_balance).toFixed(2);
      say(data.profile.status==="pending"?"Profile created. Your account is awaiting admin review.":"Signed in successfully.");
@@ -204,7 +204,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
     });
    }catch(err){$("investmentHistory").textContent="Could not load history."; $("transactionHistory").textContent=err.message||"Could not load history.";}
  }
- $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("phoneSection").classList.add("hidden");$("financialActions").classList.add("hidden");mode(false);say("Signed out.");};
+ $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("phoneSection").classList.add("hidden");$("financialActions").classList.add("hidden");$("investmentActions").classList.add("hidden");mode(false);say("Signed out.");};
  client.auth.getSession().then(({data})=>{if(data.session){$("accountEmail").textContent=data.session.user.email||"";loadAccount();}});
 })();
 </script>
