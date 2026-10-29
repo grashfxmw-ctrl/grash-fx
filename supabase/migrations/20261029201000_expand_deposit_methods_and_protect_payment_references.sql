@@ -1,6 +1,6 @@
 ALTER TABLE public.money_requests DROP CONSTRAINT IF EXISTS money_requests_payment_method_check;
 ALTER TABLE public.money_requests ADD CONSTRAINT money_requests_payment_method_check
-  CHECK (payment_method IS NULL OR payment_method = ANY (ARRAY['bank_transfer','eft','usdt_ethereum','usdc_ethereum','bitcoin','airtel_money']::text[]));
+  CHECK (payment_method IS NULL OR payment_method = ANY (ARRAY['bank_transfer','eft','usdt_ethereum','usdc_ethereum','bitcoin','airtel_money','mpamba','mtn_mobile_money','cashsend_cardless']::text[]));
 CREATE UNIQUE INDEX IF NOT EXISTS money_requests_paid_external_reference_unique
   ON public.money_requests (payment_method, lower(trim(external_payment_reference)))
   WHERE status = 'paid' AND external_payment_reference IS NOT NULL AND trim(external_payment_reference) <> '';
@@ -18,7 +18,7 @@ begin
   if v_user_id is null then raise exception 'authentication required' using errcode='28000'; end if;
   if p_request_type not in ('deposit','withdrawal') or p_amount is null or p_amount<=0 or p_amount<>round(p_amount,2)
     or upper(coalesce(p_currency,''))<>'USD'
-    or coalesce(p_payment_method,'') not in ('bank_transfer','eft','usdt_ethereum','usdc_ethereum','bitcoin','airtel_money')
+    or coalesce(p_payment_method,'') not in ('bank_transfer','eft','usdt_ethereum','usdc_ethereum','bitcoin','airtel_money','mpamba','mtn_mobile_money','cashsend_cardless')
     or p_idempotency_key is null or length(trim(p_idempotency_key))<8 or length(trim(p_idempotency_key))>128
     or jsonb_typeof(v_details)<>'object' or length(v_details::text)>2000 then
     raise exception 'invalid money request' using errcode='22023';
@@ -30,7 +30,7 @@ begin
   if p_request_type='deposit' and p_payment_method not in ('usdt_ethereum','usdc_ethereum','bitcoin','airtel_money') then
     raise exception 'unsupported deposit method' using errcode='22023';
   end if;
-  if p_request_type='withdrawal' and p_payment_method not in ('bank_transfer','eft') then
+  if p_request_type='withdrawal' and p_payment_method not in ('bank_transfer','eft','airtel_money','mpamba','mtn_mobile_money','cashsend_cardless') then
     raise exception 'unsupported withdrawal method' using errcode='22023';
   end if;
   if p_request_type='deposit' and (p_client_reference is null or length(trim(p_client_reference))<3 or length(trim(p_client_reference))>120) then
