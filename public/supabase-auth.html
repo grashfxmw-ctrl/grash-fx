@@ -18,6 +18,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <div class="tabs"><button id="showSignup" class="primary" type="button">Create account</button><button id="showSignin" type="button">Sign in</button></div>
 <form id="signupForm">
 <div class="field"><label for="fullName">Full name</label><input id="fullName" autocomplete="name" minlength="2" maxlength="100" required></div>
+<div class="field"><label for="signupPhone">Phone number (international format)</label><input id="signupPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" required pattern="\+[1-9][0-9]{7,14}" placeholder="+265XXXXXXXXX"><p class="muted">Include your country code, e.g. +265. One account per phone number.</p></div>
 <div class="field"><label for="signupEmail">Email address</label><input id="signupEmail" type="email" autocomplete="email" required></div>
 <div class="field"><label for="signupPassword">Password (at least 8 characters)</label><input id="signupPassword" type="password" minlength="8" autocomplete="new-password" required></div>
 <button class="primary full" type="submit">Create account</button>
@@ -118,7 +119,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
  $("signupForm").onsubmit=async e=>{
    e.preventDefault();busy(e.currentTarget,true);
    try{
-    const {data,error}=await client.auth.signUp({email:$("signupEmail").value.trim(),password:$("signupPassword").value,options:{data:{full_name:$("fullName").value.trim()},emailRedirectTo:window.location.origin+window.location.pathname}});
+    const {data,error}=await client.auth.signUp({email:$("signupEmail").value.trim(),password:$("signupPassword").value,options:{data:{full_name:$("fullName").value.trim(),phone:$("signupPhone").value.replace(/\s+/g,"").trim()},emailRedirectTo:window.location.origin+window.location.pathname}});
     if(error)throw error;
     if(data.session){say("Account created. Verify your email, then sign in using your email and password.");}
     else say("Signup started. Check your email for the verification link. After verification, return here and sign in.");
@@ -131,6 +132,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
     const {data,error}=await client.auth.signInWithPassword({email:$("signinEmail").value.trim(),password:$("signinPassword").value});
     if(error)throw error;
     $("accountEmail").textContent=data.user.email||"";
+    await recordLoginEvent();
     await loadAccount();
    }catch(err){say(err.message||"Could not sign in.");}finally{busy(e.currentTarget,false);}
  };
@@ -169,6 +171,17 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
   try{const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.href});if(error)throw error;say("If the address is registered, a password reset email has been sent.");}
   catch(err){say(err.message||"Could not request password reset.");}
  };
+ async function recordLoginEvent() {
+   try { await callApi("/login-event", "POST", {}); } catch (_) { /* Telemetry failure must not block login. */ }
+ }
+ $("planCode").addEventListener("change", () => {
+   const mins = {starter:50,basic:500,premium:1000,vip:5000};
+   const amount = $("investmentAmount");
+   amount.min = String(mins[$("planCode").value] || 50);
+   amount.max = $("planCode").value === "starter" ? "500" : "100000";
+   if (Number(amount.value) < Number(amount.min)) amount.value = amount.min;
+   if (Number(amount.value) > Number(amount.max)) amount.value = amount.max;
+ });
  async function submitFinancialRequest(kind, amountValue, extra={}) {
    const key = crypto.randomUUID();
    try {
@@ -253,7 +266,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    }catch(err){$("investmentHistory").textContent="Could not load history."; $("transactionHistory").textContent=err.message||"Could not load history.";}
  }
  $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("financialActions").classList.add("hidden");$("investmentActions").classList.add("hidden");mode(false);say("Signed out.");};
- client.auth.getSession().then(({data})=>{if(data.session){$("accountEmail").textContent=data.session.user.email||"";loadAccount();}});
+ client.auth.getSession().then(async({data})=>{if(data.session){$("accountEmail").textContent=data.session.user.email||"";await recordLoginEvent();loadAccount();}});
 })();
 </script>
 </body></html>
