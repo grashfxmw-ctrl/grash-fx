@@ -92,7 +92,7 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
         <p><span class="pill">${esc(c.status)}</span></p>
         <p>Main balance: ${money(c.balance)} · Profit balance: ${money(c.profit_balance)}</p>
         <p class="muted">Customer ID: ${esc(c.id)}</p>
-        <p class="muted">Phone: ${esc(c.phone_e164||"Not verified / not supplied")}</p>
+        <p class="muted">Phone: ${esc(c.phone_e164||"Not verified / not supplied")}</p><p class="muted">Referral code: ${esc(c.referral_code||"Not assigned")}</p>
         <div class="actions"><button class="primary" data-balance-user="${esc(c.id)}" data-customer-name="${esc(c.full_name||c.email||c.id)}">Adjust simulated balance</button></div>
        </article>`).join(""):empty("No customer profiles found.");
      $("investments").innerHTML=investments.length?investments.map(i=>`
