@@ -11,7 +11,7 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
 </style>
 </head>
 <body><main>
-<header class="brand"><div><h1>GRASH FX · ADMIN</h1><p>Customer onboarding and financial request review</p></div><div class="top-actions"><button id="refresh" class="hidden">Refresh queue</button><button id="signout" class="hidden">Sign out</button></div></header>
+<header class="brand"><div><h1>GRASH FX · ADMIN</h1><p>Customer onboarding and financial request review</p><p id="adminIdentity" class="muted">Administrator account</p></div><div class="top-actions"><button id="refresh" class="hidden">Refresh queue</button><button id="openSettings" class="hidden">Settings</button><button id="signout" class="hidden">Sign out</button></div></header>
 <section id="loginPanel" class="panel login">
 <h2>Administrator sign in</h2>
 <p class="muted">Use the verified administrator account. Admin access is checked again by the server for every protected request.</p>
@@ -29,6 +29,25 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
 <div class="panel"><div class="section-head"><div><h2>Referral program overview</h2><p class="muted">Read-only attribution and reward audit. Reward totals come from the ledger, not estimated referral counts.</p></div><span id="referralCount" class="pill">0 referrals</span></div><div id="referralSummary" class="status">Loading referral totals…</div><div id="referrals" class="grid"></div></div>
 <div class="panel"><div class="section-head"><div><h2>Recent login activity and shared-IP flags</h2><p class="muted">IP addresses are stored as one-way hashes. A shared IP is a review signal, not automatic proof of duplicate ownership.</p></div></div><div id="loginEvents" class="grid"></div><div id="sharedIpFlags" class="status">No shared-IP flags.</div></div>
 <div class="panel"><div class="section-head"><div><h2>Active investments and maturity monitoring</h2><p class="muted">Read-only monitoring. Matured investments are paid by the scheduled server process, not by an admin button.</p></div><span id="investmentCount" class="pill">0 active investments</span></div><div id="investments" class="grid"></div></div>
+<section class="panel" id="adminSettings">
+ <div class="section-head"><div><h2>Administrator Settings</h2><p class="muted">Manage your own administrator profile and login password. Your administrator role is not editable here.</p></div><span class="pill">Account security</span></div>
+ <div class="grid">
+  <form id="adminProfileForm" class="item">
+   <h3>Profile information</h3>
+   <div class="field"><label for="adminEmail">Administrator email</label><input id="adminEmail" type="email" readonly></div>
+   <div class="field"><label for="adminDisplayName">Display name</label><input id="adminDisplayName" maxlength="100" placeholder="Administrator"></div>
+   <div class="actions"><button class="primary" type="submit">Save profile</button></div>
+  </form>
+  <form id="adminPasswordForm" class="item">
+   <h3>Change password</h3>
+   <div class="field"><label for="adminNewPassword">New password</label><input id="adminNewPassword" type="password" minlength="8" autocomplete="new-password" required></div>
+   <div class="field"><label for="adminConfirmPassword">Confirm new password</label><input id="adminConfirmPassword" type="password" minlength="8" autocomplete="new-password" required></div>
+   <div class="actions"><button class="primary" type="submit">Update password</button></div>
+  </form>
+ </div>
+ <p class="muted">Security reminder: use a unique password and never share administrator credentials. Password changes are handled by Supabase Auth.</p>
+ <div id="settingsMessage" class="status" role="status" aria-live="polite">Settings ready.</div>
+</section>
 <div id="message" class="status" role="status" aria-live="polite">Ready.</div>
 </section>
 </main>
@@ -55,7 +74,12 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
    $("loginPanel").classList.toggle("hidden",yes);
    $("dashboard").classList.toggle("hidden",!yes);
    $("refresh").classList.toggle("hidden",!yes);
+   $("openSettings").classList.toggle("hidden",!yes);
    $("signout").classList.toggle("hidden",!yes);
+ }
+ function showSettings() {
+   $("adminSettings").scrollIntoView({behavior:"smooth",block:"start"});
+   $("adminDisplayName").focus({preventScroll:true});
  }
  function empty(message){return '<div class="empty">'+esc(message)+'</div>'}
  async function loadQueue(){
@@ -151,7 +175,35 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
    finally {button.disabled=false;}
  };
  $("refresh").onclick=loadQueue;
+ $("openSettings").onclick=showSettings;
  $("signout").onclick=async()=>{await client.auth.signOut();setLoggedIn(false);$("loginMessage").textContent="Signed out.";};
+ $("adminProfileForm").onsubmit=async event=>{
+   event.preventDefault();
+   const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
+   try {
+     const displayName=$("adminDisplayName").value.trim();
+     if(displayName.length<2) throw new Error("Enter a display name with at least 2 characters.");
+     const {data,error}=await client.auth.updateUser({data:{full_name:displayName}});
+     if(error) throw error;
+     $("adminIdentity").textContent=displayName+" · "+(data.user?.email||"Administrator");
+     $("settingsMessage").textContent="Administrator profile updated.";
+   } catch(error) {$("settingsMessage").textContent=error.message||"Could not update profile.";}
+   finally {button.disabled=false;}
+ };
+ $("adminPasswordForm").onsubmit=async event=>{
+   event.preventDefault();
+   const password=$("adminNewPassword").value,confirmPassword=$("adminConfirmPassword").value;
+   if(password.length<8){$("settingsMessage").textContent="Use a password with at least 8 characters.";return;}
+   if(password!==confirmPassword){$("settingsMessage").textContent="The passwords do not match.";return;}
+   const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
+   try {
+     const {error}=await client.auth.updateUser({password});
+     if(error) throw error;
+     event.currentTarget.reset();
+     $("settingsMessage").textContent="Administrator password updated successfully.";
+   } catch(error) {$("settingsMessage").textContent=error.message||"Password update failed.";}
+   finally {button.disabled=false;}
+ };
  document.addEventListener("click",async event=>{
    const button=event.target.closest("button[data-profile],button[data-transaction],button[data-balance-user]");
    if(!button)return;
@@ -196,6 +248,11 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
  });
  client.auth.getSession().then(async({data})=>{
    if(data.session&&(data.session.user?.email||"").toLowerCase()==="grashfxmw@gmail.com"){
+     const user=data.session.user;
+     const displayName=user.user_metadata?.full_name||"Administrator";
+     $("adminEmail").value=user.email||"";
+     $("adminDisplayName").value=displayName;
+     $("adminIdentity").textContent=displayName+" · "+(user.email||"");
      setLoggedIn(true);await loadQueue();
    }
  });
