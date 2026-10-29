@@ -30,7 +30,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <button id="resetPassword" class="full" type="button">Send password reset email</button>
 </form>
 <div id="accountSection" class="hidden account">
-<h2>Your account</h2><div id="accountStatus" class="muted"></div>
+<h2>Your account</h2><div id="accountStatus" class="muted"></div><button id="refreshAccount" class="full" type="button">Refresh account status</button>
 <div class="balance"><div class="tile"><span>Main balance</span><strong id="balance">—</strong></div><div class="tile"><span>Profit balance</span><strong id="profit">—</strong></div></div>
 <p id="accountEmail" class="muted"></p>
 <div id="financialActions" class="hidden">
@@ -125,11 +125,13 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
      $("balance").textContent=Number(created.profile.balance||0).toFixed(2);
      $("profit").textContent=Number(created.profile.profit_balance||0).toFixed(2);
      $("accountEmail").textContent=created.profile.email||user.email||"";
+     if(created.profile.status==="active") { $("financialActions").classList.remove("hidden"); $("investmentActions").classList.remove("hidden"); await loadHistory(); }
      say("Profile created successfully. Account status: "+created.profile.status+".");
     }
    }catch(err){say(err.message||"Could not load account.");}
  }
 
+ $("refreshAccount").onclick=async()=>{const button=$("refreshAccount");button.disabled=true;button.textContent="Refreshing…";try{await loadAccount();}finally{button.disabled=false;button.textContent="Refresh account status";}};
  $("resetPassword").onclick=async()=>{
   const email=$("signinEmail").value.trim();if(!email){say("Enter your email address first.");return;}
   try{const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.href});if(error)throw error;say("If the address is registered, a password reset email has been sent.");}
