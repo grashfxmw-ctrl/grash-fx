@@ -1,0 +1,28 @@
+name: Supabase backend checks
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - production-backend-integration
+  pull_request:
+    branches:
+      - production-backend-integration
+
+permissions:
+  contents: read
+
+jobs:
+  repository-layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Verify Supabase application files
+        run: |
+          test -f public/index.html
+          test -f public/supabase-auth.html
+          test -f public/admin-dashboard.html
+          test -f supabase/functions/account-api/index.ts
+          test -d supabase/migrations
