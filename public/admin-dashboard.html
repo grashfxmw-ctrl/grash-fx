@@ -81,7 +81,7 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
         <p class="muted">Request ID: ${esc(t.id)}</p>
         <p class="muted">Payment method: ${esc(t.description||"Not supplied")} · ${esc(new Date(t.created_at).toLocaleString())}</p>
         ${t.kind === "deposit" ? `<p><strong>Payment reference / TXID:</strong> <span>${esc(t.reference||"Not supplied")}</span></p>` : `<div class="item"><h3>Withdrawal details</h3><p>Recipient: ${esc(t.payout_details?.account_holder||"Not supplied")}</p>${t.payout_details?.bank_name ? `<p>Bank: ${esc(t.payout_details.bank_name)}</p>` : ""}<p>Account / phone / wallet: ${esc(t.payout_details?.account_number||"Not supplied")}</p></div>`}
-        <div class="field"><label for="reason-${esc(t.id)}">${t.kind === "deposit" ? "Verified incoming payment reference / TXID" : "External payout reference"} </label><input id="reason-${esc(t.id)}" maxlength="250" placeholder="${t.kind === "deposit" ? "Match against the actual incoming payment" : "Enter payout receipt/reference"}"></div>
+        <div class="field"><label for="reason-${esc(t.id)}">${t.kind === "deposit" ? "Verified incoming payment reference / TXID" : t.status === "approved" ? "External payout reference" : "Review note (optional)"} </label><input id="reason-${esc(t.id)}" maxlength="250" placeholder="${t.kind === "deposit" ? "Match against the actual incoming payment" : t.status === "approved" ? "Enter payout receipt/reference" : "Only needed if rejecting"}"></div>
         <div class="actions"><button class="primary" data-transaction="${esc(t.id)}" data-decision="approve">Approve</button>${t.kind === "withdrawal" && t.status === "approved" ? `<button class="primary" data-transaction="${esc(t.id)}" data-decision="complete">Mark paid</button>` : ""}<button class="danger" data-transaction="${esc(t.id)}" data-decision="reject">Reject / release reservation</button></div>
        </article>`).join(""):empty("No deposit or withdrawal requests awaiting review.");
      $("customers").innerHTML=customers.length?customers.map(c=>`
@@ -143,8 +143,13 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
        await api("/admin/profile-review","POST",{user_id:button.dataset.profile,decision,reason:note});
      } else {
        const id=button.dataset.transaction;
-       const note=$("reason-"+id)?.value||"";
-       if(decision==="complete" && note.trim().length<3) throw new Error("Enter the external payment reference before marking a withdrawal paid.");
+       let note=$("reason-"+id)?.value.trim()||"";
+       const card=button.closest(".item");
+       const kind=(card?.querySelector("h3")?.textContent||"").toLowerCase().startsWith("deposit")?"deposit":"withdrawal";
+       if(decision==="complete" && note.length<3) throw new Error("Enter the external payment reference before marking a withdrawal paid.");
+       if(decision==="approve" && kind==="deposit" && note.length<3) throw new Error("Enter the verified incoming payment reference before approving this deposit.");
+       if(decision==="reject" && note.length<3) throw new Error("Enter a short reason before rejecting this request.");
+       if(decision==="approve" && kind==="withdrawal" && !note) note="Approved for manual payout";
        await api("/admin/review","POST",{transaction_id:id,decision,reference:note,reason:note});
      }
      say("Review saved successfully. Refreshing queue…");
