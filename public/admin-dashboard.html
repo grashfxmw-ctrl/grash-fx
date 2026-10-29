@@ -81,7 +81,7 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
         <p class="muted">Request ID: ${esc(t.id)}</p>
         <p class="muted">${esc(t.description||"No description")} · ${esc(new Date(t.created_at).toLocaleString())}</p>
         <div class="field"><label for="reason-${esc(t.id)}">Review note / payment reference</label><input id="reason-${esc(t.id)}" maxlength="250" placeholder="Enter verification note"></div>
-        <div class="actions"><button class="primary" data-transaction="${esc(t.id)}" data-decision="approve">Approve</button><button class="danger" data-transaction="${esc(t.id)}" data-decision="reject">Reject</button></div>
+        <div class="actions"><button class="primary" data-transaction="${esc(t.id)}" data-decision="approve">Approve</button>${t.kind === "withdrawal" && t.status === "approved" ? `<button class="primary" data-transaction="${esc(t.id)}" data-decision="complete">Mark paid</button>` : ""}<button class="danger" data-transaction="${esc(t.id)}" data-decision="reject">Reject / release reservation</button></div>
        </article>`).join(""):empty("No deposit or withdrawal requests awaiting review.");
      $("customers").innerHTML=customers.length?customers.map(c=>`
        <article class="item">
@@ -143,6 +143,7 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
      } else {
        const id=button.dataset.transaction;
        const note=$("reason-"+id)?.value||"";
+       if(decision==="complete" && note.trim().length<3) throw new Error("Enter the external payment reference before marking a withdrawal paid.");
        await api("/admin/review","POST",{transaction_id:id,decision,reference:note,reason:note});
      }
      say("Review saved successfully. Refreshing queue…");
