@@ -20,6 +20,7 @@ This folder contains the first source-code foundation for GRASH FX. It is not de
 - `schema/002_seed_plan_versions.sql` — proposed plan data; all four plans remain inactive and unapproved.
 - `docs/access-control.md` — permissions and security requirements.
 - `docs/financial-rules.md` — investment lifecycle, ledger and maturity rules.
+- `docs/admin-panel.md` — Step 9 administrator-panel scope, role boundaries, audit requirements and staging acceptance checklist.
 
 ## Before applying the schema
 
@@ -41,3 +42,7 @@ The website's internal ledger is an accounting record, not a bank account and no
 The SQL foundation records principal, plan/rate/term snapshots, server-generated start and maturity timestamps, and investment status. The maturity function calculates simple daily profit from the saved plan terms and uses unique ledger keys to avoid duplicate credits on retries. See [`docs/financial-rules.md`](docs/financial-rules.md) for the rules and outstanding controls.
 
 **Not launch-ready:** the current maturity function credits principal and profit to the internal ledger without checking that external treasury cash is sufficient. An internal ledger balance is not proof of cash available to pay a withdrawal. A separate reconciled treasury/liquidity control, scheduled worker, failure alerts, and staging tests are required before real-money use.
+
+## Step 9 — Secure administrator panel
+
+The admin panel is specified in [`docs/admin-panel.md`](docs/admin-panel.md). It defines the overview, plan management, transaction queues, account investigations, reports and audit trail, plus least-privilege staff roles. The document is a build specification—not a connected UI or deployed authorization layer. Server-side permission checks, protected RPCs, immutable audit events, MFA/re-authentication and staging tests must be implemented before the UI is connected. Existing role and audit tables alone do not provide complete admin security.
