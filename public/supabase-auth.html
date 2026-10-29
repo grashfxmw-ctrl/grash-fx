@@ -83,10 +83,29 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
  const requestedPlan = (query.get("plan") || "").toLowerCase();
  if (["starter","basic","premium","vip"].includes(requestedPlan)) $("planCode").value = requestedPlan;
  mode(requestedMode !== "signin");
+
+ // Supabase confirmation links can return token_hash/type; verify them on this hosted page.
+ (async () => {
+   const authParams = new URLSearchParams(window.location.search);
+   const tokenHash = authParams.get("token_hash");
+   const authType = authParams.get("type");
+   if (tokenHash && authType && ["signup","email","recovery","invite","magiclink","email_change"].includes(authType)) {
+     try {
+       const { error } = await client.auth.verifyOtp({ token_hash: tokenHash, type: authType });
+       if (error) throw error;
+       history.replaceState({}, document.title, window.location.pathname);
+       say(authType === "recovery" ? "Email verified. Continue password recovery." : "Email verified successfully. Please sign in.");
+       mode(false);
+     } catch (err) {
+       say(err.message || "This verification link is invalid or expired. Request a new email.");
+     }
+   }
+ })();
+
  $("signupForm").onsubmit=async e=>{
    e.preventDefault();busy(e.currentTarget,true);
    try{
-    const {data,error}=await client.auth.signUp({email:$("signupEmail").value.trim(),password:$("signupPassword").value,options:{data:{full_name:$("fullName").value.trim()}}});
+    const {data,error}=await client.auth.signUp({email:$("signupEmail").value.trim(),password:$("signupPassword").value,options:{data:{full_name:$("fullName").value.trim()},emailRedirectTo:window.location.origin+window.location.pathname}});
     if(error)throw error;
     if(data.session){say("Account created. Verify your email, then sign in using your email and password.");}
     else say("Signup started. Check your email for the verification link. After verification, return here and sign in.");
