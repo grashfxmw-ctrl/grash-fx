@@ -1,261 +1,152 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#080b12">
-<title>GRASH FX — Admin Dashboard</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111318">
+<title>GRASH FX | Administrator Portal</title>
+<script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/lucide@latest"></script>
 <style>
-:root{color-scheme:dark;--bg:#080b12;--panel:#111827;--line:#273449;--text:#f3f6fb;--muted:#9aa9bd;--accent:#48d6a5;--danger:#ff8585;--warn:#f4c66a}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#16263a 0,var(--bg) 55%);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text);min-height:100vh;padding:20px}
-main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px}.brand h1{font-size:24px;letter-spacing:.1em;margin:0}.brand p{color:var(--muted);margin:3px 0}.panel{background:rgba(17,24,39,.96);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px}h2{font-size:19px;margin:0 0 12px}.muted{color:var(--muted);font-size:13px}.field{margin:12px 0}label{display:block;color:#c7d2e1;font-size:13px;margin-bottom:6px}input{width:100%;padding:11px 12px;border-radius:9px;border:1px solid var(--line);background:#0a111d;color:var(--text);font:inherit}button{border:1px solid var(--line);border-radius:9px;padding:10px 13px;background:#1c2b3d;color:var(--text);font:600 13px system-ui;cursor:pointer}button.primary{background:var(--accent);color:#05261d;border-color:transparent}button.danger{color:#2b0707;background:var(--danger);border-color:transparent}button:disabled{opacity:.55;cursor:wait}.hidden{display:none!important}.status{white-space:pre-wrap;margin-top:12px;padding:10px;border-radius:9px;background:#0a111d;color:#d7e5f4;min-height:40px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.item{border:1px solid var(--line);background:#0a111d;border-radius:12px;padding:14px;min-width:0}.item h3{font-size:15px;margin:0 0 5px;overflow-wrap:anywhere}.item p{margin:5px 0;overflow-wrap:anywhere}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.pill{display:inline-block;padding:3px 8px;border-radius:999px;background:#263449;color:#d7e5f4;font-size:12px}.pill.warn{color:#241a04;background:var(--warn)}.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.empty{padding:18px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:10px}.login{max-width:440px;margin:40px auto}.top-actions{display:flex;gap:8px;flex-wrap:wrap}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+*{box-sizing:border-box}body{font-family:Inter,system-ui,sans-serif;background:#f1f5f9;color:#1e293b}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#9ca3af;border-radius:8px}
+.nav-active{background:#1e222d;color:#fff;font-weight:700}.nav-active .nav-icon{color:#f59e0b}
+.panel{background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 1px 2px #0f172a0a}
+.stat{padding:20px}.stat-label{font-size:12px;color:#64748b;font-weight:600}.stat-value{font-size:27px;font-weight:800;color:#0f172a;margin-top:6px;letter-spacing:-.03em}
+.btn{border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700;transition:.15s}.btn-dark{background:#111827;color:white}.btn-amber{background:#f59e0b;color:#111827}.btn-light{background:#f1f5f9;color:#334155}.btn-red{background:#fee2e2;color:#991b1b}.btn:disabled{opacity:.5;cursor:wait}
+.field{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px 11px;font-size:12px;background:#fff;color:#0f172a}.field:focus{outline:2px solid #fbbf24;outline-offset:1px}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#f8fafc;color:#64748b;text-transform:uppercase;letter-spacing:.05em;font-size:10px;text-align:left;padding:12px;white-space:nowrap}td{padding:12px;border-top:1px solid #f1f5f9;vertical-align:middle}tr:hover td{background:#fafafa}
+.pill{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:800;background:#e2e8f0;color:#334155}.pill-green{background:#dcfce7;color:#166534}.pill-amber{background:#fef3c7;color:#92400e}.pill-red{background:#fee2e2;color:#991b1b}
+.view{display:none}.view.active{display:block}.muted{color:#64748b}.empty{padding:28px;text-align:center;color:#94a3b8;font-size:12px;border:1px dashed #cbd5e1;border-radius:10px}
+.modal{position:fixed;inset:0;background:#02061799;z-index:60;display:none;align-items:center;justify-content:center;padding:16px}.modal.open{display:flex}
+@media(max-width:767px){#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#main{padding-left:0}}
 </style>
 </head>
-<body><main>
-<header class="brand"><div><h1>GRASH FX · ADMIN</h1><p>Customer onboarding and financial request review</p><p id="adminIdentity" class="muted">Administrator account</p></div><div class="top-actions"><button id="refresh" class="hidden">Refresh queue</button><button id="openSettings" class="hidden">Settings</button><button id="signout" class="hidden">Sign out</button></div></header>
-<section id="loginPanel" class="panel login">
-<h2>Administrator sign in</h2>
-<p class="muted">Use the verified administrator account. Admin access is checked again by the server for every protected request.</p>
-<form id="loginForm">
-<div class="field"><label for="email">Administrator email</label><input id="email" type="email" autocomplete="username" required></div>
-<div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
-<button class="primary" type="submit">Sign in securely</button>
-</form>
-<div id="loginMessage" class="status" role="status">Sign in to continue.</div>
-</section>
-<section id="dashboard" class="hidden">
-<div class="panel"><div class="section-head"><div><h2>Pending customer registrations</h2><p class="muted">Approve only after checking the submitted customer details.</p></div><span id="profileCount" class="pill">0 awaiting review</span></div><div id="profiles" class="grid"></div></div>
-<div class="panel"><div class="section-head"><div><h2>Deposit and withdrawal requests</h2><p class="muted">Verify deposits independently before approval. A submitted request is not proof of payment.</p></div><span id="transactionCount" class="pill">0 requests</span></div><div id="transactions" class="grid"></div></div>
-<div class="panel"><div class="section-head"><div><h2>Customer directory and balance controls</h2><p class="muted">Adjustments create permanent ledger entries and audit records. Debits cannot use funds reserved for pending withdrawals.</p></div><span id="customerCount" class="pill">0 customers</span></div><div id="customers" class="grid"></div></div>
-<div class="panel"><div class="section-head"><div><h2>Referral program overview</h2><p class="muted">Read-only attribution and reward audit. Reward totals come from the ledger, not estimated referral counts.</p></div><span id="referralCount" class="pill">0 referrals</span></div><div id="referralSummary" class="status">Loading referral totals…</div><div id="referrals" class="grid"></div></div>
-<div class="panel"><div class="section-head"><div><h2>Recent login activity and shared-IP flags</h2><p class="muted">IP addresses are stored as one-way hashes. A shared IP is a review signal, not automatic proof of duplicate ownership.</p></div></div><div id="loginEvents" class="grid"></div><div id="sharedIpFlags" class="status">No shared-IP flags.</div></div>
-<div class="panel"><div class="section-head"><div><h2>Active investments and maturity monitoring</h2><p class="muted">Read-only monitoring. Matured investments are paid by the scheduled server process, not by an admin button.</p></div><span id="investmentCount" class="pill">0 active investments</span></div><div id="investments" class="grid"></div></div>
-<section class="panel" id="adminSettings">
- <div class="section-head"><div><h2>Administrator Settings</h2><p class="muted">Manage your own administrator profile and login password. Your administrator role is not editable here.</p></div><span class="pill">Account security</span></div>
- <div class="grid">
-  <form id="adminProfileForm" class="item">
-   <h3>Profile information</h3>
-   <div class="field"><label for="adminEmail">Administrator email</label><input id="adminEmail" type="email" readonly></div>
-   <div class="field"><label for="adminDisplayName">Display name</label><input id="adminDisplayName" maxlength="100" placeholder="Administrator"></div>
-   <div class="actions"><button class="primary" type="submit">Save profile</button></div>
-  </form>
-  <form id="adminPasswordForm" class="item">
-   <h3>Change password</h3>
-   <div class="field"><label for="adminNewPassword">New password</label><input id="adminNewPassword" type="password" minlength="8" autocomplete="new-password" required></div>
-   <div class="field"><label for="adminConfirmPassword">Confirm new password</label><input id="adminConfirmPassword" type="password" minlength="8" autocomplete="new-password" required></div>
-   <div class="actions"><button class="primary" type="submit">Update password</button></div>
-  </form>
+<body class="min-h-screen">
+<section id="loginPanel" class="min-h-screen grid place-items-center p-5">
+ <div class="panel w-full max-w-md p-7">
+  <div class="flex items-center gap-3 mb-6"><div class="w-11 h-11 rounded-xl bg-amber-500 grid place-items-center text-slate-950 text-2xl">🐈‍⬛</div><div><h1 class="font-extrabold tracking-wider">GRASH <span class="text-amber-500">FX</span></h1><p class="text-[10px] tracking-[.2em] text-slate-500 font-bold">ADMINISTRATOR PORTAL</p></div></div>
+  <h2 class="text-xl font-extrabold">Secure administrator sign in</h2><p class="text-xs text-slate-500 mt-2 mb-5">Only accounts with an active administrator or finance role can enter. Access is verified by the server.</p>
+  <form id="loginForm" class="space-y-3"><label class="block text-xs font-semibold">Email<input id="email" class="field mt-1" type="email" autocomplete="username" required></label><label class="block text-xs font-semibold">Password<input id="password" class="field mt-1" type="password" autocomplete="current-password" required></label><button id="loginButton" class="btn btn-dark w-full py-3" type="submit">Sign in securely</button></form>
+  <p id="loginMessage" class="text-xs text-slate-500 mt-4" role="status">Administrator permissions are checked after sign in.</p>
  </div>
- <p class="muted">Security reminder: use a unique password and never share administrator credentials. Password changes are handled by Supabase Auth.</p>
- <div id="settingsMessage" class="status" role="status" aria-live="polite">Settings ready.</div>
 </section>
-<div id="message" class="status" role="status" aria-live="polite">Ready.</div>
-</section>
-</main>
+<div id="app" class="hidden min-h-screen">
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-[#111318] border-r border-[#1e222d] flex flex-col transition-transform duration-300">
+ <div class="h-16 flex items-center px-5 border-b border-white/10 gap-3"><div class="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 text-xl">🐈‍⬛</div><div><h1 class="font-extrabold text-white tracking-wide text-sm">GRASH <span class="text-amber-400">FX</span></h1><p class="text-[10px] text-slate-400 tracking-wider font-bold">ADMIN PORTAL</p></div></div>
+ <nav class="p-4 space-y-1 text-sm font-medium text-slate-300 flex-1 overflow-y-auto">
+  <button data-view="dashboard" class="nav nav-active w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-left"><i data-lucide="layout-grid" class="nav-icon w-5 h-5"></i>Dashboard</button>
+  <button data-view="users" class="nav w-full flex items-center gap-3 px-3.5 py-3 rounded-lg hover:bg-white/5 text-left"><i data-lucide="users" class="nav-icon w-5 h-5 text-slate-400"></i>Registered Users</button>
+  <button data-view="tickets" class="nav w-full flex items-center gap-3 px-3.5 py-3 rounded-lg hover:bg-white/5 text-left"><i data-lucide="message-square" class="nav-icon w-5 h-5 text-slate-400"></i>Support Tickets <span id="ticketNavCount" class="ml-auto text-[10px] text-amber-400">0</span></button>
+  <div class="pt-5 pb-2 px-3.5"><span class="text-[10px] font-extrabold tracking-[.2em] text-amber-500">MORE</span></div>
+  <button data-view="plans" class="nav w-full flex items-center gap-3 px-3.5 py-3 rounded-lg hover:bg-white/5 text-left"><i data-lucide="chart-no-axes-combined" class="nav-icon w-5 h-5 text-slate-400"></i>Investment System</button>
+  <button data-view="investments" class="nav w-full flex items-center gap-3 px-3.5 py-3 rounded-lg hover:bg-white/5 text-left"><i data-lucide="chart-line" class="nav-icon w-5 h-5 text-slate-400"></i>Active Investments</button>
+  <button data-view="deposits" class="nav w-full flex items-center gap-3 px-3.5 py-3 rounded-lg hover:bg-white/5 text-left"><i data-lucide="arrow-down-left" class="nav-icon w-5 h-5 text-slate-400"></i>Deposit System <span id="depositNavCount" class="ml-auto text-[10px] text-amber-400">0</span></button>
+  <button data-view="withdrawals" class="nav w-full flex items-center gap-3 px-3.5 py-3 rounded-lg hover:bg-white/5 text-left"><i data-lucide="wallet" class="nav-icon w-5 h-5 text-slate-400"></i>Withdrawal System <span id="withdrawNavCount" class="ml-auto text-[10px] text-amber-400">0</span></button>
+  <button data-view="history" class="nav w-full flex items-center gap-3 px-3.5 py-3 rounded-lg hover:bg-white/5 text-left"><i data-lucide="receipt-text" class="nav-icon w-5 h-5 text-slate-400"></i>Approved Logs</button>
+  <button data-view="activity" class="nav w-full flex items-center gap-3 px-3.5 py-3 rounded-lg hover:bg-white/5 text-left"><i data-lucide="shield-check" class="nav-icon w-5 h-5 text-slate-400"></i>Login & Security</button>
+  <button data-view="account" class="nav w-full flex items-center gap-3 px-3.5 py-3 rounded-lg hover:bg-white/5 text-left"><i data-lucide="user-cog" class="nav-icon w-5 h-5 text-slate-400"></i>Account Settings</button>
+  <button id="logout" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 mt-4 text-left"><i data-lucide="power" class="w-5 h-5"></i>Logout</button>
+ </nav>
+ <div class="p-4 border-t border-white/10 text-[10px] text-slate-500 text-center">GRASH FX · ADMIN CONSOLE</div>
+</aside>
+<div id="main" class="md:pl-64 min-h-screen flex flex-col">
+ <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30 shadow-sm">
+  <div class="flex items-center gap-4 min-w-0"><button id="menu" class="md:hidden p-2 rounded-lg hover:bg-slate-100"><i data-lucide="menu"></i></button><div class="min-w-0"><div id="pageTitle" class="font-extrabold text-sm">Dashboard Overview</div><div class="text-[10px] text-slate-500">GRASH FX administrator workspace</div></div></div>
+  <div class="flex items-center gap-3"><div class="hidden sm:block text-right"><div id="adminName" class="text-xs font-bold text-slate-800">Administrator</div><div id="adminEmail" class="text-[10px] text-slate-500"></div></div><div class="w-9 h-9 rounded-full bg-slate-900 text-amber-400 grid place-items-center"><i data-lucide="shield-check"></i></div></div>
+ </header>
+ <div class="bg-white border-b border-slate-200 px-4 md:px-8 py-2"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>{"symbols":[{"proName":"FX:EURUSD","title":"EUR/USD"},{"proName":"FX:GBPUSD","title":"GBP/USD"},{"proName":"BITSTAMP:BTCUSD","title":"BTC/USD"},{"proName":"BITSTAMP:ETHUSD","title":"ETH/USD"},{"proName":"NASDAQ:NDX","title":"NASDAQ 100"}],"showSymbolLogo":true,"isTransparent":true,"displayMode":"adaptive","colorTheme":"light","locale":"en"}</script></div></div>
+ <main class="w-full max-w-[1500px] mx-auto p-4 md:p-8 space-y-6 flex-1">
+  <div class="flex items-center justify-between gap-3"><p id="globalMessage" class="text-xs text-slate-500" role="status">Loading administrator workspace…</p><button id="refresh" class="btn btn-dark flex items-center gap-2"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>Refresh data</button></div>
+  <section id="view-dashboard" class="view active space-y-6">
+   <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+    <article class="panel stat"><div class="stat-label">Total Deposits</div><div id="statDeposits" class="stat-value">$0.00</div><div id="statDepositCount" class="text-[11px] text-slate-500 mt-3 pt-3 border-t">0 approved deposits</div></article>
+    <article class="panel stat"><div class="stat-label">Total Invested</div><div id="statInvested" class="stat-value">$0.00</div><div id="statInvestments" class="text-[11px] text-slate-500 mt-3 pt-3 border-t">0 active · 0 completed</div></article>
+    <article class="panel stat"><div class="stat-label">Profit Credited</div><div id="statProfit" class="stat-value">$0.00</div><div class="text-[11px] text-slate-500 mt-3 pt-3 border-t">Recorded in the account ledger</div></article>
+    <article class="panel stat"><div class="stat-label">Registered Users</div><div id="statUsers" class="stat-value">0</div><div id="statUserBreakdown" class="text-[11px] text-slate-500 mt-3 pt-3 border-t">0 active · 0 restricted</div></article>
+    <article class="panel stat"><div class="stat-label">Support Tickets</div><div id="statTickets" class="stat-value">0</div><div id="statTicketBreakdown" class="text-[11px] text-slate-500 mt-3 pt-3 border-t">0 open · 0 closed</div></article>
+    <article class="panel stat"><div class="stat-label">Investments</div><div id="statInvestmentCount" class="stat-value">0</div><div id="statInvestmentBreakdown" class="text-[11px] text-slate-500 mt-3 pt-3 border-t">0 active · 0 completed</div></article>
+    <article class="panel stat"><div class="stat-label">Deposits</div><div id="statPendingDeposits" class="stat-value">0</div><div class="text-[11px] text-slate-500 mt-3 pt-3 border-t">Pending administrator review</div></article>
+    <article class="panel stat"><div class="stat-label">Withdrawals</div><div id="statPendingWithdrawals" class="stat-value">0</div><div class="text-[11px] text-slate-500 mt-3 pt-3 border-t">Awaiting review or payout</div></article>
+   </div>
+   <div class="panel p-4 md:p-5"><div class="flex flex-wrap justify-between items-center gap-2 mb-3"><div><h2 class="font-extrabold text-sm">Live Market Chart</h2><p class="text-[10px] text-slate-500">Market data supplied by TradingView, not account or investment performance.</p></div><div class="flex gap-1"><button class="btn btn-light" data-interval="1">1m</button><button class="btn btn-light" data-interval="30">30m</button><button class="btn btn-light" data-interval="60">1h</button><button class="btn btn-light" data-interval="D">1D</button></div></div><div id="marketChart" class="w-full h-[430px]"><iframe id="chartFrame" title="Live BTC USD market chart" class="w-full h-full border-0" src="https://s.tradingview.com/widgetembed/?symbol=BITSTAMP%3ABTCUSD&interval=60&hidesidetoolbar=0&symboledit=1&saveimage=0&toolbarbg=f1f3f6&theme=light&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1&locale=en"></iframe></div></div>
+   <div class="grid lg:grid-cols-2 gap-4"><div class="panel p-5"><div class="flex justify-between items-center mb-3"><h2 class="font-extrabold text-sm">Latest Financial Requests</h2><button data-goto="deposits" class="text-xs font-bold text-amber-700">Review requests</button></div><div id="latestRequests" class="space-y-2"></div></div><div class="panel p-5"><div class="flex justify-between items-center mb-3"><h2 class="font-extrabold text-sm">Recently Registered Users</h2><button data-goto="users" class="text-xs font-bold text-amber-700">View users</button></div><div id="latestUsers" class="space-y-2"></div></div></div>
+  </section>
+  <section id="view-users" class="view space-y-4"><div class="panel p-5"><div class="flex flex-wrap justify-between gap-3 items-center mb-4"><div><h2 class="font-extrabold">Registered Platform Users</h2><p class="text-xs text-slate-500 mt-1">Real customer profiles and ledger-derived balances. Account changes are audited.</p></div><input id="userSearch" class="field max-w-xs" placeholder="Search name, email or user ID"></div><div class="table-wrap"><table><thead><tr><th>Customer</th><th>Joined</th><th>Main Balance</th><th>Profit Balance</th><th>Status</th><th>Actions</th></tr></thead><tbody id="userRows"></tbody></table></div></div></section>
+  <section id="view-plans" class="view space-y-4"><div class="panel p-5"><h2 class="font-extrabold">Investment Plans</h2><p class="text-xs text-slate-500 mt-1 mb-4">Plan settings are displayed from the database. This page does not change plan rates.</p><div id="planRows" class="grid sm:grid-cols-2 xl:grid-cols-4 gap-3"></div></div></section>
+  <section id="view-investments" class="view space-y-4"><div class="panel p-5"><h2 class="font-extrabold">Investment Monitoring</h2><p class="text-xs text-slate-500 mt-1 mb-4">Active, pending, under-review and matured investment records.</p><div class="table-wrap"><table><thead><tr><th>Client</th><th>Plan</th><th>Principal</th><th>Daily Rate</th><th>Progress</th><th>Status</th><th>Maturity</th></tr></thead><tbody id="investmentRows"></tbody></table></div></div></section>
+  <section id="view-deposits" class="view space-y-4"><div class="panel p-5"><h2 class="font-extrabold">Deposit Requests</h2><p class="text-xs text-slate-500 mt-1 mb-4">Match each request against the actual incoming payment before approving it.</p><div id="depositCards" class="grid lg:grid-cols-2 gap-3"></div></div></section>
+  <section id="view-withdrawals" class="view space-y-4"><div class="panel p-5"><h2 class="font-extrabold">Withdrawal Requests</h2><p class="text-xs text-slate-500 mt-1 mb-4">Approve only after checking available balance and recipient details. Mark paid only after sending the payout.</p><div id="withdrawalCards" class="grid lg:grid-cols-2 gap-3"></div></div></section>
+  <section id="view-history" class="view space-y-4"><div class="panel p-5"><h2 class="font-extrabold">Financial History & Approved Logs</h2><p class="text-xs text-slate-500 mt-1 mb-4">Historical requests are shown from the database, including rejected and paid requests.</p><div class="table-wrap"><table><thead><tr><th>Date</th><th>Type</th><th>Customer ID</th><th>Amount</th><th>Payment Method</th><th>Status</th><th>Reference</th></tr></thead><tbody id="historyRows"></tbody></table></div></div></section>
+  <section id="view-tickets" class="view space-y-4"><div class="panel p-5"><h2 class="font-extrabold">Support Tickets Inbox</h2><p class="text-xs text-slate-500 mt-1 mb-4">Review the customer's message and update its handling status.</p><div id="ticketCards" class="grid lg:grid-cols-2 gap-3"></div></div></section>
+  <section id="view-activity" class="view space-y-4"><div class="panel p-5"><h2 class="font-extrabold">Login Activity & Security Review</h2><p class="text-xs text-slate-500 mt-1 mb-4">IP addresses are stored as one-way hashes. Shared IPs are review signals, not proof of duplicate ownership.</p><div id="sharedIp" class="text-xs p-3 rounded-lg bg-amber-50 text-amber-900 mb-4">Checking shared IP flags…</div><div id="loginRows" class="grid lg:grid-cols-2 gap-3"></div></div></section>
+  <section id="view-account" class="view space-y-4"><div class="panel p-5 max-w-3xl"><h2 class="font-extrabold">Administrator Account Settings</h2><p class="text-xs text-slate-500 mt-1 mb-4">Update your profile and password. Your server-side administrator role cannot be edited here.</p><div class="grid md:grid-cols-2 gap-4"><form id="profileForm" class="border rounded-xl p-4 space-y-3"><h3 class="font-bold text-sm">Profile information</h3><label class="block text-xs font-semibold">Administrator email<input id="settingEmail" class="field mt-1" readonly></label><label class="block text-xs font-semibold">Display name<input id="settingName" class="field mt-1" maxlength="100" required></label><button class="btn btn-dark">Save profile</button></form><form id="passwordForm" class="border rounded-xl p-4 space-y-3"><h3 class="font-bold text-sm">Change password</h3><label class="block text-xs font-semibold">New password<input id="newPassword" class="field mt-1" type="password" minlength="8" autocomplete="new-password" required></label><label class="block text-xs font-semibold">Confirm password<input id="confirmPassword" class="field mt-1" type="password" minlength="8" autocomplete="new-password" required></label><button class="btn btn-amber">Update password</button></form></div><p id="settingsMessage" class="text-xs text-slate-500 mt-4" role="status"></p></div></section>
+ </main>
+</div>
+</div>
+<div id="modal" class="modal"><div class="bg-white rounded-xl p-5 w-full max-w-md shadow-2xl"><div class="flex justify-between items-center mb-3"><h3 id="modalTitle" class="font-extrabold">Customer action</h3><button id="modalClose" class="btn btn-light">Close</button></div><div id="modalBody" class="text-xs text-slate-600"></div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-(() => {
- const SUPABASE_URL = "https://vwghcjkgzeausfxqphmf.supabase.co";
- const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_gn3ndWb6xAtoaZ4FYFaHug_sbnCJI33";
- const API = SUPABASE_URL + "/functions/v1/account-api";
- const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
- const $ = id => document.getElementById(id);
- const money = value => Number(value || 0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
- const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
- const say = message => $("message").textContent = message;
- async function api(path, method="GET", body) {
-   const {data:{session}} = await client.auth.getSession();
-   if(!session) throw new Error("Session expired. Please sign in again.");
-   const response = await fetch(API+path,{method,headers:{Authorization:"Bearer "+session.access_token,apikey:SUPABASE_PUBLISHABLE_KEY,"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined});
-   const data = await response.json().catch(()=>({}));
-   if(!response.ok) throw new Error(data.error || "Request failed.");
-   return data;
- }
- function setLoggedIn(yes) {
-   $("loginPanel").classList.toggle("hidden",yes);
-   $("dashboard").classList.toggle("hidden",!yes);
-   $("refresh").classList.toggle("hidden",!yes);
-   $("openSettings").classList.toggle("hidden",!yes);
-   $("signout").classList.toggle("hidden",!yes);
- }
- function showSettings() {
-   $("adminSettings").scrollIntoView({behavior:"smooth",block:"start"});
-   $("adminDisplayName").focus({preventScroll:true});
- }
- function empty(message){return '<div class="empty">'+esc(message)+'</div>'}
- async function loadQueue(){
-   say("Loading admin queue…");
-   try {
-     const queue=await api("/admin/queue");
-     const profiles=queue.pending_profiles||[], transactions=queue.financial_requests||[], investments=queue.investments||[], customers=queue.customers||[], referralOverview=queue.referral_overview||{totals:{},rows:[]};
-     $("profileCount").textContent=profiles.length+" awaiting review";
-     $("transactionCount").textContent=transactions.length+" requests";
-     $("investmentCount").textContent=investments.length+" active investments";
-     $("customerCount").textContent=customers.length+" customers";
-     $("profiles").innerHTML=profiles.length?profiles.map(p=>`
-       <article class="item">
-        <h3>${esc(p.full_name||"Name not supplied")}</h3>
-        <p class="muted">${esc(p.email)}</p><p>${esc(p.phone_e164||"No phone")} · <span class="pill warn">${esc(p.status)}</span></p>
-        <p class="muted">Registered: ${esc(new Date(p.created_at).toLocaleString())}</p>
-        <p>Main balance: ${money(p.balance)} · Profit: ${money(p.profit_balance)}</p>
-        <div class="actions"><button class="primary" data-profile="${esc(p.id)}" data-decision="approve">Approve account</button><button class="danger" data-profile="${esc(p.id)}" data-decision="reject">Reject / block</button></div>
-       </article>`).join(""):empty("No customer registrations awaiting review.");
-     $("transactions").innerHTML=transactions.length?transactions.map(t=>`
-       <article class="item">
-        <h3>${esc(t.kind.toUpperCase())} · ${money(t.amount)}</h3>
-        <p><span class="pill warn">${esc(t.status)}</span></p>
-        <p class="muted">Customer ID: ${esc(t.user_id)}</p>
-        <p class="muted">Request ID: ${esc(t.id)}</p>
-        <p class="muted">Payment method: ${esc(t.description||"Not supplied")} · ${esc(new Date(t.created_at).toLocaleString())}</p>
-        ${t.kind === "deposit" ? `<p><strong>Payment reference / TXID:</strong> <span>${esc(t.reference||"Not supplied")}</span></p>` : `<div class="item"><h3>Withdrawal details</h3><p>Recipient: ${esc(t.payout_details?.account_holder||"Not supplied")}</p>${t.payout_details?.bank_name ? `<p>Bank: ${esc(t.payout_details.bank_name)}</p>` : ""}<p>Account / phone / wallet: ${esc(t.payout_details?.account_number||"Not supplied")}</p></div>`}
-        <div class="field"><label for="reason-${esc(t.id)}">${t.kind === "deposit" ? "Verified incoming payment reference / TXID" : t.status === "approved" ? "External payout reference" : "Review note (optional)"} </label><input id="reason-${esc(t.id)}" maxlength="250" placeholder="${t.kind === "deposit" ? "Match against the actual incoming payment" : t.status === "approved" ? "Enter payout receipt/reference" : "Only needed if rejecting"}"></div>
-        <div class="actions"><button class="primary" data-transaction="${esc(t.id)}" data-decision="approve">Approve</button>${t.kind === "withdrawal" && t.status === "approved" ? `<button class="primary" data-transaction="${esc(t.id)}" data-decision="complete">Mark paid</button>` : ""}<button class="danger" data-transaction="${esc(t.id)}" data-decision="reject">Reject / release reservation</button></div>
-       </article>`).join(""):empty("No deposit or withdrawal requests awaiting review.");
-     $("customers").innerHTML=customers.length?customers.map(c=>`
-       <article class="item">
-        <h3>${esc(c.full_name||"Name not supplied")}</h3>
-        <p class="muted">${esc(c.email)}</p>
-        <p><span class="pill">${esc(c.status)}</span></p>
-        <p>Main balance: ${money(c.balance)} · Profit balance: ${money(c.profit_balance)}</p>
-        <p class="muted">Customer ID: ${esc(c.id)}</p>
-        <p class="muted">Phone: ${esc(c.phone_e164||"Not verified / not supplied")}</p><p class="muted">Referral code: ${esc(c.referral_code||"Not assigned")}</p>
-        <div class="actions"><button class="primary" data-balance-user="${esc(c.id)}" data-customer-name="${esc(c.full_name||c.email||c.id)}">Adjust simulated balance</button></div>
-       </article>`).join(""):empty("No customer profiles found.");
-     $("investments").innerHTML=investments.length?investments.map(i=>`
-       <article class="item">
-        <h3>${esc(i.plan_code.toUpperCase())} · ${money(i.principal)}</h3>
-        <p><span class="pill">${esc(i.status)}</span> · <span class="pill">${esc(i.last_processed_day)}/7 days processed</span></p>
-        <p class="muted">Customer ID: ${esc(i.user_id)}</p>
-        <p class="muted">Investment ID: ${esc(i.id)}</p>
-        <p>Daily rate: ${(Number(i.daily_rate)*100).toFixed(2)}% · Profit paid: ${money(i.profit_paid)}</p>
-        <p class="muted">Started: ${esc(new Date(i.started_at).toLocaleString())}</p>
-        <p class="muted">Matures: ${esc(new Date(i.matures_at).toLocaleString())}</p>
-       </article>`).join(""):empty("No active investments awaiting maturity.");
-     const loginEvents=queue.login_events||[];
-     const rt=referralOverview.totals||{}, rr=referralOverview.rows||[];
-     $("referralCount").textContent=(rt.referrals||0)+" referrals";
-     $("referralSummary").textContent=`Pending: ${rt.pending||0} · Rewarded: ${rt.rewarded||0} · Rejected: ${rt.rejected||0} · Ledger rewards credited: ${money(rt.reward_total)} USD`;
-     $("referrals").innerHTML=rr.length?rr.map(r=>`
-       <article class="item">
-         <h3>${esc(r.referrer_name)} → ${esc(r.referred_name)}</h3>
-         <p class="muted">Referrer: ${esc(r.referrer_email||"Email unavailable")}</p>
-         <p class="muted">Referred account: ${esc(r.referred_email||"Email unavailable")}</p>
-         <p>Code: ${esc(r.referral_code)} · <span class="pill ${r.status==="pending"?"warn":""}">${esc(r.status)}</span></p>
-         <p class="muted">Created: ${esc(r.created_at?new Date(r.created_at).toLocaleString():"Unknown")} ${r.rewarded_at?"· Rewarded: "+esc(new Date(r.rewarded_at).toLocaleString()):""}</p>
-       </article>`).join(""):empty("No referral records yet. This is normal until someone registers using a valid referral code.");
-     $("loginEvents").innerHTML=loginEvents.length?loginEvents.map(e=>`
-       <article class="item"><h3>${esc(e.country_code||"Country unavailable")} · ${esc(new Date(e.created_at).toLocaleString())}</h3>
-       <p class="muted">Account ID: ${esc(e.user_id)}</p><p class="muted">IP hash: ${esc((e.ip_hash||"unavailable").slice(0,16))}…</p>
-       <p class="muted">${esc(e.user_agent||"Device information unavailable")}</p></article>`).join(""):empty("No login events recorded yet.");
-     const shared=queue.shared_ip_accounts||[];
-     $("sharedIpFlags").textContent=shared.length?shared.map(f=>f.account_count+" accounts share an IP hash prefix "+f.ip_hash.slice(0,12)+" ("+f.user_ids.join(", ")+")").join("\\n"):"No shared-IP flags in the latest login events.";
-     say("Queue refreshed. Review details carefully before approving any money movement.");
-   } catch(error) {
-     if((error.message||"").includes("Admin access required")) {
-       await client.auth.signOut();
-       setLoggedIn(false);
-       $("loginMessage").textContent="This account is not an active administrator. You have been signed out.";
-       return;
-     }
-     say(error.message||"Could not load the admin queue.");
-   }
- }
- $("loginForm").onsubmit=async event=>{
-   event.preventDefault(); const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
-   try {
-     const {data,error}=await client.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
-     if(error) throw error;
-     if((data.user?.email||"").toLowerCase()!=="grashfxmw@gmail.com") throw new Error("This page is restricted to the configured administrator email.");
-     setLoggedIn(true);
-     await loadQueue();
-   } catch(error) {
-     await client.auth.signOut();
-     setLoggedIn(false);
-     $("loginMessage").textContent=error.message||"Sign in failed.";
-   }
-   finally {button.disabled=false;}
- };
- $("refresh").onclick=loadQueue;
- $("openSettings").onclick=showSettings;
- $("signout").onclick=async()=>{await client.auth.signOut();setLoggedIn(false);$("loginMessage").textContent="Signed out.";};
- $("adminProfileForm").onsubmit=async event=>{
-   event.preventDefault();
-   const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
-   try {
-     const displayName=$("adminDisplayName").value.trim();
-     if(displayName.length<2) throw new Error("Enter a display name with at least 2 characters.");
-     const {data,error}=await client.auth.updateUser({data:{full_name:displayName}});
-     if(error) throw error;
-     $("adminIdentity").textContent=displayName+" · "+(data.user?.email||"Administrator");
-     $("settingsMessage").textContent="Administrator profile updated.";
-   } catch(error) {$("settingsMessage").textContent=error.message||"Could not update profile.";}
-   finally {button.disabled=false;}
- };
- $("adminPasswordForm").onsubmit=async event=>{
-   event.preventDefault();
-   const password=$("adminNewPassword").value,confirmPassword=$("adminConfirmPassword").value;
-   if(password.length<8){$("settingsMessage").textContent="Use a password with at least 8 characters.";return;}
-   if(password!==confirmPassword){$("settingsMessage").textContent="The passwords do not match.";return;}
-   const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
-   try {
-     const {error}=await client.auth.updateUser({password});
-     if(error) throw error;
-     event.currentTarget.reset();
-     $("settingsMessage").textContent="Administrator password updated successfully.";
-   } catch(error) {$("settingsMessage").textContent=error.message||"Password update failed.";}
-   finally {button.disabled=false;}
- };
- document.addEventListener("click",async event=>{
-   const button=event.target.closest("button[data-profile],button[data-transaction],button[data-balance-user]");
-   if(!button)return;
-   if(button.dataset.balanceUser) {
-     const direction=(prompt("Type CREDIT to add simulated balance, or DEBIT to subtract it:")||"").trim().toLowerCase();
-     if(!["credit","debit"].includes(direction)) return;
-     if(direction==="debit"&&!confirm("Confirm this simulated balance debit? It will be permanent and audited.")) return;
-     const rawAmount=prompt("Amount in USD (positive number):");
-     const amount=Number(rawAmount);
-     if(!Number.isFinite(amount)||amount<=0||amount>10000000||Math.round(amount*100)!==amount*100) { say("Enter a valid positive amount with up to two decimals."); return; }
-     const reason=(prompt("Reason for this balance adjustment (required):")||"").trim();
-     if(reason.length<5) { say("Enter a reason of at least 5 characters."); return; }
-     button.disabled=true;
-     try {
-       await api("/admin/balance-adjustment","POST",{user_id:button.dataset.balanceUser,direction,amount,reason,idempotency_key:crypto.randomUUID()});
-       say("Balance adjustment recorded in the ledger and audit log. Refreshing queue…");
-       await loadQueue();
-     } catch(error) { say(error.message||"Balance adjustment failed."); button.disabled=false; }
-     return;
-   }
-   const decision=button.dataset.decision;
-   if(decision==="reject"&&!confirm("Confirm rejection? This action will be recorded in the audit log."))return;
-   button.disabled=true;
-   try {
-     if(button.dataset.profile) {
-       const note=prompt(decision==="approve"?"Optional approval note:":"Reason for rejecting/blocking this account:")||"";
-       await api("/admin/profile-review","POST",{user_id:button.dataset.profile,decision,reason:note});
-     } else {
-       const id=button.dataset.transaction;
-       let note=$("reason-"+id)?.value.trim()||"";
-       const card=button.closest(".item");
-       const kind=(card?.querySelector("h3")?.textContent||"").toLowerCase().startsWith("deposit")?"deposit":"withdrawal";
-       if(decision==="complete" && note.length<3) throw new Error("Enter the external payment reference before marking a withdrawal paid.");
-       if(decision==="approve" && kind==="deposit" && note.length<3) throw new Error("Enter the verified incoming payment reference before approving this deposit.");
-       if(decision==="reject" && note.length<3) throw new Error("Enter a short reason before rejecting this request.");
-       if(decision==="approve" && kind==="withdrawal" && !note) note="Approved for manual payout";
-       await api("/admin/review","POST",{transaction_id:id,decision,reference:note,reason:note});
-     }
-     say("Review saved successfully. Refreshing queue…");
-     await loadQueue();
-   } catch(error) {say(error.message||"Review action failed.");button.disabled=false;}
- });
- client.auth.getSession().then(async({data})=>{
-   if(data.session&&(data.session.user?.email||"").toLowerCase()==="grashfxmw@gmail.com"){
-     const user=data.session.user;
-     const displayName=user.user_metadata?.full_name||"Administrator";
-     $("adminEmail").value=user.email||"";
-     $("adminDisplayName").value=displayName;
-     $("adminIdentity").textContent=displayName+" · "+(user.email||"");
-     setLoggedIn(true);await loadQueue();
-   }
- });
+(function(){
+"use strict";
+var URL="https://vwghcjkgzeausfxqphmf.supabase.co",KEY="sb_publishable_gn3ndWb6xAtoaZ4FYFaHug_sbnCJI33",API=URL+"/functions/v1/account-api";
+var sb=window.supabase.createClient(URL,KEY),$=function(id){return document.getElementById(id);};
+var state={user:null,queue:null,customers:[],requests:[],investments:[],plans:[],tickets:[]};
+var money=function(v){return "$"+Number(v||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});};
+var esc=function(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});};
+var date=function(v){return v?new Date(v).toLocaleString():"—";};
+var statusPill=function(v){var s=String(v||"unknown"),cl=["active","paid","approved","matured","resolved","closed"].indexOf(s)>=0?"pill-green":(["pending","submitted","under_review","in_progress","waiting_for_client"].indexOf(s)>=0?"pill-amber":"pill-red");return '<span class="pill '+cl+'">'+esc(s.replaceAll("_"," "))+'</span>';};
+function say(t){$("globalMessage").textContent=t;}
+async function api(path,method,body){var ss=await sb.auth.getSession(),session=ss.data.session;if(!session)throw Error("Your session expired. Sign in again.");var r=await fetch(API+path,{method:method||"GET",headers:{Authorization:"Bearer "+session.access_token,apikey:KEY,"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined});var d=await r.json().catch(function(){return {};});if(!r.ok)throw Error(d.error||"The request failed.");return d;}
+function setView(name){document.querySelectorAll(".view").forEach(function(v){v.classList.remove("active");});var target=$("view-"+name);if(target)target.classList.add("active");document.querySelectorAll(".nav").forEach(function(n){n.classList.toggle("nav-active",n.dataset.view===name);});var labels={dashboard:"Dashboard Overview",users:"Registered Users",tickets:"Support Tickets",plans:"Investment System",investments:"Active Investments",deposits:"Deposit System",withdrawals:"Withdrawal System",history:"Approved Logs",activity:"Login & Security",account:"Account Settings"};$("pageTitle").textContent=labels[name]||"Administrator Portal";$("sidebar").classList.remove("open");}
+document.querySelectorAll(".nav").forEach(function(n){n.addEventListener("click",function(){setView(n.dataset.view);});});
+document.querySelectorAll("[data-goto]").forEach(function(n){n.addEventListener("click",function(){setView(n.dataset.goto);});});
+$("menu").onclick=function(){$("sidebar").classList.toggle("open");};
+$("refresh").onclick=function(){loadQueue();};
+$("modalClose").onclick=function(){$("modal").classList.remove("open");};
+function openModal(title,body){$("modalTitle").textContent=title;$("modalBody").innerHTML=body;$("modal").classList.add("open");}
+function customerName(id){var c=state.customers.find(function(x){return x.id===id;});return c?(c.full_name||c.email||id):id;}
+function renderDashboard(q){
+var s=q.stats||{};$("statDeposits").textContent=money(s.total_deposits_amount);$("statDepositCount").textContent=(s.total_deposits_count||0)+" approved / paid deposits";
+$("statInvested").textContent=money(s.total_invested_amount);$("statInvestments").textContent=(s.active_investments_count||0)+" active · "+(s.completed_investments_count||0)+" completed";
+$("statProfit").textContent=money(s.profit_credited);$("statUsers").textContent=s.total_users||0;$("statUserBreakdown").textContent=(s.active_users||0)+" active · "+(s.restricted_users||0)+" restricted / closed";
+$("statTickets").textContent=(s.open_tickets||0)+(s.closed_tickets||0);$("statTicketBreakdown").textContent=(s.open_tickets||0)+" open · "+(s.closed_tickets||0)+" resolved / closed";
+$("statInvestmentCount").textContent=(s.active_investments_count||0)+(s.completed_investments_count||0);$("statInvestmentBreakdown").textContent=(s.active_investments_count||0)+" active · "+(s.completed_investments_count||0)+" completed";
+$("statPendingDeposits").textContent=s.pending_deposits||0;$("statPendingWithdrawals").textContent=s.pending_withdrawals||0;
+$("ticketNavCount").textContent=s.open_tickets||0;$("depositNavCount").textContent=s.pending_deposits||0;$("withdrawNavCount").textContent=s.pending_withdrawals||0;
+var recent=(q.financial_requests||[]).slice(0,4);$("latestRequests").innerHTML=recent.length?recent.map(function(r){return '<div class="flex justify-between gap-3 border-b border-slate-100 pb-2 text-xs"><div><b>'+esc(r.kind.toUpperCase())+'</b><div class="text-slate-500">'+esc(customerName(r.user_id))+'</div></div><div class="text-right"><b>'+money(r.amount)+'</b><div>'+statusPill(r.status)+'</div></div></div>';}).join(""):'<div class="empty">No requests awaiting review.</div>';
+var recentUsers=(q.customers||[]).slice(0,4);$("latestUsers").innerHTML=recentUsers.length?recentUsers.map(function(c){return '<div class="flex justify-between gap-3 border-b border-slate-100 pb-2 text-xs"><div><b>'+esc(c.full_name||"Customer")+'</b><div class="text-slate-500">'+esc(c.email||"")+'</div></div><div>'+statusPill(c.status)+'</div></div>';}).join(""):'<div class="empty">No registered customers found.</div>';
+}
+function renderUsers(){
+var term=($("userSearch").value||"").toLowerCase();var list=state.customers.filter(function(c){return [c.full_name,c.email,c.id,c.phone_e164,c.status].join(" ").toLowerCase().includes(term);});
+$("userRows").innerHTML=list.length?list.map(function(c){return '<tr><td><b>'+esc(c.full_name||"Name not supplied")+'</b><div class="text-slate-500 text-[10px]">'+esc(c.email||"Email unavailable")+'</div><div class="text-slate-400 text-[9px]">'+esc(c.id)+'</div></td><td>'+esc(date(c.created_at))+'</td><td class="font-bold">'+money(c.balance)+'</td><td>'+money(c.profit_balance)+'</td><td>'+statusPill(c.status)+'</td><td><div class="flex flex-wrap gap-1"><button class="btn btn-light" data-balance="'+esc(c.id)+'">Adjust balance</button>'+ (c.status==="active"?'<button class="btn btn-red" data-status="'+esc(c.id)+'" data-next="restricted">Restrict</button>':'<button class="btn btn-amber" data-status="'+esc(c.id)+'" data-next="active">Activate</button>')+'</div></td></tr>';}).join(""):'<tr><td colspan="6"><div class="empty">No matching users.</div></td></tr>';
+}
+function renderPlans(){var a=state.plans;$("planRows").innerHTML=a.length?a.map(function(p){return '<article class="border rounded-xl p-4"><div class="flex justify-between gap-2"><h3 class="font-extrabold">'+esc(p.display_name||p.plan_code)+'</h3>'+statusPill(p.is_active&&p.approval_status==="approved"?"active":p.approval_status)+'</div><div class="text-2xl font-extrabold mt-3">'+(Number(p.daily_rate)*100).toFixed(2)+'% <span class="text-xs font-medium text-slate-500">per day (configured rate)</span></div><p class="text-xs text-slate-500 mt-2">Minimum: '+money(p.minimum_amount)+' · Term: '+esc(p.term_days)+' days</p><p class="text-[10px] text-slate-400 mt-3">Plan code: '+esc(p.plan_code)+'</p></article>';}).join(""):'<div class="empty">No investment plans configured.</div>';}
+function renderInvestments(){var a=state.investments;$("investmentRows").innerHTML=a.length?a.map(function(i){return '<tr><td>'+esc(customerName(i.user_id))+'<div class="text-slate-400 text-[9px]">'+esc(i.user_id)+'</div></td><td>'+esc(i.plan_code)+'</td><td class="font-bold">'+money(i.principal)+'</td><td>'+(Number(i.daily_rate)*100).toFixed(2)+'%</td><td>'+esc(i.last_processed_day||0)+' / '+esc(i.duration_days||7)+' days</td><td>'+statusPill(i.status)+'</td><td>'+esc(date(i.matures_at))+'</td></tr>';}).join(""):'<tr><td colspan="7"><div class="empty">No investment records found.</div></td></tr>';}
+function requestCard(r){var isDeposit=r.kind==="deposit";var label=isDeposit?"Deposit":"Withdrawal";var payout=r.payout_details||{};return '<article class="border rounded-xl p-4 space-y-2"><div class="flex justify-between gap-2"><div><h3 class="font-extrabold">'+label+' · '+money(r.amount)+'</h3><p class="text-[10px] text-slate-500">'+esc(customerName(r.user_id))+' · '+esc(date(r.created_at))+'</p></div>'+statusPill(r.status)+'</div><p class="text-[10px] text-slate-500 break-all">Request: '+esc(r.id)+'</p>'+(isDeposit?'<p class="text-xs">Method: '+esc(r.description||"Not specified")+' · Client reference: '+esc(r.reference||"Not supplied")+'</p>':'<div class="text-xs bg-slate-50 rounded-lg p-3"><b>Recipient:</b> '+esc(payout.account_holder||"Not supplied")+'<br><b>Bank:</b> '+esc(payout.bank_name||"Not supplied")+'<br><b>Account / wallet:</b> '+esc(payout.account_number||"Not supplied")+'<br><b>Country:</b> '+esc(payout.country||"Not supplied")+'</div>')+'<label class="block text-[10px] font-bold text-slate-600">'+(isDeposit?"Verified payment TXID / incoming reference":"Review note or payout reference")+'<input class="field mt-1" id="ref-'+esc(r.id)+'" maxlength="160" placeholder="'+(isDeposit?"Match this to the actual incoming transfer":"Enter a reason or external payout reference")+'"></label><div class="flex flex-wrap gap-2"><button class="btn btn-amber" data-review="'+esc(r.id)+'" data-kind="'+esc(r.kind)+'" data-decision="approve">Approve</button>'+(r.kind==="withdrawal"&&r.status==="approved"?'<button class="btn btn-dark" data-review="'+esc(r.id)+'" data-kind="withdrawal" data-decision="complete">Mark paid</button>':'')+'<button class="btn btn-red" data-review="'+esc(r.id)+'" data-kind="'+esc(r.kind)+'" data-decision="reject">Reject</button></div></article>';}
+function renderRequests(){var deposits=state.requests.filter(function(r){return r.kind==="deposit"&&["submitted","under_review"].includes(r.status);});var withdrawals=state.requests.filter(function(r){return r.kind==="withdrawal"&&["submitted","under_review","approved"].includes(r.status);});$("depositCards").innerHTML=deposits.length?deposits.map(requestCard).join(""):'<div class="empty lg:col-span-2">No pending deposits.</div>';$("withdrawalCards").innerHTML=withdrawals.length?withdrawals.map(requestCard).join(""):'<div class="empty lg:col-span-2">No pending withdrawals.</div>';}
+function renderHistory(){var a=state.queue.financial_history||[];$("historyRows").innerHTML=a.length?a.map(function(r){return '<tr><td>'+esc(date(r.created_at))+'</td><td>'+esc(r.kind)+'</td><td class="text-[10px]">'+esc(r.user_id)+'</td><td class="font-bold">'+money(r.amount)+'</td><td>'+esc(r.payment_method||"—")+'</td><td>'+statusPill(r.status)+'</td><td>'+esc(r.external_reference||r.reference||"—")+'</td></tr>';}).join(""):'<tr><td colspan="7"><div class="empty">No financial history found.</div></td></tr>';}
+function renderTickets(){var a=state.tickets;$("ticketCards").innerHTML=a.length?a.map(function(t){return '<article class="border rounded-xl p-4 space-y-2"><div class="flex justify-between gap-2"><h3 class="font-extrabold">'+esc(t.subject)+'</h3>'+statusPill(t.status)+'</div><p class="text-xs text-slate-500">Customer: '+esc(customerName(t.user_id))+' · '+esc(date(t.created_at))+'</p><p class="text-sm whitespace-pre-wrap">'+esc(t.message)+'</p><p class="text-[10px] text-slate-400">Ticket ID: '+esc(t.id)+'</p><div class="flex flex-wrap gap-2"><select class="field max-w-[220px]" id="ticket-'+esc(t.id)+'"><option value="open" '+(t.status==="open"?"selected":"")+'>Open</option><option value="in_progress" '+(t.status==="in_progress"?"selected":"")+'>In progress</option><option value="waiting_for_client" '+(t.status==="waiting_for_client"?"selected":"")+'>Waiting for client</option><option value="resolved" '+(t.status==="resolved"?"selected":"")+'>Resolved</option><option value="closed" '+(t.status==="closed"?"selected":"")+'>Closed</option></select><button class="btn btn-dark" data-ticket="'+esc(t.id)+'">Update status</button></div></article>';}).join(""):'<div class="empty lg:col-span-2">No support tickets have been submitted.</div>';}
+function renderActivity(){var events=state.queue.login_events||[],flags=state.queue.shared_ip_accounts||[];$("sharedIp").textContent=flags.length?flags.map(function(f){return f.account_count+" accounts share an IP hash prefix "+String(f.ip_hash).slice(0,12)+" · "+f.user_ids.join(", ");}).join(" | "):"No shared-IP flags in the latest 100 login events.";$("loginRows").innerHTML=events.length?events.map(function(e){return '<article class="border rounded-xl p-3"><div class="font-bold text-xs">'+esc(e.country_code||"Country unavailable")+' · '+esc(date(e.created_at))+'</div><p class="text-[10px] text-slate-500 mt-1">Account: '+esc(customerName(e.user_id))+'</p><p class="text-[10px] text-slate-500">IP hash: '+esc((e.ip_hash||"unavailable").slice(0,20))+'…</p><p class="text-[10px] text-slate-500 break-words">'+esc(e.user_agent||"Device unavailable")+'</p></article>';}).join(""):'<div class="empty lg:col-span-2">No login events have been recorded.</div>';}
+async function loadQueue(){say("Loading live data from Supabase…");$("refresh").disabled=true;try{var q=await api("/admin/queue");state.queue=q;state.customers=q.customers||[];state.requests=q.financial_requests||[];state.investments=q.investments||[];state.plans=q.plan_catalog||[];state.tickets=q.support_tickets||[];renderDashboard(q);renderUsers();renderPlans();renderInvestments();renderRequests();renderHistory();renderTickets();renderActivity();say("Live account data loaded · "+new Date().toLocaleTimeString());}catch(e){say(e.message||"Unable to load administrator data.");if((e.message||"").includes("Admin access required")){await sb.auth.signOut();$("app").classList.add("hidden");$("loginPanel").classList.remove("hidden");$("loginMessage").textContent="This signed-in account does not have an active administrator role.";}}finally{$("refresh").disabled=false;}}
+async function enter(user){state.user=user;$("adminEmail").textContent=user.email||"";$("settingEmail").value=user.email||"";var display=(user.user_metadata&&user.user_metadata.full_name)||"Administrator";$("adminName").textContent=display;$("settingName").value=display;$("loginPanel").classList.add("hidden");$("app").classList.remove("hidden");await loadQueue();}
+$("loginForm").onsubmit=async function(e){e.preventDefault();var b=$("loginButton");b.disabled=true;$("loginMessage").textContent="Checking account and administrator permissions…";try{var result=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(result.error)throw result.error;await enter(result.data.user);}catch(err){await sb.auth.signOut();$("loginMessage").textContent=err.message||"Sign in failed.";}finally{b.disabled=false;}};
+$("logout").onclick=async function(){await sb.auth.signOut();$("app").classList.add("hidden");$("loginPanel").classList.remove("hidden");$("loginMessage").textContent="You have signed out.";$("password").value="";};
+$("userSearch").addEventListener("input",renderUsers);
+document.addEventListener("click",async function(e){
+var b=e.target.closest("button");if(!b)return;
+try{
+if(b.dataset.balance){var id=b.dataset.balance,dir=(prompt("Type CREDIT to add simulated balance or DEBIT to subtract it:")||"").trim().toLowerCase();if(!["credit","debit"].includes(dir))return;var amount=Number(prompt("Amount in USD (positive number):"));if(!Number.isFinite(amount)||amount<=0||Math.round(amount*100)!==amount*100)throw Error("Enter a valid amount with up to two decimals.");var reason=(prompt("Reason for this balance adjustment:")||"").trim();if(reason.length<5)throw Error("A reason of at least 5 characters is required.");if(!confirm("Confirm "+dir+" of "+money(amount)+" for "+customerName(id)+"? This creates a permanent ledger entry."))return;b.disabled=true;await api("/admin/balance-adjustment","POST",{user_id:id,direction:dir,amount:amount,reason:reason,idempotency_key:crypto.randomUUID()});say("Balance adjustment saved and audited.");await loadQueue();return;}
+if(b.dataset.status){var uid=b.dataset.status,next=b.dataset.next,why=(prompt("Reason for changing this account status:")||"").trim();if(why.length<5)throw Error("Enter a reason of at least 5 characters.");if(!confirm("Change "+customerName(uid)+" to "+next+"?"))return;b.disabled=true;await api("/admin/customer-status","POST",{user_id:uid,status:next,reason:why});say("Customer account status updated.");await loadQueue();return;}
+if(b.dataset.review){var rid=b.dataset.review,decision=b.dataset.decision,kind=b.dataset.kind,ref=$("ref-"+rid).value.trim();if(decision!=="reject"&&ref.length<3)throw Error("Enter the payment reference or review note before proceeding.");if(decision==="reject"&&ref.length<3)throw Error("Enter a rejection reason of at least 3 characters.");var confirmText=decision==="complete"?"Confirm that the withdrawal has actually been paid externally?":decision==="approve"?"Confirm approval after independently checking the payment / withdrawal details?":"Confirm rejection of this request?";if(!confirm(confirmText))return;b.disabled=true;await api("/admin/review","POST",{transaction_id:rid,decision:decision,reason:ref,reference:ref});say("Financial request updated.");await loadQueue();return;}
+if(b.dataset.ticket){var tid=b.dataset.ticket,ts=$("ticket-"+tid).value;b.disabled=true;await api("/admin/support-ticket","POST",{ticket_id:tid,status:ts,reason:"Administrator updated ticket status"});say("Support ticket status updated.");await loadQueue();return;}
+}catch(err){say(err.message||"The action could not be completed.");}finally{if(b)b.disabled=false;}
+});
+$("profileForm").onsubmit=async function(e){e.preventDefault();var name=$("settingName").value.trim();if(name.length<2){$("settingsMessage").textContent="Enter a display name with at least 2 characters.";return;}var r=await sb.auth.updateUser({data:{full_name:name}});$("settingsMessage").textContent=r.error?r.error.message:"Administrator profile updated.";$("adminName").textContent=name;};
+$("passwordForm").onsubmit=async function(e){e.preventDefault();var p=$("newPassword").value,c=$("confirmPassword").value;if(p.length<8||p!==c){$("settingsMessage").textContent=p.length<8?"Use at least 8 characters.":"Passwords do not match.";return;}var r=await sb.auth.updateUser({password:p});if(r.error){$("settingsMessage").textContent=r.error.message;return;}$("passwordForm").reset();$("settingsMessage").textContent="Administrator password updated successfully.";};
+document.querySelectorAll("[data-interval]").forEach(function(b){b.onclick=function(){var interval=b.dataset.interval;var url="https://s.tradingview.com/widgetembed/?symbol=BITSTAMP%3ABTCUSD&interval="+encodeURIComponent(interval)+"&hidesidetoolbar=0&symboledit=1&saveimage=0&toolbarbg=f1f3f6&theme=light&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1&locale=en";$("chartFrame").src=url;};});
+sb.auth.getSession().then(async function(r){if(r.data.session&&r.data.session.user){await enter(r.data.session.user);}}).catch(function(){});
+sb.auth.onAuthStateChange(function(event,session){if(event==="SIGNED_OUT"&& !$("app").classList.contains("hidden")){ $("app").classList.add("hidden");$("loginPanel").classList.remove("hidden");}});
+lucide.createIcons();
 })();
 </script>
-</body></html>
+</body>
+</html>
