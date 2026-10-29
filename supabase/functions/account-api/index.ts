@@ -156,15 +156,17 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "GET" && path.endsWith("/admin/queue")) {
       if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
-      const [profiles, requests, investments, loginEvents, referralsResult, referralRewardsResult] = await Promise.all([
-        adminClient.from("profiles").select("user_id,full_name,email,phone,referral_code,status,created_at").order("created_at").limit(200),
-        adminClient.from("money_requests").select("id,user_id,request_type,amount,currency,status,client_reference,payment_method,payment_details,submitted_at,created_at")
-          .in("status", ["submitted", "under_review", "approved"]).order("created_at").limit(200),
+      const [profiles, requests, investments, loginEvents, referralsResult, referralRewardsResult, ticketsResult, plansResult] = await Promise.all([
+        adminClient.from("profiles").select("user_id,full_name,email,phone,referral_code,status,created_at").order("created_at").limit(1000),
+        adminClient.from("money_requests").select("id,user_id,request_type,amount,currency,status,client_reference,external_payment_reference,payment_method,payment_details,submitted_at,created_at,reviewed_at,paid_at")
+          .order("created_at", {ascending:false}).limit(1000),
         adminClient.from("investments").select("id,user_id,plan_id,principal_amount,currency,daily_rate_snapshot,term_days_snapshot,status,started_at,matures_at,matured_at,created_at")
-          .in("status", ["active", "under_review", "pending"]).order("matures_at").limit(200),
+          .order("created_at", {ascending:false}).limit(1000),
         adminClient.from("login_events").select("id,user_id,ip_hash,country_code,user_agent,created_at").order("created_at", {ascending:false}).limit(100),
         adminClient.from("referrals").select("id,referrer_user_id,referred_user_id,referral_code,status,created_at,rewarded_at").order("created_at", {ascending:false}).limit(500),
         adminClient.from("ledger_entries").select("user_id,amount,created_at").eq("entry_type","referral_bonus_credit").eq("currency","USD").order("created_at", {ascending:false}).limit(1000),
+        adminClient.from("support_tickets").select("id,user_id,subject,message,status,assigned_to,created_at,updated_at").order("created_at", {ascending:false}).limit(500),
+        adminClient.from("investment_plans").select("id,plan_code,display_name,daily_rate,minimum_amount,term_days,is_active,approval_status,created_at").order("created_at"),
       ]);
       if (profiles.error) throw profiles.error;
       if (requests.error) throw requests.error;
@@ -172,6 +174,8 @@ Deno.serve(async (req: Request) => {
       if (loginEvents.error) throw loginEvents.error;
       if (referralsResult.error) throw referralsResult.error;
       if (referralRewardsResult.error) throw referralRewardsResult.error;
+      if (ticketsResult.error) throw ticketsResult.error;
+      if (plansResult.error) throw plansResult.error;
       const planIds = [...new Set((investments.data || []).map(i => i.plan_id).filter(Boolean))];
       let plans: Record<string, string> = {};
       if (planIds.length) {
@@ -201,8 +205,27 @@ Deno.serve(async (req: Request) => {
         balances.set(row.user_id,item);
       }
       return json({
+        stats: (() => {
+          const ps=profiles.data||[], rs=requests.data||[], ins=investments.data||[];
+          const deposits=rs.filter(r=>r.request_type==="deposit"&&["approved","paid"].includes(r.status));
+          const active=ins.filter(i=>i.status==="active"), completed=ins.filter(i=>i.status==="matured");
+          return {
+            total_users:ps.length,active_users:ps.filter(p=>p.status==="active").length,
+            restricted_users:ps.filter(p=>p.status==="restricted"||p.status==="closed").length,
+            total_deposits_count:deposits.length,total_deposits_amount:deposits.reduce((n,r)=>n+Number(r.amount||0),0),
+            active_investments_count:active.length,completed_investments_count:completed.length,
+            total_invested_amount:[...active,...completed].reduce((n,i)=>n+Number(i.principal_amount||0),0),
+            profit_credited:ledgerRows.filter(e=>e.entry_type==="profit_credit").reduce((n,e)=>n+Number(e.amount||0),0),
+            pending_deposits:rs.filter(r=>r.request_type==="deposit"&&["submitted","under_review"].includes(r.status)).length,
+            pending_withdrawals:rs.filter(r=>r.request_type==="withdrawal"&&["submitted","under_review","approved"].includes(r.status)).length,
+            open_tickets:(ticketsResult.data||[]).filter(t=>["open","in_progress","waiting_for_client"].includes(t.status)).length,
+            closed_tickets:(ticketsResult.data||[]).filter(t=>["resolved","closed"].includes(t.status)).length
+          };
+        })(),
+        plan_catalog:(plansResult.data||[]).map(p=>({id:p.id,plan_code:p.plan_code,display_name:p.display_name,daily_rate:Number(p.daily_rate),minimum_amount:Number(p.minimum_amount),term_days:p.term_days,is_active:p.is_active,approval_status:p.approval_status})),
+        support_tickets:(ticketsResult.data||[]).map(t=>({id:t.id,user_id:t.user_id,subject:t.subject,message:t.message,status:t.status,assigned_to:t.assigned_to,created_at:t.created_at,updated_at:t.updated_at})),
         pending_profiles: (profiles.data || []).filter(p => p.status === "pending").map(p => ({ id: p.user_id, ...p })),
-        financial_requests: (requests.data || []).map(r => ({ id: r.id, user_id: r.user_id, kind: r.request_type,
+        financial_requests: (requests.data || []).filter(r=>["submitted","under_review","approved"].includes(r.status)).map(r => ({ id: r.id, user_id: r.user_id, kind: r.request_type,
           amount: Number(r.amount), status: r.status, reference: r.client_reference, description: r.payment_method,
           payout_details: r.request_type === "withdrawal" ? {
             account_holder: String((r.payment_details || {}).account_holder || ""),
@@ -212,6 +235,7 @@ Deno.serve(async (req: Request) => {
           } : null,
           country: String((r.payment_details || {}).country || ""),
           created_at: r.created_at || r.submitted_at })),
+        financial_history:(requests.data||[]).map(r=>({id:r.id,user_id:r.user_id,kind:r.request_type,amount:Number(r.amount),currency:r.currency,status:r.status,reference:r.client_reference,external_reference:r.external_payment_reference,payment_method:r.payment_method,created_at:r.created_at||r.submitted_at,reviewed_at:r.reviewed_at,paid_at:r.paid_at})),
         investments: (investments.data || []).map(i => ({ id: i.id, user_id: i.user_id, plan_code: plans[i.plan_id] || "investment",
           principal: Number(i.principal_amount), daily_rate: Number(i.daily_rate_snapshot), duration_days: i.term_days_snapshot,
           status: i.status, started_at: i.started_at, matures_at: i.matures_at, completed_at: i.matured_at,
@@ -300,6 +324,35 @@ Deno.serve(async (req: Request) => {
           }
         }
         return json({ recorded: true, notification_configured: Boolean(notificationUrl) });
+      }
+
+      if (path.endsWith("/admin/customer-status")) {
+        if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
+        const targetUserId=clean(body.user_id,64), nextStatus=clean(body.status,32), reason=clean(body.reason,500);
+        if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetUserId)||!["active","restricted","closed"].includes(nextStatus)||reason.length<5)
+          return json({error:"Customer, valid account status, and reason (5+ characters) are required."},400);
+        if(targetUserId===user.id) return json({error:"You cannot change your own administrator account status here."},400);
+        const {data:target,error}=await adminClient.from("profiles").update({status:nextStatus,updated_at:new Date().toISOString()})
+          .eq("user_id",targetUserId).select("user_id,full_name,email,status").maybeSingle();
+        if(error) throw error;
+        if(!target) return json({error:"Customer account not found."},404);
+        const {error:auditError}=await adminClient.from("audit_events").insert({actor_user_id:user.id,action:"customer.status_changed",entity_type:"profile",entity_id:targetUserId,reason,details:{status:nextStatus,source:"account-api"}});
+        if(auditError) throw auditError;
+        return json({customer:{id:target.user_id,...target}});
+      }
+
+      if (path.endsWith("/admin/support-ticket")) {
+        if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
+        const ticketId=clean(body.ticket_id,64),status=clean(body.status,32),reason=clean(body.reason,500);
+        if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(ticketId)||!["open","in_progress","waiting_for_client","resolved","closed"].includes(status))
+          return json({error:"A valid ticket and supported status are required."},400);
+        const {data:ticket,error}=await adminClient.from("support_tickets").update({status,assigned_to:user.id,updated_at:new Date().toISOString()})
+          .eq("id",ticketId).select("id,user_id,subject,status,assigned_to,updated_at").maybeSingle();
+        if(error) throw error;
+        if(!ticket) return json({error:"Support ticket not found."},404);
+        const {error:auditError}=await adminClient.from("audit_events").insert({actor_user_id:user.id,action:"support_ticket.status_changed",entity_type:"support_ticket",entity_id:ticketId,reason:reason||"Administrator updated support ticket status",details:{status,source:"account-api"}});
+        if(auditError) throw auditError;
+        return json({ticket});
       }
 
       if (path.endsWith("/admin/balance-adjustment")) {
