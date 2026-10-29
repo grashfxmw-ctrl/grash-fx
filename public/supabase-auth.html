@@ -19,6 +19,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <form id="signupForm">
 <div class="field"><label for="fullName">Full name</label><input id="fullName" autocomplete="name" minlength="2" maxlength="100" required></div>
 <div class="field"><label for="signupPhone">Phone number (international format)</label><input id="signupPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" required pattern="\+[1-9][0-9]{7,14}" placeholder="+265XXXXXXXXX"><p class="muted">Include your country code, e.g. +265. One account per phone number.</p></div>
+<div class="field"><label for="referralCode">Referral code (optional)</label><input id="referralCode" maxlength="9" autocomplete="off" pattern="GRASH[0-9]{4}" placeholder="GRASH1234"></div>
 <div class="field"><label for="signupEmail">Email address</label><input id="signupEmail" type="email" autocomplete="email" required></div>
 <div class="field"><label for="signupPassword">Password (at least 8 characters)</label><input id="signupPassword" type="password" minlength="8" autocomplete="new-password" required></div>
 <button class="primary full" type="submit">Create account</button>
@@ -31,7 +32,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <button id="resetPassword" class="full" type="button">Send password reset email</button>
 </form>
 <div id="accountSection" class="hidden account">
-<h2>Your account</h2><div id="accountStatus" class="muted"></div><button id="refreshAccount" class="full" type="button">Refresh account status</button>
+<h2>Your account</h2><div id="accountStatus" class="muted"></div><div class="tile"><span>Your referral code · Refer &amp; Earn $5 after email verification</span><strong id="myReferralCode">Loading…</strong></div><button id="refreshAccount" class="full" type="button">Refresh account status</button>
 <div class="balance"><div class="tile"><span>Main balance</span><strong id="balance">—</strong></div><div class="tile"><span>Profit balance</span><strong id="profit">—</strong></div></div>
 <p id="accountEmail" class="muted"></p>
 <div id="financialActions" class="hidden">
@@ -119,7 +120,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
  $("signupForm").onsubmit=async e=>{
    e.preventDefault();busy(e.currentTarget,true);
    try{
-    const {data,error}=await client.auth.signUp({email:$("signupEmail").value.trim(),password:$("signupPassword").value,options:{data:{full_name:$("fullName").value.trim(),phone:$("signupPhone").value.replace(/\s+/g,"").trim()},emailRedirectTo:window.location.origin+window.location.pathname}});
+    const {data,error}=await client.auth.signUp({email:$("signupEmail").value.trim(),password:$("signupPassword").value,options:{data:{full_name:$("fullName").value.trim(),phone:$("signupPhone").value.replace(/\s+/g,"").trim(),referral_code:$("referralCode").value.trim().toUpperCase()},emailRedirectTo:window.location.origin+window.location.pathname}});
     if(error)throw error;
     if(data.session){say("Account created. Verify your email, then sign in using your email and password.");}
     else say("Signup started. Check your email for the verification link. After verification, return here and sign in.");
@@ -143,6 +144,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
     if(data.profile){
      $("accountSection").classList.remove("hidden");
      $("accountStatus").textContent="Account status: "+data.profile.status;
+     $("myReferralCode").textContent=data.profile.referral_code||"Not assigned";
      if(data.profile.status==="active") { $("financialActions").classList.remove("hidden"); $("investmentActions").classList.remove("hidden"); }
      $("balance").textContent=Number(data.profile.balance).toFixed(2);
      $("profit").textContent=Number(data.profile.profit_balance).toFixed(2);
@@ -156,6 +158,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
      const created=await callApi("/profile","POST",{full_name:fullName});
      $("accountSection").classList.remove("hidden");
      $("accountStatus").textContent="Account status: "+created.profile.status;
+     $("myReferralCode").textContent=created.profile.referral_code||"Not assigned";
      $("balance").textContent=Number(created.profile.balance||0).toFixed(2);
      $("profit").textContent=Number(created.profile.profit_balance||0).toFixed(2);
      $("accountEmail").textContent=created.profile.email||user.email||"";
