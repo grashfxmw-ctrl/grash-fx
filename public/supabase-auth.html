@@ -187,7 +187,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
      $("balance").textContent=Number(data.profile.balance).toFixed(2);
      $("profit").textContent=Number(data.profile.profit_balance).toFixed(2);
      say(data.profile.status==="pending"?"Your email is verified, but account activation has not completed. Refresh your account status or contact support.":"Signed in successfully.");
-     if(data.profile.status==="active") await loadHistory();
+     if(data.profile.status==="active") { await loadHistory(); window.location.replace("client-dashboard.html"); }
      else { $("investmentHistory").textContent="Investment history will appear when your account is active."; $("transactionHistory").textContent="Transaction history will appear when your account is active."; }
     }else{
      const {data:{user},error:userError}=await client.auth.getUser();
@@ -204,7 +204,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
      $("profit").textContent=Number(created.profile.profit_balance||0).toFixed(2);
      $("accountEmail").textContent=created.profile.email||user.email||"";
      if(created.profile.status==="active") { $("financialActions").classList.remove("hidden"); $("investmentActions").classList.remove("hidden"); await loadHistory(); }
-     say("Profile created successfully. Account status: "+created.profile.status+".");
+     say("Profile created successfully. Account status: "+created.profile.status+".");\n     if(created.profile.status==="active") window.location.replace("client-dashboard.html");
     }
    }catch(err){say(err.message||"Could not load account.");}
  }
