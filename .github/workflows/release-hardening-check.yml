@@ -25,6 +25,7 @@ jobs:
           test -f supabase/functions/account-api/index.ts
           test -f supabase/migrations/20261029195000_release_hardening_financial_ops.sql
           test -f supabase/migrations/20261029195500_referral_rewards_and_codes.sql
+          test -f supabase/migrations/20261029200000_harden_balance_adjustment_idempotency.sql
           grep -q 'admin_adjust_balance' supabase/functions/account-api/index.ts
           grep -q 'process_my_referral_reward' supabase/functions/account-api/index.ts
           grep -q 'LOGIN_NOTIFICATION_WEBHOOK_URL' supabase/functions/account-api/index.ts
