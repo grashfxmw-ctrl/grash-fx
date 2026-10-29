@@ -1,25 +1,18 @@
 # GRASH FX
 
-Official GRASH FX Trading & Investment Telegram Mini App.
+GRASH FX client website and Supabase-backed account platform.
 
-## Secure backend integration
+## Current implementation
 
-Secure frontend/backend work is currently isolated on the `production-backend-integration` branch. It has not been deployed to production by this work.
+- Client authentication: `public/supabase-auth.html`
+- Administrator dashboard: `public/admin-dashboard.html`
+- Server-side account and financial-request API: `supabase/functions/account-api/index.ts`
+- Database changes and controls: `supabase/migrations/`
 
-- [Secure authentication page](secure-auth.html)
-- [Secure customer account page](secure-account.html)
-- [Admin transaction review](admin-review.html)
-- [Admin audit log](admin-audit.html)
-- [Admin customer directory](admin-users.html)
-- [Admin legacy account review](admin-legacy-review.html)
-- [Secure cutover and release checklist](SECURE_CUTOVER_CHECKLIST.md)
+Firebase has been removed from this development branch. The site is not confirmed live or production-deployed; do not treat this repository state as an end-to-end tested investment service.
 
-## Important implementation boundaries
+## Financial operations
 
-- Secure account data and transaction requests are served through Firebase callable Functions.
-- Deposit and withdrawal requests are pending until an authorized administrator reviews them. These pages do not process payments.
-- Legacy account values are review snapshots, not verified opening balances. No automatic legacy balance/profit/referral migration is implemented.
-- Existing Starter/Basic/Premium/VIP rates, seven-day scheduled profit processing, $5 referral reward on verified registration, transaction minimums, and audited admin balance editing are implemented on this development branch only. The scheduled processor and Firebase permissions still require staging verification before reliance.
-- Automated tests do not replace staging tests, Firebase configuration review, payment reconciliation, or an explicit production release decision.
+Deposit and withdrawal requests require administrator review. Deposit approval requires an external payment reference. The website does not itself prove that external funds were received or sent. Maturity processing and administrator authentication still require complete staging and security verification before real-money use.
 
-Do not deploy or merge this branch until the release checklist is complete and the production owner has approved the cutover.
+Do not merge, deploy, or accept client funds until the production owner approves the release and all security, legal, operational, and reconciliation checks are complete.
