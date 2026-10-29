@@ -25,6 +25,7 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
 <section id="dashboard" class="hidden">
 <div class="panel"><div class="section-head"><div><h2>Pending customer registrations</h2><p class="muted">Approve only after checking the submitted customer details.</p></div><span id="profileCount" class="pill">0 awaiting review</span></div><div id="profiles" class="grid"></div></div>
 <div class="panel"><div class="section-head"><div><h2>Deposit and withdrawal requests</h2><p class="muted">Verify deposits independently before approval. A submitted request is not proof of payment.</p></div><span id="transactionCount" class="pill">0 requests</span></div><div id="transactions" class="grid"></div></div>
+<div class="panel"><div class="section-head"><div><h2>Active investments and maturity monitoring</h2><p class="muted">Read-only monitoring. Matured investments are paid by the scheduled server process, not by an admin button.</p></div><span id="investmentCount" class="pill">0 active investments</span></div><div id="investments" class="grid"></div></div>
 <div id="message" class="status" role="status" aria-live="polite">Ready.</div>
 </section>
 </main>
@@ -58,9 +59,10 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
    say("Loading admin queue…");
    try {
      const queue=await api("/admin/queue");
-     const profiles=queue.pending_profiles||[], transactions=queue.financial_requests||[];
+     const profiles=queue.pending_profiles||[], transactions=queue.financial_requests||[], investments=queue.investments||[];
      $("profileCount").textContent=profiles.length+" awaiting review";
      $("transactionCount").textContent=transactions.length+" requests";
+     $("investmentCount").textContent=investments.length+" active investments";
      $("profiles").innerHTML=profiles.length?profiles.map(p=>`
        <article class="item">
         <h3>${esc(p.full_name||"Name not supplied")}</h3>
@@ -79,6 +81,16 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
         <div class="field"><label for="reason-${esc(t.id)}">Review note / payment reference</label><input id="reason-${esc(t.id)}" maxlength="250" placeholder="Enter verification note"></div>
         <div class="actions"><button class="primary" data-transaction="${esc(t.id)}" data-decision="approve">Approve</button><button class="danger" data-transaction="${esc(t.id)}" data-decision="reject">Reject</button></div>
        </article>`).join(""):empty("No deposit or withdrawal requests awaiting review.");
+     $("investments").innerHTML=investments.length?investments.map(i=>`
+       <article class="item">
+        <h3>${esc(i.plan_code.toUpperCase())} · ${money(i.principal)}</h3>
+        <p><span class="pill">${esc(i.status)}</span> · <span class="pill">${esc(i.last_processed_day)}/7 days processed</span></p>
+        <p class="muted">Customer ID: ${esc(i.user_id)}</p>
+        <p class="muted">Investment ID: ${esc(i.id)}</p>
+        <p>Daily rate: ${(Number(i.daily_rate)*100).toFixed(2)}% · Profit paid: ${money(i.profit_paid)}</p>
+        <p class="muted">Started: ${esc(new Date(i.started_at).toLocaleString())}</p>
+        <p class="muted">Matures: ${esc(new Date(i.matures_at).toLocaleString())}</p>
+       </article>`).join(""):empty("No active investments awaiting maturity.");
      say("Queue refreshed. Review details carefully before approving any money movement.");
    } catch(error) {
      say(error.message||"Could not load the admin queue.");
