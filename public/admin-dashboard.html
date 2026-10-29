@@ -104,8 +104,13 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
        </article>`).join(""):empty("No active investments awaiting maturity.");
      say("Queue refreshed. Review details carefully before approving any money movement.");
    } catch(error) {
+     if((error.message||"").includes("Admin access required")) {
+       await client.auth.signOut();
+       setLoggedIn(false);
+       $("loginMessage").textContent="This account is not an active administrator. You have been signed out.";
+       return;
+     }
      say(error.message||"Could not load the admin queue.");
-     if((error.message||"").includes("Admin access required")) say("This signed-in account is not provisioned as an active admin. Confirm the admin email and complete email plus phone verification first.");
    }
  }
  $("loginForm").onsubmit=async event=>{
@@ -116,7 +121,11 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
      if((data.user?.email||"").toLowerCase()!=="grashfxmw@gmail.com") throw new Error("This page is restricted to the configured administrator email.");
      setLoggedIn(true);
      await loadQueue();
-   } catch(error) { $("loginMessage").textContent=error.message||"Sign in failed."; }
+   } catch(error) {
+     await client.auth.signOut();
+     setLoggedIn(false);
+     $("loginMessage").textContent=error.message||"Sign in failed.";
+   }
    finally {button.disabled=false;}
  };
  $("refresh").onclick=loadQueue;
