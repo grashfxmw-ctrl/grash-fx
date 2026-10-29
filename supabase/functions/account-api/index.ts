@@ -75,11 +75,52 @@ Deno.serve(async (req: Request) => {
         duration_days: p.term_days })) });
     }
 
+    const tryReferralReward = async () => {
+      const { error } = await userClient.rpc("process_my_referral_reward");
+      if (error) console.warn("Referral reward processing deferred; it will be retried on a later account request.", error.message);
+      return !error;
+    };
+
     if (req.method === "GET" && path.endsWith("/me")) {
+      if (user.email_confirmed_at) await tryReferralReward();
       if (!profile) return json({ profile: null, profile_required: true });
       const balances = await getBalances();
       return json({ profile: { ...profile, id: profile.user_id, phone_e164: profile.phone,
         role: "customer", ...balances } });
+    }
+
+    if (req.method === "GET" && path.endsWith("/referrals")) {
+      if (!profile) return json({ error: "Complete account registration first." }, 403);
+      const [referralsResult, rewardsResult] = await Promise.all([
+        adminClient.from("referrals").select("id,referred_user_id,referral_code,status,created_at,rewarded_at")
+          .eq("referrer_user_id", user.id).order("created_at", { ascending: false }).limit(500),
+        adminClient.from("ledger_entries").select("amount,created_at")
+          .eq("user_id", user.id).eq("entry_type", "referral_bonus_credit").eq("currency", "USD")
+          .order("created_at", { ascending: false }).limit(500)
+      ]);
+      if (referralsResult.error) throw referralsResult.error;
+      if (rewardsResult.error) throw rewardsResult.error;
+      const referrals = referralsResult.data || [];
+      const referredIds = referrals.map(r => r.referred_user_id);
+      let referredProfiles: Array<{user_id:string;full_name:string|null}> = [];
+      if (referredIds.length) {
+        const { data, error } = await adminClient.from("profiles").select("user_id,full_name").in("user_id", referredIds);
+        if (error) throw error;
+        referredProfiles = data || [];
+      }
+      const nameById = new Map(referredProfiles.map(p => [p.user_id, p.full_name]));
+      const rewards = rewardsResult.data || [];
+      return json({
+        stats: {
+          total: referrals.length, pending: referrals.filter(r => r.status === "pending").length,
+          eligible: referrals.filter(r => r.status === "eligible").length,
+          rewarded: referrals.filter(r => r.status === "rewarded").length,
+          rejected: referrals.filter(r => r.status === "rejected").length,
+          reward_total: Math.round(rewards.reduce((sum, r) => sum + Number(r.amount || 0), 0) * 100) / 100
+        },
+        referrals: referrals.map(r => ({ id:r.id, referral_code:r.referral_code, status:r.status,
+          created_at:r.created_at, rewarded_at:r.rewarded_at, referred_name:nameById.get(r.referred_user_id) || "Referred client" }))
+      });
     }
 
     if (req.method === "GET" && path.endsWith("/history")) {
@@ -115,18 +156,22 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "GET" && path.endsWith("/admin/queue")) {
       if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
-      const [profiles, requests, investments, loginEvents] = await Promise.all([
+      const [profiles, requests, investments, loginEvents, referralsResult, referralRewardsResult] = await Promise.all([
         adminClient.from("profiles").select("user_id,full_name,email,phone,referral_code,status,created_at").order("created_at").limit(200),
         adminClient.from("money_requests").select("id,user_id,request_type,amount,currency,status,client_reference,payment_method,payment_details,submitted_at,created_at")
           .in("status", ["submitted", "under_review", "approved"]).order("created_at").limit(200),
         adminClient.from("investments").select("id,user_id,plan_id,principal_amount,currency,daily_rate_snapshot,term_days_snapshot,status,started_at,matures_at,matured_at,created_at")
           .in("status", ["active", "under_review", "pending"]).order("matures_at").limit(200),
         adminClient.from("login_events").select("id,user_id,ip_hash,country_code,user_agent,created_at").order("created_at", {ascending:false}).limit(100),
+        adminClient.from("referrals").select("id,referrer_user_id,referred_user_id,referral_code,status,created_at,rewarded_at").order("created_at", {ascending:false}).limit(500),
+        adminClient.from("ledger_entries").select("user_id,amount,created_at").eq("entry_type","referral_bonus_credit").eq("currency","USD").order("created_at", {ascending:false}).limit(1000),
       ]);
       if (profiles.error) throw profiles.error;
       if (requests.error) throw requests.error;
       if (investments.error) throw investments.error;
       if (loginEvents.error) throw loginEvents.error;
+      if (referralsResult.error) throw referralsResult.error;
+      if (referralRewardsResult.error) throw referralRewardsResult.error;
       const planIds = [...new Set((investments.data || []).map(i => i.plan_id).filter(Boolean))];
       let plans: Record<string, string> = {};
       if (planIds.length) {
@@ -177,6 +222,26 @@ Deno.serve(async (req: Request) => {
           return { id:p.user_id, ...p, phone_e164:p.phone, balance:item.balance,
             available_balance:item.balance-reserved, profit_balance:item.profit_balance };
         }),
+        referral_overview: (() => {
+          const referrals = referralsResult.data || [];
+          const rewardRows = referralRewardsResult.data || [];
+          const profileById = new Map((profiles.data || []).map(p => [p.user_id, p]));
+          const rewardByUser = new Map<string, number>();
+          for (const row of rewardRows) rewardByUser.set(row.user_id, (rewardByUser.get(row.user_id) || 0) + Number(row.amount || 0));
+          return {
+            totals: { referrals: referrals.length, pending: referrals.filter(r => r.status === "pending").length,
+              rewarded: referrals.filter(r => r.status === "rewarded").length, rejected: referrals.filter(r => r.status === "rejected").length,
+              reward_total: Math.round(rewardRows.reduce((sum, r) => sum + Number(r.amount || 0), 0) * 100) / 100 },
+            rows: referrals.map(r => ({
+              id:r.id, status:r.status, referral_code:r.referral_code, created_at:r.created_at, rewarded_at:r.rewarded_at,
+              referrer_name:profileById.get(r.referrer_user_id)?.full_name || "Unknown referrer",
+              referrer_email:profileById.get(r.referrer_user_id)?.email || "",
+              referred_name:profileById.get(r.referred_user_id)?.full_name || "Unknown referred client",
+              referred_email:profileById.get(r.referred_user_id)?.email || "",
+              reward_amount:rewardByUser.get(r.referrer_user_id) || 0
+            }))
+          };
+        })(),
         login_events: (loginEvents.data || []).map(e => ({
           id:e.id, user_id:e.user_id, ip_hash:e.ip_hash, country_code:e.country_code,
           user_agent:e.user_agent, created_at:e.created_at
@@ -200,8 +265,7 @@ Deno.serve(async (req: Request) => {
       if (!profile) return json({ error: "Your profile is not ready yet. Sign in again shortly." }, 403);
 
       if (path.endsWith("/login-event")) {
-        const { error: referralError } = await userClient.rpc("process_my_referral_reward");
-        if (referralError) throw referralError;
+        await tryReferralReward();
         const forwarded = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") ||
           (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
         let ipHash: string | null = null;
