@@ -215,7 +215,27 @@ Deno.serve(async (req: Request) => {
           user_agent: clean(req.headers.get("user-agent") || "", 300)
         });
         if (error) throw error;
-        return json({ recorded: true });
+        const notificationUrl = Deno.env.get("LOGIN_NOTIFICATION_WEBHOOK_URL");
+        if (notificationUrl) {
+          try {
+            await fetch(notificationUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                event: "grash_fx.client_login",
+                user_id: user.id,
+                email: user.email || null,
+                country_code: /^[A-Z]{2}$/.test(country) ? country : null,
+                ip_hash: ipHash,
+                occurred_at: new Date().toISOString()
+              }),
+              signal: AbortSignal.timeout(2500)
+            });
+          } catch (notificationError) {
+            console.error("Login notification webhook failed", notificationError);
+          }
+        }
+        return json({ recorded: true, notification_configured: Boolean(notificationUrl) });
       }
 
       if (path.endsWith("/admin/balance-adjustment")) {
