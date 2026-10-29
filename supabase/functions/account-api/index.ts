@@ -159,8 +159,11 @@ Deno.serve(async (req: Request) => {
           amount: Number(r.amount), status: r.status, reference: r.client_reference, description: r.payment_method,
           payout_details: r.request_type === "withdrawal" ? {
             account_holder: String((r.payment_details || {}).account_holder || ""),
-            account_number: String((r.payment_details || {}).account_number || "")
+            account_number: String((r.payment_details || {}).account_number || ""),
+            bank_name: String((r.payment_details || {}).bank_name || ""),
+            country: String((r.payment_details || {}).country || "")
           } : null,
+          country: String((r.payment_details || {}).country || ""),
           created_at: r.created_at || r.submitted_at })),
         investments: (investments.data || []).map(i => ({ id: i.id, user_id: i.user_id, plan_code: plans[i.plan_id] || "investment",
           principal: Number(i.principal_amount), daily_rate: Number(i.daily_rate_snapshot), duration_days: i.term_days_snapshot,
