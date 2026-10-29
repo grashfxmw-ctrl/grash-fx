@@ -209,8 +209,8 @@ Deno.serve(async (req: Request) => {
         if (!withdrawal && clientReference.length < 3) return json({ error: "Enter the transfer reference so finance can match your deposit." }, 400);
         if (withdrawal) {
           const payout = details as Record<string, unknown>;
-          if (!clean(payout.account_holder, 120) || !clean(payout.account_number, 160) || !clean(payout.country, 80)) {
-            return json({ error: "Provide recipient name, destination details, and country for the withdrawal." }, 400);
+          if (!clean(payout.account_holder, 120) || !clean(payout.account_number, 160)) {
+            return json({ error: "Provide the recipient name and destination details for the withdrawal." }, 400);
           }
           if (["bank_transfer", "eft"].includes(paymentMethod) && !clean(payout.bank_name, 120)) {
             return json({ error: "Enter the bank name for this withdrawal method." }, 400);
@@ -274,7 +274,8 @@ Deno.serve(async (req: Request) => {
         } else return json({ error: "Unsupported review decision." }, 400);
         const { data, error } = await userClient.rpc("review_money_request", {
           p_request_id: requestId, p_action: action, p_reason: reason,
-          p_external_payment_reference: clean(body.reference || body.reason, 160),
+          p_external_payment_reference: decision === "complete" || (decision === "approve" && action === "confirm_deposit")
+            ? clean(body.reference, 160) || null : null,
         });
         if (error) return json({ error: error.message }, 400);
         return json({ request_id: data, status: "reviewed" });
