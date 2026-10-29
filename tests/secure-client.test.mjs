@@ -23,12 +23,14 @@ test("administrator portal calls protected Supabase endpoints", () => {
 });
 
 test("account API validates bearer tokens and gates administrative actions", () => {
-  assert.match(apiSource, /authClient\.auth\.getUser\(token\)/);
-  assert.match(apiSource, /if \(!isAdmin\) return json\(\{ error: "Admin access required\." \}, 403\)/);
+  assert.match(apiSource, /userClient\.auth\.getUser\(token\)/);
+  assert.match(apiSource, /if \(!\(await isAdmin\(\)\)\) return json\(\{ error: "Admin access required\." \}, 403\)/);
   assert.match(apiSource, /\/admin\/queue/);
   assert.match(apiSource, /\/deposit/);
   assert.match(apiSource, /\/withdrawal/);
   assert.match(apiSource, /\/investment/);
+  assert.match(apiSource, /minimum deposit is \$20\.00/);
+  assert.match(apiSource, /minimum withdrawal is \$50\.00/);
 });
 
 test("legacy platform files are not dependencies of the current test suite", async () => {
