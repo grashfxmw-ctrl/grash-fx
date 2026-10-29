@@ -34,21 +34,21 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <div class="balance"><div class="tile"><span>Main balance</span><strong id="balance">—</strong></div><div class="tile"><span>Profit balance</span><strong id="profit">—</strong></div></div>
 <p id="accountEmail" class="muted"></p>
 <div id="financialActions" class="hidden">
-<h2>Requests</h2><p class="muted">Deposit requests remain pending until an administrator verifies payment. Withdrawal requests reserve your balance until reviewed. Do not send money based only on a submitted request.</p>
+<h2>Deposit and withdrawal</h2>
 <form id="depositForm">
 <div class="field"><label for="depositAmount">Deposit amount (USD)</label><input id="depositAmount" type="number" min="20" step="0.01" required></div>
 <div class="field"><label for="depositCountry">Country</label><input id="depositCountry" maxlength="80" autocomplete="country-name" required placeholder="Enter your country"></div>
 <div class="field"><label for="depositMethod">Deposit method</label><select id="depositMethod" required><option value="usdt_ethereum">USDT — Ethereum network</option><option value="usdc_ethereum">USDC — Ethereum network</option><option value="bitcoin">Bitcoin (BTC)</option><option value="airtel_money">Airtel Money</option><option value="cashsend_cardless">Cash Send / Cardless</option></select></div>
 
 <div class="field"><label for="depositReference">Payment reference / transaction ID</label><input id="depositReference" maxlength="120" required placeholder="Enter transaction ID or payment receipt reference"></div>
-<p class="muted">Minimum: $20. No platform deposit fee. This form records your request; payment is made outside the website.</p>
+<p class="muted">Minimum deposit: $20. No platform fee.</p>
 <button class="full" type="submit">Submit deposit request</button></form>
 <form id="withdrawalForm"><div class="field"><label for="withdrawalAmount">Withdrawal amount (USD)</label><input id="withdrawalAmount" type="number" min="50" step="0.01" required></div>
 <div class="field"><label for="withdrawalMethod">Withdrawal payout method</label><select id="withdrawalMethod" required><option value="bank_transfer">Bank transfer</option><option value="eft">EFT</option><option value="airtel_money">Mobile money — Airtel Money</option><option value="mpamba">Mobile money — Mpamba</option><option value="mtn_mobile_money">Mobile money — MTN</option><option value="cashsend_cardless">Cash Send / Cardless</option><option value="usdt_ethereum">USDT — Ethereum network</option><option value="usdc_ethereum">USDC — Ethereum network</option><option value="bitcoin">Bitcoin (BTC)</option></select></div>
-<div class="field"><label id="withdrawalHolderLabel" for="withdrawalHolder">Recipient name</label><input id="withdrawalHolder" maxlength="120" required autocomplete="name"></div>
-<div class="field"><label id="withdrawalAccountLabel" for="withdrawalAccount">Bank / phone / wallet details</label><input id="withdrawalAccount" maxlength="160" required autocomplete="off" placeholder="Enter recipient details"></div>
-<div class="field" id="withdrawalBankField"><label for="withdrawalBank">Bank name (if applicable)</label><input id="withdrawalBank" maxlength="120" autocomplete="organization" placeholder="Enter bank name"></div>
-<p class="muted">Minimum: $50. No platform withdrawal fee. Payments are handled manually outside the website.</p>
+<div class="field" id="withdrawalHolderField"><label id="withdrawalHolderLabel" for="withdrawalHolder">Account holder / recipient name</label><input id="withdrawalHolder" maxlength="120" autocomplete="name"></div>
+<div class="field" id="withdrawalBankField"><label for="withdrawalBank">Bank name</label><input id="withdrawalBank" maxlength="120" autocomplete="organization" placeholder="Enter bank name"></div>
+<div class="field"><label id="withdrawalAccountLabel" for="withdrawalAccount">Bank account number</label><input id="withdrawalAccount" maxlength="160" required autocomplete="off" placeholder="Enter destination details"></div>
+<p class="muted">Minimum withdrawal: $50. No platform fee.</p>
 <button class="full" type="submit">Request withdrawal</button></form>
 </div>
 <section id="investmentActions" class="hidden account">
@@ -66,7 +66,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 </div>
 <div id="message" class="status" role="status" aria-live="polite">Ready.</div>
 </section>
-<footer>Payments are made outside the website. This page records requests only.</footer>
+<footer>Deposits and withdrawals are processed manually.</footer>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -187,6 +187,9 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
  function updateWithdrawalFields() {
   const method = $("withdrawalMethod").value;
   const bank = ["bank_transfer","eft"].includes(method);
+  const mobile = ["airtel_money","mpamba","mtn_mobile_money","cashsend_cardless"].includes(method);
+  const crypto = ["usdt_ethereum","usdc_ethereum","bitcoin"].includes(method);
+  const showHolder = !crypto;
   const labels = {
     bank_transfer: ["Account holder name", "Bank account number", "Enter account number"],
     eft: ["Account holder name", "Bank account number", "Enter account number"],
@@ -194,24 +197,27 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
     mpamba: ["Recipient name", "Mobile money phone number", "Enter phone number"],
     mtn_mobile_money: ["Recipient name", "Mobile money phone number", "Enter phone number"],
     cashsend_cardless: ["Recipient name", "Cash Send phone / reference", "Enter phone or payout reference"],
-    usdt_ethereum: ["Wallet recipient name", "USDT (Ethereum/ERC-20) wallet address", "Enter USDT wallet address"],
-    usdc_ethereum: ["Wallet recipient name", "USDC (Ethereum/ERC-20) wallet address", "Enter USDC wallet address"],
-    bitcoin: ["Wallet recipient name", "Bitcoin wallet address", "Enter Bitcoin wallet address"]
+    usdt_ethereum: ["", "USDT — Ethereum (ERC-20) wallet address", "Enter USDT wallet address"],
+    usdc_ethereum: ["", "USDC — Ethereum (ERC-20) wallet address", "Enter USDC wallet address"],
+    bitcoin: ["", "Bitcoin wallet address", "Enter Bitcoin wallet address"]
   };
   const selected = labels[method] || labels.bank_transfer;
-  $("withdrawalHolderLabel").textContent = selected[0];
+  $("withdrawalHolderField").classList.toggle("hidden", !showHolder);
+  $("withdrawalHolder").required = showHolder;
+  $("withdrawalHolder").disabled = !showHolder;
+  if (!showHolder) $("withdrawalHolder").value = "";
+  $("withdrawalHolderLabel").textContent = selected[0] || "Recipient";
   $("withdrawalAccountLabel").textContent = selected[1];
   $("withdrawalAccount").placeholder = selected[2];
+  $("withdrawalAccount").inputMode = mobile ? "tel" : "text";
   $("withdrawalBankField").classList.toggle("hidden", !bank);
   $("withdrawalBank").required = bank;
   $("withdrawalBank").disabled = !bank;
   if (!bank) $("withdrawalBank").value = "";
-  $("withdrawalAccount").inputMode = mobile || method === "cashsend_cardless" ? "tel" : "text";
-  $("withdrawalAccount").autocomplete = bank ? "off" : "off";
  }
  $("withdrawalMethod").addEventListener("change", updateWithdrawalFields);
  updateWithdrawalFields();
- $("withdrawalForm").onsubmit=async e=>{e.preventDefault();busy(e.currentTarget,true);try{const method=$("withdrawalMethod").value;await submitFinancialRequest("withdrawal",$("withdrawalAmount").value,{payment_method:method,payment_details:{account_holder:$("withdrawalHolder").value.trim(),account_number:$("withdrawalAccount").value.trim(),bank_name:$("withdrawalBank").value.trim()}});}finally{busy(e.currentTarget,false);}};
+ $("withdrawalForm").onsubmit=async e=>{e.preventDefault();busy(e.currentTarget,true);try{const method=$("withdrawalMethod").value;const crypto=["usdt_ethereum","usdc_ethereum","bitcoin"].includes(method);await submitFinancialRequest("withdrawal",$("withdrawalAmount").value,{payment_method:method,payment_details:{account_holder:crypto?"Crypto wallet":$("withdrawalHolder").value.trim(),account_number:$("withdrawalAccount").value.trim(),bank_name:$("withdrawalBank").value.trim()}});}finally{busy(e.currentTarget,false);}};
  $("investmentForm").onsubmit=async e=>{
    e.preventDefault();busy(e.currentTarget,true);
    try{
