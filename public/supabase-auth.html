@@ -35,24 +35,6 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <h2>Your account</h2><div id="accountStatus" class="muted"></div><div class="tile"><span>Your referral code · $5 simulated reward after the referred user verifies email and signs in</span><strong id="myReferralCode">Loading…</strong><div class="field"><label for="referralLink">Personal referral link</label><input id="referralLink" readonly value="Loading…"></div><button id="copyReferralLink" type="button" class="full">Copy referral link</button><p class="muted">The code fills automatically when someone opens your link.</p></div><div class="tile"><span>Referral overview</span><div id="referralStats" class="muted">Loading…</div></div><div id="referralHistory" class="muted">Loading referral history…</div><button id="refreshAccount" class="full" type="button">Refresh account status</button>
 <div class="balance"><div class="tile"><span>Main balance</span><strong id="balance">—</strong></div><div class="tile"><span>Profit balance</span><strong id="profit">—</strong></div></div>
 <p id="accountEmail" class="muted"></p>
-<div id="financialActions" class="hidden">
-<h2>Deposit and withdrawal</h2>
-<form id="depositForm">
-<div class="field"><label for="depositAmount">Deposit amount (USD)</label><input id="depositAmount" type="number" min="20" step="0.01" required></div>
-<div class="field"><label for="depositCountry">Country</label><input id="depositCountry" maxlength="80" autocomplete="country-name" required placeholder="Enter your country"></div>
-<div class="field"><label for="depositMethod">Deposit method</label><select id="depositMethod" required><option value="usdt_ethereum">USDT — Ethereum network</option><option value="usdc_ethereum">USDC — Ethereum network</option><option value="bitcoin">Bitcoin (BTC)</option><option value="airtel_money">Airtel Money</option><option value="cashsend_cardless">Cash Send / Cardless</option></select></div>
-
-<div class="field"><label for="depositReference">Payment reference / transaction ID</label><input id="depositReference" maxlength="120" required placeholder="Enter transaction ID or payment receipt reference"></div>
-<p class="muted">Minimum deposit: $20. No platform fee.</p>
-<button class="full" type="submit">Submit deposit request</button></form>
-<form id="withdrawalForm"><div class="field"><label for="withdrawalAmount">Withdrawal amount (USD)</label><input id="withdrawalAmount" type="number" min="50" step="0.01" required></div>
-<div class="field"><label for="withdrawalMethod">Withdrawal payout method</label><select id="withdrawalMethod" required><option value="bank_transfer">Bank transfer</option><option value="eft">EFT</option><option value="airtel_money">Mobile money — Airtel Money</option><option value="mpamba">Mobile money — Mpamba</option><option value="mtn_mobile_money">Mobile money — MTN</option><option value="cashsend_cardless">Cash Send / Cardless</option><option value="usdt_ethereum">USDT — Ethereum network</option><option value="usdc_ethereum">USDC — Ethereum network</option><option value="bitcoin">Bitcoin (BTC)</option></select></div>
-<div class="field" id="withdrawalHolderField"><label id="withdrawalHolderLabel" for="withdrawalHolder">Account holder / recipient name</label><input id="withdrawalHolder" maxlength="120" autocomplete="name"></div>
-<div class="field" id="withdrawalBankField"><label for="withdrawalBank">Bank name</label><input id="withdrawalBank" maxlength="120" autocomplete="organization" placeholder="Enter bank name"></div>
-<div class="field"><label id="withdrawalAccountLabel" for="withdrawalAccount">Bank account number</label><input id="withdrawalAccount" maxlength="160" required autocomplete="off" placeholder="Enter destination details"></div>
-<p class="muted">Minimum withdrawal: $50. No platform fee.</p>
-<button class="full" type="submit">Request withdrawal</button></form>
-</div>
 <section id="investmentActions" class="hidden account">
 <h2>Investment plan</h2>
 <p class="muted">Seven-day term. Activating a plan deducts principal from your available balance. Profit and principal return to your main balance at maturity under the configured rules.</p>
@@ -174,7 +156,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    }catch(err){say(err.message||"Could not sign in.");}finally{busy(e.currentTarget,false);}
  };
  async function loadAccount(){
-   $("accountSection").classList.add("hidden");$("financialActions").classList.add("hidden");$("investmentActions").classList.add("hidden");
+   $("accountSection").classList.add("hidden");$("investmentActions").classList.add("hidden");
    try{
     const data=await callApi("/me");
     if(data.profile){
@@ -183,11 +165,11 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
      $("myReferralCode").textContent=data.profile.referral_code||"Not assigned";
      setReferralLink(data.profile.referral_code);
      await loadReferrals();
-     if(data.profile.status==="active") { $("financialActions").classList.remove("hidden"); $("investmentActions").classList.remove("hidden"); }
+     if(data.profile.status==="active") { $("investmentActions").classList.remove("hidden"); }
      $("balance").textContent=Number(data.profile.balance).toFixed(2);
      $("profit").textContent=Number(data.profile.profit_balance).toFixed(2);
      say(data.profile.status==="pending"?"Your email is verified, but account activation has not completed. Refresh your account status or contact support.":"Signed in successfully.");
-     if(data.profile.status==="active") { await loadHistory(); if(query.get("next")!=="portal") window.location.replace("client-dashboard.html"); }
+     if(data.profile.status==="active") { window.location.replace(query.get("next")==="portal" ? "client-dashboard.html#funds" : "client-dashboard.html"); return; }
      else { $("investmentHistory").textContent="Investment history will appear when your account is active."; $("transactionHistory").textContent="Transaction history will appear when your account is active."; }
     }else{
      const {data:{user},error:userError}=await client.auth.getUser();
@@ -203,9 +185,9 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
      $("balance").textContent=Number(created.profile.balance||0).toFixed(2);
      $("profit").textContent=Number(created.profile.profit_balance||0).toFixed(2);
      $("accountEmail").textContent=created.profile.email||user.email||"";
-     if(created.profile.status==="active") { $("financialActions").classList.remove("hidden"); $("investmentActions").classList.remove("hidden"); await loadHistory(); }
+     if(created.profile.status==="active") { $("investmentActions").classList.remove("hidden"); await loadHistory(); }
      say("Profile created successfully. Account status: "+created.profile.status+".");
-     if(created.profile.status==="active" && query.get("next")!=="portal") window.location.replace("client-dashboard.html");
+     if(created.profile.status==="active") { window.location.replace(query.get("next")==="portal" ? "client-dashboard.html#funds" : "client-dashboard.html"); return; }
     }
    }catch(err){say(err.message||"Could not load account.");}
  }
@@ -228,55 +210,6 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    if (Number(amount.value) > Number(amount.max)) amount.value = amount.max;
  });
  $("planCode").dispatchEvent(new Event("change"));
- async function submitFinancialRequest(kind, amountValue, extra={}) {
-   const key = crypto.randomUUID();
-   try {
-     const result = await callApi("/"+kind, "POST", {amount:Number(amountValue), idempotency_key:key, ...extra});
-     const request = result.request || result.transaction;
-     say(kind==="deposit" ? "Deposit request submitted. Finance must independently verify the transfer reference." : "Withdrawal request submitted. It remains pending review.");
-     if(request) say((kind==="deposit" ? "Deposit request " : "Withdrawal request ") + request.id + " · status: " + request.status);
-     await loadAccount();
-   } catch(err) { say(err.message || "Could not submit request."); }
- }
- $("depositMethod").addEventListener("change", () => {
-   $("depositReference").placeholder = ["usdt_ethereum","usdc_ethereum","bitcoin"].includes($("depositMethod").value)
-     ? "Transaction ID / TXID" : "Payment receipt / reference";
- });
- $("depositForm").onsubmit=async e=>{e.preventDefault();busy(e.currentTarget,true);try{await submitFinancialRequest("deposit",$("depositAmount").value,{client_reference:$("depositReference").value.trim(),payment_method:$("depositMethod").value,payment_details:{country:$("depositCountry").value.trim()}});}finally{busy(e.currentTarget,false);}};
- function updateWithdrawalFields() {
-  const method = $("withdrawalMethod").value;
-  const bank = ["bank_transfer","eft"].includes(method);
-  const mobile = ["airtel_money","mpamba","mtn_mobile_money","cashsend_cardless"].includes(method);
-  const crypto = ["usdt_ethereum","usdc_ethereum","bitcoin"].includes(method);
-  const showHolder = !crypto;
-  const labels = {
-    bank_transfer: ["Account holder name", "Bank account number", "Enter account number"],
-    eft: ["Account holder name", "Bank account number", "Enter account number"],
-    airtel_money: ["Recipient name", "Mobile money phone number", "Enter phone number"],
-    mpamba: ["Recipient name", "Mobile money phone number", "Enter phone number"],
-    mtn_mobile_money: ["Recipient name", "Mobile money phone number", "Enter phone number"],
-    cashsend_cardless: ["Recipient name", "Cash Send phone / reference", "Enter phone or payout reference"],
-    usdt_ethereum: ["", "USDT — Ethereum (ERC-20) wallet address", "Enter USDT wallet address"],
-    usdc_ethereum: ["", "USDC — Ethereum (ERC-20) wallet address", "Enter USDC wallet address"],
-    bitcoin: ["", "Bitcoin wallet address", "Enter Bitcoin wallet address"]
-  };
-  const selected = labels[method] || labels.bank_transfer;
-  $("withdrawalHolderField").classList.toggle("hidden", !showHolder);
-  $("withdrawalHolder").required = showHolder;
-  $("withdrawalHolder").disabled = !showHolder;
-  if (!showHolder) $("withdrawalHolder").value = "";
-  $("withdrawalHolderLabel").textContent = selected[0] || "Recipient";
-  $("withdrawalAccountLabel").textContent = selected[1];
-  $("withdrawalAccount").placeholder = selected[2];
-  $("withdrawalAccount").inputMode = mobile ? "tel" : "text";
-  $("withdrawalBankField").classList.toggle("hidden", !bank);
-  $("withdrawalBank").required = bank;
-  $("withdrawalBank").disabled = !bank;
-  if (!bank) $("withdrawalBank").value = "";
- }
- $("withdrawalMethod").addEventListener("change", updateWithdrawalFields);
- updateWithdrawalFields();
- $("withdrawalForm").onsubmit=async e=>{e.preventDefault();busy(e.currentTarget,true);try{const method=$("withdrawalMethod").value;const crypto=["usdt_ethereum","usdc_ethereum","bitcoin"].includes(method);await submitFinancialRequest("withdrawal",$("withdrawalAmount").value,{payment_method:method,payment_details:{account_holder:crypto?"Crypto wallet":$("withdrawalHolder").value.trim(),account_number:$("withdrawalAccount").value.trim(),bank_name:$("withdrawalBank").value.trim()}});}finally{busy(e.currentTarget,false);}};
  $("investmentForm").onsubmit=async e=>{
    e.preventDefault();busy(e.currentTarget,true);
    try{
@@ -311,7 +244,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
     });
    }catch(err){$("investmentHistory").textContent="Could not load history."; $("transactionHistory").textContent=err.message||"Could not load history.";}
  }
- $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("financialActions").classList.add("hidden");$("investmentActions").classList.add("hidden");mode(false);say("Signed out.");};
+ $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("investmentActions").classList.add("hidden");mode(false);say("Signed out.");};
  client.auth.getSession().then(async({data})=>{if(data.session){$("accountEmail").textContent=data.session.user.email||"";await recordLoginEvent();loadAccount();}});
 })();
 </script>
