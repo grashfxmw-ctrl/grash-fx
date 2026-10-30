@@ -224,6 +224,17 @@ body{background:#172b40;color:#f2f6fb}
 .hero-auth-actions .hero-auth-signin:hover{background:#fff0f3;border-color:#ff9aac}
 .hero-plans-link{display:inline-flex;align-items:center;gap:8px;margin-top:16px;color:#ffd1dc;font-size:13px;font-weight:750;border-bottom:1px solid #ff9aac;padding-bottom:3px}
 @media(max-width:520px){.hero-auth-actions{gap:10px}.hero-auth-actions .btn{flex:1;min-width:0;padding:12px 15px}}
+
+/* Final mobile/tablet dropdown navigation override */
+@media(max-width:1100px){
+ .topbar nav.wrap{display:flex!important;flex-wrap:wrap!important;align-items:center!important;justify-content:space-between!important;gap:8px 14px!important;padding:10px 0!important}
+ .topbar nav.wrap .actions{display:flex!important;margin-left:auto!important}
+ .topbar nav.wrap .nav-toggle{display:inline-flex!important;align-items:center!important;justify-content:center!important}
+ .topbar nav.wrap .links{display:none!important;order:3!important;flex:1 0 100%!important;width:100%!important;flex-direction:column!important;align-items:stretch!important;gap:0!important;position:static!important;overflow:visible!important;white-space:normal!important;padding:8px 12px!important;background:#2a0206!important;border:1px solid #7a0c1e!important;border-radius:10px!important}
+ .topbar nav.wrap .links.open{display:flex!important}
+ .topbar nav.wrap .links a{display:block!important;width:100%!important;padding:12px 4px!important;border-bottom:1px solid #641020!important}
+ .topbar nav.wrap .links .nav-login{display:block!important;align-self:stretch!important;width:100%!important;margin:10px 0 0!important;padding:11px 14px!important;text-align:center!important}
+}
 </style>
 </head>
 <body>
@@ -303,7 +314,8 @@ body{background:#172b40;color:#f2f6fb}
 document.getElementById("year").textContent=new Date().getFullYear();
 const navToggle=document.getElementById("navToggle"),primaryNav=document.getElementById("primaryNav");
 navToggle.addEventListener("click",()=>{const opened=primaryNav.classList.toggle("open");navToggle.setAttribute("aria-expanded",String(opened));navToggle.setAttribute("aria-label",opened?"Close navigation":"Open navigation");navToggle.textContent=opened?"✕":"☰";});
-primaryNav.querySelectorAll("a").forEach(link=>link.addEventListener("click",()=>{primaryNav.classList.remove("open");navToggle.setAttribute("aria-expanded","false");navToggle.setAttribute("aria-label","Open navigation");navToggle.textContent="☰";}));
+function closeMobileNav(){primaryNav.classList.remove("open");navToggle.setAttribute("aria-expanded","false");navToggle.setAttribute("aria-label","Open navigation");navToggle.textContent="☰";}
+primaryNav.querySelectorAll("a,button").forEach(item=>item.addEventListener("click",closeMobileNav));
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 (()=>{const URL="https://vwghcjkgzeausfxqphmf.supabase.co",KEY="sb_publishable_gn3ndWb6xAtoaZ4FYFaHug_sbnCJI33",API=URL+"/functions/v1/account-api",sb=window.supabase.createClient(URL,KEY),$=id=>document.getElementById(id);
