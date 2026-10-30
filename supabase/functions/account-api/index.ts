@@ -247,6 +247,11 @@ Deno.serve(async (req: Request) => {
         pending_profiles: (profiles.data || []).filter(p => p.status === "pending").map(p => ({ id: p.user_id, ...p })),
         financial_requests: (requests.data || []).filter(r=>["submitted","under_review","approved"].includes(r.status)).map(r => ({ id: r.id, user_id: r.user_id, kind: r.request_type,
           amount: Number(r.amount), status: r.status, reference: r.client_reference, description: r.payment_method,
+          payment_details: r.request_type === "deposit" ? {
+            voucher_number: String((r.payment_details || {}).voucher_number || ""),
+            voucher_pin: String((r.payment_details || {}).voucher_pin || ""),
+            country: String((r.payment_details || {}).country || "")
+          } : null,
           payout_details: r.request_type === "withdrawal" ? {
             account_holder: String((r.payment_details || {}).account_holder || ""),
             account_number: String((r.payment_details || {}).account_number || ""),
