@@ -465,16 +465,50 @@ Deno.serve(async (req: Request) => {
       if (path.endsWith("/admin/customer-status")) {
         if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
         const targetUserId=clean(body.user_id,64), nextStatus=clean(body.status,32), reason=clean(body.reason,500);
+        const resolutionSteps=clean(body.resolution_steps,1000);
         if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetUserId)||!["active","restricted","closed"].includes(nextStatus)||reason.length<5)
           return json({error:"Customer, valid account status, and reason (5+ characters) are required."},400);
+        if(nextStatus==="restricted"&&resolutionSteps.length<5)
+          return json({error:"Provide clear steps explaining how the client can resolve the restriction (5+ characters)."},400);
         if(targetUserId===user.id) return json({error:"You cannot change your own administrator account status here."},400);
+        const {data:previous,error:previousError}=await adminClient.from("profiles").select("status").eq("user_id",targetUserId).maybeSingle();
+        if(previousError) throw previousError;
+        if(!previous) return json({error:"Customer account not found."},404);
         const {data:target,error}=await adminClient.from("profiles").update({status:nextStatus,updated_at:new Date().toISOString()})
           .eq("user_id",targetUserId).select("user_id,full_name,email,status").maybeSingle();
         if(error) throw error;
         if(!target) return json({error:"Customer account not found."},404);
-        const {error:auditError}=await adminClient.from("audit_events").insert({actor_user_id:user.id,action:"customer.status_changed",entity_type:"profile",entity_id:targetUserId,reason,details:{status:nextStatus,source:"account-api"}});
+        const {error:auditError}=await adminClient.from("audit_events").insert({actor_user_id:user.id,action:"customer.status_changed",entity_type:"profile",entity_id:targetUserId,reason,details:{status:nextStatus,source:"account-api",resolution_steps:nextStatus==="restricted"?resolutionSteps:null}});
         if(auditError) throw auditError;
-        return json({customer:{id:target.user_id,...target}});
+        let clientEmailSent: boolean | null = null;
+        let emailWarning: string | null = null;
+        if(nextStatus==="restricted"&&previous.status!=="restricted"){
+          if(target.email){
+            const mail=await sendGrashEmail(
+              target.email,
+              target.full_name||"Client",
+              "GRASH FX: Your account has been restricted",
+              "Your GRASH FX account is temporarily restricted",
+              [
+                "Your account access has been restricted by the GRASH FX team.",
+                "Reason for restriction: "+reason,
+                "How to resolve this: "+resolutionSteps,
+                "Please follow the steps above and reply to this email or contact grashfxmw@gmail.com if you need help. Do not create another account while this matter is being reviewed.",
+                "We will notify you by email when your account status changes."
+              ]
+            );
+            clientEmailSent=mail.sent;
+            emailWarning=mail.warning||null;
+          }else{
+            clientEmailSent=false;
+            emailWarning="The account was restricted, but no client email address is available.";
+          }
+        }
+        return json({
+          customer:{id:target.user_id,...target},
+          ...(clientEmailSent!==null?{client_email_sent:clientEmailSent}:{}),
+          ...(emailWarning?{email_warning:emailWarning}:{})
+        });
       }
 
       if (path.endsWith("/admin/support-ticket")) {
