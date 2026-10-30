@@ -388,6 +388,46 @@ Deno.serve(async (req: Request) => {
       try { body = await req.json(); } catch { return json({ error: "Invalid JSON body." }, 400); }
       if (!profile) return json({ error: "Your profile is not ready yet. Sign in again shortly." }, 403);
 
+      if (path.endsWith("/account-deletion-request")) {
+        if (!profile) return json({ error: "Your account profile could not be found." }, 403);
+        const { data: existing, error: existingError } = await adminClient.from("support_tickets")
+          .select("id,status").eq("user_id", user.id).eq("subject", "Account deletion request")
+          .in("status", ["open", "in_progress", "waiting_for_client"]).order("created_at", { ascending: false }).limit(1);
+        if (existingError) throw existingError;
+        if (existing?.length) return json({ error: "You already have an account deletion request awaiting Admin review." }, 409);
+        const ticketMessage = [
+          "ACCOUNT DELETION REQUEST",
+          "The client has requested that GRASH FX Admin review and approve deletion of this account.",
+          "This is a request only. Do not delete the account until identity, active investments, pending withdrawals, balances and legally required records have been reviewed and resolved.",
+          "Client email: " + (profile.email || user.email || "Not available"),
+          "Client name: " + (profile.full_name || "Not available")
+        ].join("\\n");
+        const { data: ticket, error: ticketError } = await adminClient.from("support_tickets").insert({
+          user_id: user.id, subject: "Account deletion request", message: ticketMessage, status: "open"
+        }).select("id,subject,status,created_at").single();
+        if (ticketError) throw ticketError;
+        const adminMail = await sendGrashEmail(
+          "grashfxmw@gmail.com",
+          "GRASH FX: Account deletion request",
+          "A client has requested account deletion",
+          "GRASH FX Admin",
+          [
+            "Client: " + (profile.full_name || "Client"),
+            "Client email: " + (profile.email || user.email || "Not available"),
+            "User ID: " + user.id,
+            "Request ticket: " + ticket.id,
+            "Review the client's account, investments, pending withdrawals, balances and record-retention requirements before taking action.",
+            "The account has not been deleted."
+          ]
+        );
+        return json({
+          request: { id: ticket.id, status: ticket.status },
+          message: "Your request has been submitted to Admin. Your account remains active until the review is completed.",
+          admin_email_sent: adminMail.sent,
+          ...(adminMail.warning ? { email_warning: adminMail.warning } : {})
+        }, 201);
+      }
+
       if (path.endsWith("/messages")) {
         const message = clean(body.message, 4000);
         if (!message) return json({ error: "Write a message before sending." }, 400);
