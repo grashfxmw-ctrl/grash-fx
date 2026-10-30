@@ -125,24 +125,43 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
      const shared=queue.shared_ip_accounts||[];
      $("sharedIpFlags").textContent=shared.length?shared.map(f=>f.account_count+" accounts share an IP hash prefix "+f.ip_hash.slice(0,12)+" ("+f.user_ids.join(", ")+")").join("\\n"):"No shared-IP flags in the latest login events.";
      say("Queue refreshed. Review details carefully before approving any money movement.");
+     return true;
    } catch(error) {
      if((error.message||"").includes("Admin access required")) {
        await client.auth.signOut();
        setLoggedIn(false);
-       $("loginMessage").textContent="This account is not an active administrator. You have been signed out.";
-       return;
+       $("loginMessage").textContent="This account is not an active administrator.";
+       return false;
      }
      say(error.message||"Could not load the admin queue.");
+     $("loginMessage").textContent=error.message||"Could not verify administrator access.";
+     return false;
    }
  }
+ const startupAuthReady = client.auth.getSession().then(async({data})=>{
+   if(data.session) await client.auth.signOut();
+   setLoggedIn(false);
+ }).catch(()=>setLoggedIn(false));
  $("loginForm").onsubmit=async event=>{
-   event.preventDefault(); const button=event.currentTarget.querySelector('button[type="submit"]');button.disabled=true;
+   event.preventDefault();
+   if(!event.currentTarget.reportValidity()) return;
+   const button=event.currentTarget.querySelector('button[type="submit"]');
+   button.disabled=true;
+   setLoggedIn(false);
+   $("loginMessage").textContent="Checking administrator credentials…";
    try {
+     await startupAuthReady;
+     await client.auth.signOut();
      const {data,error}=await client.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
-     if(error) throw error;
-     if((data.user?.email||"").toLowerCase()!=="grashfxmw@gmail.com") throw new Error("This page is restricted to the configured administrator email.");
+     if(error) {
+       if(/invalid login credentials|invalid credentials/i.test(error.message||"")) throw new Error("Invalid email or password.");
+       throw error;
+     }
+     if((data.user?.email||"").toLowerCase()!=="grashfxmw@gmail.com") throw new Error("This account is not authorised for administrator access.");
+     $("loginMessage").textContent="Verifying administrator permissions…";
+     const loaded=await loadQueue();
+     if(!loaded) throw new Error($("loginMessage").textContent||"Administrator access could not be verified.");
      setLoggedIn(true);
-     await loadQueue();
    } catch(error) {
      await client.auth.signOut();
      setLoggedIn(false);
@@ -194,11 +213,8 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
      await loadQueue();
    } catch(error) {say(error.message||"Review action failed.");button.disabled=false;}
  });
- client.auth.getSession().then(async({data})=>{
-   if(data.session&&(data.session.user?.email||"").toLowerCase()==="grashfxmw@gmail.com"){
-     setLoggedIn(true);await loadQueue();
-   }
- });
+ // Do not restore a previous browser session on the admin entry page.
+ // A fresh, explicit credential check is required before showing the dashboard.
 })();
 </script>
 </body></html>
