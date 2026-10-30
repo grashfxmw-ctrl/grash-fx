@@ -10,16 +10,16 @@ const json = (data: unknown, status = 200) => new Response(JSON.stringify(data),
 const clean = (v: unknown, max = 250) => typeof v === "string" ? v.trim().slice(0, max) : "";
 const money = (v: unknown) => typeof v === "number" && Number.isFinite(v) && v > 0 && v <= 10000000 ? Math.round(v * 100) / 100 : null;
 const keyOf = (req: Request, body: Record<string, unknown>) => clean(req.headers.get("x-idempotency-key") || body.idempotency_key, 128);
-const sendRejectionEmail = async (to: string, name: string, subject: string, heading: string, details: string[]) => {
+const sendGrashEmail = async (to: string, name: string, subject: string, heading: string, details: string[]) => {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) return { sent: false, warning: "Decision saved; RESEND_API_KEY is not configured." };
   const esc = (v: unknown) => String(v ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;" }[c] || c));
   const html = "<div style=\"font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px\"><h2>GRASH FX</h2><h3>" + esc(heading) + "</h3><p>Hello " + esc(name || "Client") + ",</p>" + details.map(x => "<p>" + esc(x) + "</p>").join("") + "<p>For help, reply to this email or contact grashfxmw@gmail.com.</p></div>";
   try {
     const response = await fetch("https://api.resend.com/emails", { method: "POST", headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" }, body: JSON.stringify({ from: "GRASH FX <notifications@grashfx.aclclouds.online>", to: [to], reply_to: "grashfxmw@gmail.com", subject, html }), signal: AbortSignal.timeout(8000) });
-    if (!response.ok) { console.error("Resend email failed", response.status, (await response.text()).slice(0, 300)); return { sent: false, warning: "Decision saved, but rejection email could not be sent. Check Resend configuration." }; }
+    if (!response.ok) { console.error("Resend email failed", response.status, (await response.text()).slice(0, 300)); return { sent: false, warning: "Decision saved, but email notification could not be sent. Check Resend configuration." }; }
     return { sent: true, warning: null };
-  } catch (error) { console.error("Resend email request failed", error); return { sent: false, warning: "Decision saved, but rejection email could not be sent. Check Resend configuration." }; }
+  } catch (error) { console.error("Resend email request failed", error); return { sent: false, warning: "Decision saved, but email notification could not be sent. Check Resend configuration." }; }
 };
 
 Deno.serve(async (req: Request) => {
@@ -472,7 +472,31 @@ Deno.serve(async (req: Request) => {
           p_idempotency_key: key,
         });
         if (error) return json({ error: error.message }, 400);
-        return json({ request: { id: data, status: "submitted", request_type: withdrawal ? "withdrawal" : "deposit", amount: value } }, 201);
+        let adminEmailSent: boolean | null = null;
+        let emailWarning: string | null = null;
+        if (!withdrawal) {
+          const mail = await sendGrashEmail(
+            "grashfxmw@gmail.com",
+            "GRASH FX: New deposit request",
+            "A new deposit request was submitted",
+            "Finance team",
+            [
+              "Client: " + (profile.full_name || "Client"),
+              "Client email: " + (profile.email || user.email || "Not available"),
+              "Amount: " + value.toFixed(2) + " USD",
+              "Payment method: " + paymentMethod,
+              "Payment reference: " + clientReference,
+              "Request ID: " + String(data)
+            ]
+          );
+          adminEmailSent = mail.sent;
+          emailWarning = mail.warning || null;
+        }
+        return json({
+          request: { id: data, status: "submitted", request_type: withdrawal ? "withdrawal" : "deposit", amount: value },
+          ...(adminEmailSent !== null ? { admin_email_sent: adminEmailSent } : {}),
+          ...(emailWarning ? { email_warning: emailWarning } : {})
+        }, 201);
       }
 
       if (path.endsWith("/investment")) {
@@ -505,6 +529,7 @@ Deno.serve(async (req: Request) => {
         if (!requestId || reason.length < 3) return json({ error: "Request ID and a review reason/reference of at least 3 characters are required." }, 400);
         let action = "";
         let rejectedRequest: { user_id: string; request_type: string; amount: number; currency: string | null } | null = null;
+        let approvedRequest: { user_id: string; request_type: string; amount: number; currency: string | null; client_reference: string | null; payment_method: string | null } | null = null;
         if (decision === "reject") {
           const { data: request, error } = await adminClient.from("money_requests")
             .select("user_id,request_type,amount,currency").eq("id", requestId).maybeSingle();
@@ -514,9 +539,10 @@ Deno.serve(async (req: Request) => {
           action = "reject";
         } else if (decision === "approve" || decision === "complete") {
           const { data: request, error } = await adminClient.from("money_requests")
-            .select("request_type,status").eq("id", requestId).maybeSingle();
+            .select("user_id,request_type,status,amount,currency,client_reference,payment_method").eq("id", requestId).maybeSingle();
           if (error) throw error;
           if (!request) return json({ error: "Money request not found." }, 404);
+          approvedRequest = request as typeof approvedRequest;
           if (decision === "complete") {
             if (request.request_type !== "withdrawal" || request.status !== "approved") {
               return json({ error: "Only an approved withdrawal can be marked paid." }, 409);
@@ -539,10 +565,48 @@ Deno.serve(async (req: Request) => {
           const { data: recipient } = await adminClient.from("profiles").select("email,full_name").eq("user_id", rejectedRequest.user_id).maybeSingle();
           if (recipient?.email) {
             const label = rejectedRequest.request_type === "deposit" ? "Deposit" : "Withdrawal";
-            const mail = await sendRejectionEmail(recipient.email, recipient.full_name || "", "GRASH FX: " + label + " request update", label + " request not approved", ["Amount: " + Number(rejectedRequest.amount).toFixed(2) + " " + (rejectedRequest.currency || "USD"), "Reason: " + reason]);
+            const mail = await sendGrashEmail(recipient.email, recipient.full_name || "", "GRASH FX: " + label + " request update", label + " request not approved", ["Amount: " + Number(rejectedRequest.amount).toFixed(2) + " " + (rejectedRequest.currency || "USD"), "Reason: " + reason]);
             return json({ request_id: data, status: "reviewed", email_sent: mail.sent, ...(mail.warning ? { email_warning: mail.warning } : {}) });
           }
           return json({ request_id: data, status: "reviewed", email_sent: false, email_warning: "Decision saved, but client email was not found." });
+        }
+        if (decision === "approve" && action === "confirm_deposit" && approvedRequest) {
+          const { data: recipient, error: recipientError } = await adminClient.from("profiles")
+            .select("email,full_name").eq("user_id", approvedRequest.user_id).maybeSingle();
+          if (recipientError) console.error("Could not load deposit approval email recipient", recipientError);
+          const amountText = Number(approvedRequest.amount).toFixed(2) + " " + (approvedRequest.currency || "USD");
+          const clientMail = recipient?.email
+            ? await sendGrashEmail(
+                recipient.email,
+                "GRASH FX: Deposit approved",
+                "Your deposit has been approved",
+                recipient.full_name || "Client",
+                ["Your deposit of " + amountText + " has been approved and credited to your GRASH FX account.",
+                 "Payment reference: " + (approvedRequest.client_reference || "Not provided"),
+                 "You can sign in to your dashboard to view your updated account balance."]
+              )
+            : { sent: false, warning: "Client email address was not found." };
+          const adminMail = await sendGrashEmail(
+            "grashfxmw@gmail.com",
+            "GRASH FX: Deposit approved",
+            "A client deposit was approved",
+            "Finance team",
+            [
+              "Client: " + (recipient?.full_name || "Client"),
+              "Client email: " + (recipient?.email || "Not available"),
+              "Amount: " + amountText,
+              "Payment method: " + (approvedRequest.payment_method || "Not recorded"),
+              "Payment reference: " + (approvedRequest.client_reference || "Not provided"),
+              "Request ID: " + String(data)
+            ]
+          );
+          const warnings = [clientMail.warning, adminMail.warning].filter(Boolean);
+          return json({
+            request_id: data, status: "reviewed",
+            client_email_sent: clientMail.sent,
+            admin_email_sent: adminMail.sent,
+            ...(warnings.length ? { email_warning: warnings.join(" ") } : {})
+          });
         }
         return json({ request_id: data, status: "reviewed" });
       }
@@ -571,7 +635,7 @@ Deno.serve(async (req: Request) => {
         });
         if (auditError) throw auditError;
         if (decision === "reject" && target.email) {
-          const mail = await sendRejectionEmail(target.email, target.full_name || "", "GRASH FX: Registration review update", "Your registration was not approved", ["Your GRASH FX account registration was reviewed and was not approved.", "Reason: " + reason]);
+          const mail = await sendGrashEmail(target.email, target.full_name || "", "GRASH FX: Registration review update", "Your registration was not approved", ["Your GRASH FX account registration was reviewed and was not approved.", "Reason: " + reason]);
           return json({ profile: { id: target.user_id, ...target }, email_sent: mail.sent, ...(mail.warning ? { email_warning: mail.warning } : {}) });
         }
         return json({ profile: { id: target.user_id, ...target } });
