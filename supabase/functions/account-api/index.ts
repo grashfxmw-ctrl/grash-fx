@@ -169,7 +169,9 @@ Deno.serve(async (req: Request) => {
         investments: (investments.data || []).map(i => ({ id: i.id, plan_code: plans[i.plan_id] || "investment",
           principal: Number(i.principal_amount), daily_rate: Number(i.daily_rate_snapshot), duration_days: i.term_days_snapshot,
           status: i.status, started_at: i.started_at, matures_at: i.matures_at, completed_at: i.matured_at,
-          last_processed_day: (ledger.data || []).filter(e => e.investment_id === i.id && e.entry_type === "profit_credit").length })),
+          last_processed_day: (ledger.data || []).filter(e => e.investment_id === i.id && e.entry_type === "profit_credit").length,
+          credited_profit: Math.round((ledger.data || []).filter(e => e.investment_id === i.id && e.entry_type === "profit_credit")
+            .reduce((sum, e) => sum + Number(e.amount || 0), 0) * 100) / 100 })),
         ledger: ledger.data || [],
       });
     }
