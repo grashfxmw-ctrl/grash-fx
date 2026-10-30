@@ -16,7 +16,7 @@ test("public homepage supports email sign-up, sign-in, and email verification", 
   assert.match(homePage, /verifyOtp\(/);
   assert.match(homePage, /homeSignup/);
   assert.match(homePage, /homeSignin/);
-  assert.match(homePage, /auth=signin/);
+  assert.match(homePage, /get\("auth"\)==="signin"/);
 });
 
 test("client dashboard requires a valid session and does not reload on SIGNED_IN", () => {
