@@ -82,7 +82,15 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
  const callApi = async (path, method="GET", body) => {
    const {data:{session}} = await client.auth.getSession();
    if(!session) throw new Error("Please sign in again.");
-   const res = await fetch(API + path, {method, headers:{Authorization:"Bearer "+session.access_token, apikey:SUPABASE_PUBLISHABLE_KEY, "Content-Type":"application/json"}, body:body?JSON.stringify(body):undefined});
+   const controller = new AbortController();
+   const timeout = setTimeout(() => controller.abort(), 15000);
+   let res;
+   try {
+     res = await fetch(API + path, {method, headers:{Authorization:"Bearer "+session.access_token, apikey:SUPABASE_PUBLISHABLE_KEY, "Content-Type":"application/json"}, body:body?JSON.stringify(body):undefined, signal:controller.signal});
+   } catch (error) {
+     if (error && error.name === "AbortError") throw new Error("The server took too long to respond. Check your connection and tap Refresh account status.");
+     throw new Error("Could not reach the account server. Check your connection and tap Refresh account status.");
+   } finally { clearTimeout(timeout); }
    const data = await res.json().catch(()=>({}));
    if(!res.ok) throw new Error(data.error || "Request failed.");
    return data;
@@ -196,26 +204,14 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
      setReferralLink(data.profile.referral_code);
      await loadReferrals();
      if(data.profile.status==="active") { $("financialActions").classList.remove("hidden"); $("investmentActions").classList.remove("hidden"); }
-     $("balance").textContent=Number(data.profile.balance).toFixed(2);
-     $("profit").textContent=Number(data.profile.profit_balance).toFixed(2);
-     say(data.profile.status==="pending"?"Profile created. Your account is awaiting admin review.":"Signed in successfully.");
-     if(data.profile.status==="active") await loadHistory();
+     $("balance").textContent=Number(data.profile.balance||0).toFixed(2);
+     $("profit").textContent=Number(data.profile.profit_balance||0).toFixed(2);
+     say(data.profile.status==="pending"?"Your account is awaiting admin review.":"Account loaded successfully.");
+     // The core account should appear immediately; optional histories load independently.
+     loadReferrals();
+     if(data.profile.status==="active") loadHistory();
     }else{
-     const {data:{user},error:userError}=await client.auth.getUser();
-     if(userError) throw userError;
-     const fullName=(user?.user_metadata?.full_name||"").trim();
-     if(fullName.length<2) throw new Error("Your profile name is missing. Please contact support.");
-     const created=await callApi("/profile","POST",{full_name:fullName});
-     $("accountSection").classList.remove("hidden");
-     $("accountStatus").textContent="Account status: "+created.profile.status;
-     $("myReferralCode").textContent=created.profile.referral_code||"Not assigned";
-     setReferralLink(created.profile.referral_code);
-     await loadReferrals();
-     $("balance").textContent=Number(created.profile.balance||0).toFixed(2);
-     $("profit").textContent=Number(created.profile.profit_balance||0).toFixed(2);
-     $("accountEmail").textContent=created.profile.email||user.email||"";
-     if(created.profile.status==="active") { $("financialActions").classList.remove("hidden"); $("investmentActions").classList.remove("hidden"); await loadHistory(); }
-     say("Profile created successfully. Account status: "+created.profile.status+".");
+     throw new Error("Your client profile is not ready yet. Please contact GRASH FX support; do not create another account.");
     }
    }catch(err){say(err.message||"Could not load account.");}
  }
