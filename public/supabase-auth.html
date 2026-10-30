@@ -30,6 +30,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <div class="field"><label for="signinPassword">Password</label><input id="signinPassword" type="password" autocomplete="current-password" required></div>
 <button class="primary full" type="submit">Sign in</button>
 <button id="resetPassword" class="full" type="button">Send password reset email</button>
+<button id="resendVerification" class="full" type="button">Resend verification email</button>
 </form>
 <div id="accountSection" class="hidden account">
 <h2>Your account</h2><div id="accountStatus" class="muted"></div><div class="tile"><span>Your referral code · $5 simulated reward after the referred user verifies email and signs in</span><strong id="myReferralCode">Loading…</strong><div class="field"><label for="referralLink">Personal referral link</label><input id="referralLink" readonly value="Loading…"></div><button id="copyReferralLink" type="button" class="full">Copy referral link</button><p class="muted">The code fills automatically when someone opens your link.</p></div><div class="tile"><span>Referral overview</span><div id="referralStats" class="muted">Loading…</div></div><div id="referralHistory" class="muted">Loading referral history…</div><button id="refreshAccount" class="full" type="button">Refresh account status</button>
@@ -193,6 +194,17 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
  }
 
  $("refreshAccount").onclick=async()=>{const button=$("refreshAccount");button.disabled=true;button.textContent="Refreshing…";try{await loadAccount();}finally{button.disabled=false;button.textContent="Refresh account status";}};
+ $("resendVerification").onclick=async()=>{
+  const email=$("signinEmail").value.trim() || $("signupEmail").value.trim();
+  if(!email){say("Enter your email address first.");return;}
+  const button=$("resendVerification");button.disabled=true;button.textContent="Sending…";
+  try{
+    const {error}=await client.auth.resend({type:"signup",email,options:{emailRedirectTo:window.location.origin+window.location.pathname}});
+    if(error)throw error;
+    say("If this account needs email verification, a new email has been requested. Check Inbox and Spam.");
+  }catch(err){say(err.message||"Could not resend verification email.");}
+  finally{button.disabled=false;button.textContent="Resend verification email";}
+ };
  $("resetPassword").onclick=async()=>{
   const email=$("signinEmail").value.trim();if(!email){say("Enter your email address first.");return;}
   try{const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:location.href});if(error)throw error;say("If the address is registered, a password reset email has been sent.");}
