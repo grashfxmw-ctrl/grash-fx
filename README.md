@@ -5,7 +5,7 @@ GRASH FX public website and Supabase-backed account platform.
 ## Current structure
 
 - Public website: `public/index.html` (browsing and plan information do not require sign-in)
-- Client registration/login: `public/supabase-auth.html` (email/password authentication)
+- Client registration/login: `public/account.html` (email/password authentication)
 - Separate administrator entry: `public/admin.html` → `public/admin-dashboard.html`
 - Supabase Edge Function: `supabase/functions/account-api/index.ts`
 - Database migrations: `supabase/migrations/`
