@@ -151,7 +151,7 @@ Deno.serve(async (req: Request) => {
         adminClient.from("investments").select("id,plan_id,principal_amount,currency,daily_rate_snapshot,term_days_snapshot,status,started_at,matures_at,matured_at,created_at")
           .eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
         adminClient.from("ledger_entries").select("id,investment_id,entry_type,amount,currency,description,created_at,metadata,idempotency_key")
-          .eq("user_id", user.id).order("created_at", { ascending: false }).limit(100),
+          .eq("user_id", user.id).order("created_at", { ascending: false }).limit(5000),
       ]);
       if (requests.error) throw requests.error;
       if (investments.error) throw investments.error;
