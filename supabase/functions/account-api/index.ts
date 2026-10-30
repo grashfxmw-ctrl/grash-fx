@@ -504,7 +504,13 @@ Deno.serve(async (req: Request) => {
         const reason = clean(body.reason || body.reference, 500);
         if (!requestId || reason.length < 3) return json({ error: "Request ID and a review reason/reference of at least 3 characters are required." }, 400);
         let action = "";
+        let rejectedRequest: { user_id: string; request_type: string; amount: number; currency: string | null } | null = null;
         if (decision === "reject") {
+          const { data: request, error } = await adminClient.from("money_requests")
+            .select("user_id,request_type,amount,currency").eq("id", requestId).maybeSingle();
+          if (error) throw error;
+          if (!request) return json({ error: "Money request not found." }, 404);
+          rejectedRequest = request;
           action = "reject";
         } else if (decision === "approve" || decision === "complete") {
           const { data: request, error } = await adminClient.from("money_requests")
@@ -529,6 +535,15 @@ Deno.serve(async (req: Request) => {
             ? clean(body.reference, 160) || null : null,
         });
         if (error) return json({ error: error.message }, 400);
+        if (decision === "reject" && rejectedRequest) {
+          const { data: recipient } = await adminClient.from("profiles").select("email,full_name").eq("user_id", rejectedRequest.user_id).maybeSingle();
+          if (recipient?.email) {
+            const label = rejectedRequest.request_type === "deposit" ? "Deposit" : "Withdrawal";
+            const mail = await sendRejectionEmail(recipient.email, recipient.full_name || "", "GRASH FX: " + label + " request update", label + " request not approved", ["Amount: " + Number(rejectedRequest.amount).toFixed(2) + " " + (rejectedRequest.currency || "USD"), "Reason: " + reason]);
+            return json({ request_id: data, status: "reviewed", email_sent: mail.sent, ...(mail.warning ? { email_warning: mail.warning } : {}) });
+          }
+          return json({ request_id: data, status: "reviewed", email_sent: false, email_warning: "Decision saved, but client email was not found." });
+        }
         return json({ request_id: data, status: "reviewed" });
       }
 
@@ -555,6 +570,10 @@ Deno.serve(async (req: Request) => {
           details: { decision, status: nextStatus, source: "account-api" }
         });
         if (auditError) throw auditError;
+        if (decision === "reject" && target.email) {
+          const mail = await sendRejectionEmail(target.email, target.full_name || "", "GRASH FX: Registration review update", "Your registration was not approved", ["Your GRASH FX account registration was reviewed and was not approved.", "Reason: " + reason]);
+          return json({ profile: { id: target.user_id, ...target }, email_sent: mail.sent, ...(mail.warning ? { email_warning: mail.warning } : {}) });
+        }
         return json({ profile: { id: target.user_id, ...target } });
       }
     }
