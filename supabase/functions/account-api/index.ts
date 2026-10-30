@@ -10,6 +10,17 @@ const json = (data: unknown, status = 200) => new Response(JSON.stringify(data),
 const clean = (v: unknown, max = 250) => typeof v === "string" ? v.trim().slice(0, max) : "";
 const money = (v: unknown) => typeof v === "number" && Number.isFinite(v) && v > 0 && v <= 10000000 ? Math.round(v * 100) / 100 : null;
 const keyOf = (req: Request, body: Record<string, unknown>) => clean(req.headers.get("x-idempotency-key") || body.idempotency_key, 128);
+const sendRejectionEmail = async (to: string, name: string, subject: string, heading: string, details: string[]) => {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) return { sent: false, warning: "Decision saved; RESEND_API_KEY is not configured." };
+  const esc = (v: unknown) => String(v ?? "").replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;" }[c] || c));
+  const html = "<div style=\"font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:24px\"><h2>GRASH FX</h2><h3>" + esc(heading) + "</h3><p>Hello " + esc(name || "Client") + ",</p>" + details.map(x => "<p>" + esc(x) + "</p>").join("") + "<p>For help, reply to this email or contact grashfxmw@gmail.com.</p></div>";
+  try {
+    const response = await fetch("https://api.resend.com/emails", { method: "POST", headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" }, body: JSON.stringify({ from: "GRASH FX <notifications@grashfx.aclclouds.online>", to: [to], reply_to: "grashfxmw@gmail.com", subject, html }), signal: AbortSignal.timeout(8000) });
+    if (!response.ok) { console.error("Resend email failed", response.status, (await response.text()).slice(0, 300)); return { sent: false, warning: "Decision saved, but rejection email could not be sent. Check Resend configuration." }; }
+    return { sent: true, warning: null };
+  } catch (error) { console.error("Resend email request failed", error); return { sent: false, warning: "Decision saved, but rejection email could not be sent. Check Resend configuration." }; }
+};
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
