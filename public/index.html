@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#07111e">
-<meta name="description" content="GRASH FX — review investment plan information and access your client account.">
+<meta name="theme-color" content="#0d2036">
+<meta name="description" content="Explore GRASH FX services, review plan information and access your client account.">
 <title>GRASH FX — Invest With Purpose</title>
 <style>
 :root{color-scheme:dark;--bg:#07111e;--panel:#101f30;--line:#2b4056;--text:#f7f9fc;--muted:#bdcad8;--gold:#f0b94f;--blue:#132b43}
@@ -78,6 +78,46 @@ footer{padding:32px 0}
  .links a:last-child{border-bottom:0}
 }
 @media(max-width:520px){.contact-options{grid-template-columns:1fr}.contact-option{padding:16px}}
+/* Professional fintech refresh */
+:root{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--line:#dce4ee;--text:#14243a;--muted:#63748a;--gold:#c6a15b;--blue:#0d2036}
+body{background:#f4f7fb;color:#14243a}
+.topbar{background:rgba(8,24,43,.97);border-bottom:1px solid #243b55}
+.brand{color:#d6b875}.brand small{color:#c5d1df}.cat{border-color:#d6b875}
+.links{color:#e2eaf3}.links a:hover{color:#d6b875}
+.btn{border-color:#b7c4d3;color:#18304b;background:#fff;transition:transform .18s,border-color .18s}
+.btn:hover{transform:translateY(-1px);border-color:#c6a15b}
+.primary,.btn.primary{background:#c6a15b;border-color:#c6a15b;color:#102238}
+.hero{background:radial-gradient(ellipse at 78% 18%,#1b4562 0,#102b46 42%,#081a2d 78%);border:0}
+.hero-grid{padding-top:86px;padding-bottom:82px}.hero h1{color:#fff}.hero p{color:#d0dbe7}
+.eyebrow{color:#c6a15b}.chart{background:linear-gradient(145deg,#173a56,#0b1c30);border-color:#36516b;box-shadow:0 24px 65px #020b1833}
+.trust{background:#fff;max-width:none;padding-left:max(24px,calc((100% - 1180px)/2));padding-right:max(24px,calc((100% - 1180px)/2));border-bottom:1px solid #e2e8f0}
+.trust article{border-color:#e3e9f0}.trust strong{color:#14243a}.trust span{color:#65758a}
+.section{background:#fff}.light{background:#f3f6fa;color:#14243a;border-color:#e1e8f0}
+.light .section-head p,.section-head p{color:#65758a}.section h2{letter-spacing:-.025em}
+.plans{gap:18px}.plan{background:#fff;color:#14243a;border:1px solid #dce4ee;box-shadow:0 10px 28px #122b460d;border-radius:16px}
+.plan h3{color:#14243a}.rate{color:#087f83}.term{color:#65758a;border-color:#e6ebf1}
+.plan .btn{background:#102b46;color:#fff;border-color:#102b46}.plan .btn:hover{background:#174365}
+.notice{color:#68798d}.about-grid p{color:#63748a}.points span:before{color:#07878a}
+#how-it-works,#faq{background:#f3f6fa}
+.step{background:#fff;border-color:#dce4ee;box-shadow:0 8px 24px #122b4608}.step strong{color:#087f83}
+.auth-muted{color:#65758a}#investor-services{background:#fff!important}
+.info-card{background:#f8fafc;border-color:#dce4ee;box-shadow:0 8px 24px #122b4608}
+.info-card h3{color:#087f83}.info-card p,.info-card li{color:#596c82}.info-card a{color:#087f83!important}
+.faq-list details{border-color:#dce4ee}.faq-list summary{color:#172b43}.faq-list p{color:#63748a}
+.contact{background:#0d2036;border-color:#243b55}.contact h2{color:#fff}.contact p{color:#c4d1df}
+.contact-option{background:#142d48;border-color:#36516b}.contact-option:hover{border-color:#d6b875}
+.contact-icon{background:#0b1d31;color:#d6b875}.contact-arrow{color:#d6b875}
+.risk-panel{background:#fffaf0;border-color:#e7d6ad}.risk-panel h3{color:#8b6725}.risk-panel p,.risk-panel li{color:#685a40}
+.legal-links a{border-color:#d7c59e;color:#6c562c}
+footer{background:#081a2d;border-color:#243b55;color:#bdc9d7}.foot-links a:hover{color:#d6b875}
+.auth-layer{background:#061321e8}.auth-box{background:#fff;color:#14243a;border-color:#dce4ee;box-shadow:0 24px 80px #020b1840}
+.auth-box .auth-muted{color:#65758a}.auth-field label{color:#43566d}
+.auth-field input{background:#f8fafc;color:#14243a;border-color:#cbd6e2}
+.auth-message{background:#f1f5f9;color:#34475e;border-color:#dce4ee}.auth-close{border-color:#cbd6e2;color:#34475e}
+.auth-submit{background:#c6a15b;color:#102238}
+@media(max-width:850px){.links{background:#0d2036;border-color:#29425d}.links a{border-color:#29425d}}
+@media(max-width:520px){.trust{padding-left:18px;padding-right:18px}.hero-grid{padding-top:52px;padding-bottom:52px}}
+
 </style>
 </head>
 <body>
@@ -88,11 +128,11 @@ footer{padding:32px 0}
 </nav></header>
 <main id="home">
 <section class="hero"><div class="wrap hero-grid">
-<div><div class="eyebrow">Your financial journey starts here</div><h1>Build your future with <span class="gold">GRASH FX</span></h1><p>View plan information, access your account and submit requests.</p><div class="hero-buttons"><button class="btn primary" type="button" data-auth="signup">Create your account →</button><a class="btn" href="#plans">Explore plans</a></div></div>
-<div class="chart investor-overview" aria-label="GRASH FX investor account overview"><div style="position:relative;width:100%"><div class="eyebrow">Investor account overview</div><h2 style="font-size:27px;margin:12px 0;color:#fff">Your investment information, in one place.</h2><p style="color:#c5d0dd;line-height:1.8">Review plan terms and access your account when ready.</p><div style="display:grid;gap:12px;margin-top:22px"><div style="border:1px solid #38516a;background:#0b1b2b;border-radius:10px;padding:13px"><strong style="color:#f0b94f">01</strong> <span style="color:#e4edf7">Review investment plan information</span></div><div style="border:1px solid #38516a;background:#0b1b2b;border-radius:10px;padding:13px"><strong style="color:#f0b94f">02</strong> <span style="color:#e4edf7">Understand the terms and risks</span></div><div style="border:1px solid #38516a;background:#0b1b2b;border-radius:10px;padding:13px"><strong style="color:#f0b94f">03</strong> <span style="color:#e4edf7">Manage your account securely</span></div></div></div></div>
+<div><div class="eyebrow">A clearer way to access your account services</div><h1>Clarity for your next step with <span class="gold">GRASH FX</span></h1><p>Explore our services, review plan information and understand the process before deciding whether to proceed. Existing clients can securely access their account at any time.</p><div class="hero-buttons"><button class="btn primary" type="button" data-auth="signup">Create your account →</button><a class="btn" href="#plans">Explore plans</a></div></div>
+<div class="chart investor-overview" aria-label="GRASH FX investor account overview"><div style="position:relative;width:100%"><div class="eyebrow">The GRASH FX experience</div><h2 style="font-size:27px;margin:12px 0;color:#fff">Information first. Clear decisions.</h2><p style="color:#d0dbe7;line-height:1.8">Find the information you need, understand the terms and manage your account through one central place.</p><div style="display:grid;gap:12px;margin-top:22px"><div style="border:1px solid #38516a;background:#0b1b2b;border-radius:10px;padding:13px"><strong style="color:#f0b94f">01</strong> <span style="color:#e4edf7">Review investment plan information</span></div><div style="border:1px solid #38516a;background:#0b1b2b;border-radius:10px;padding:13px"><strong style="color:#f0b94f">02</strong> <span style="color:#e4edf7">Understand the terms and risks</span></div><div style="border:1px solid #38516a;background:#0b1b2b;border-radius:10px;padding:13px"><strong style="color:#f0b94f">03</strong> <span style="color:#e4edf7">Manage your account securely</span></div></div></div></div>
 </div></section>
 <section class="wrap trust" aria-label="Platform information"><article><strong>Clear plan information</strong><span>Review terms before investing.</span></article><article><strong>Account activity</strong><span>View account activity after signing in.</span></article><article><strong>Requests reviewed</strong><span>Requests are reviewed before processing.</span></article></section>
-<section class="section light" id="plans"><div class="wrap"><div class="section-head"><div class="eyebrow">Investment plans</div><h2>Review the available plan options</h2><p>Review each plan's terms before continuing.</p></div>
+<section class="section light" id="plans"><div class="wrap"><div class="section-head"><div class="eyebrow">Investment plans</div><h2>Explore the available plans</h2><p>Compare the displayed minimums and terms. Read the full agreement and risk information before making a decision.</p></div>
 <div class="plans">
 <article class="plan"><h3>Starter Plan</h3><div class="rate">10% daily*</div><div class="term">7-day term · Minimum $50</div><button class="btn primary" type="button" data-auth="signup" data-plan="starter">Continue</button></article>
 <article class="plan"><h3>Basic Plan</h3><div class="rate">20% daily*</div><div class="term">7-day term · Minimum $500</div><button class="btn primary" type="button" data-auth="signup" data-plan="basic">Continue</button></article>
@@ -100,10 +140,10 @@ footer{padding:32px 0}
 <article class="plan"><h3>VIP Plan</h3><div class="rate">40% daily*</div><div class="term">7-day term · Minimum $5,000</div><button class="btn primary" type="button" data-auth="signup" data-plan="vip">Continue</button></article>
 </div><p class="notice">*Rates displayed here must be confirmed against the active backend plan configuration and are not a promise or guarantee of returns. Investment activity involves risk. This website records account activity; it does not itself confirm external payments. Do not send funds until the business, terms, regulatory status, and payment instructions have been independently verified.</p>
 </div></section>
-<section class="section" id="about"><div class="wrap about-grid"><div><div class="eyebrow">About GRASH FX</div><h2>A clear place to manage your account</h2><p>GRASH FX provides public plan information, client accounts and a protected administrator area.</p><div class="points"><span>Client account portal</span><span>Investment history</span><span>Transaction requests</span><span>Administrator review</span></div></div><div><div class="eyebrow">Secure account access</div><h2>Already registered?</h2><p>Sign in with your verified email. Available actions depend on your account status. Submitted requests still require review.</p><button class="btn primary" type="button" data-auth="signin">Open client dashboard →</button></div></div></section>
+<section class="section" id="about"><div class="wrap about-grid"><div><div class="eyebrow">About GRASH FX</div><h2>About our platform</h2><p>GRASH FX brings service information, client account access and request management together in one place. Review the information available here and contact the team if you need clarification.</p><div class="points"><span>Client account portal</span><span>Investment history</span><span>Transaction requests</span><span>Administrator review</span></div></div><div><div class="eyebrow">Secure account access</div><h2>Already registered?</h2><p>Sign in with your verified email. Available actions depend on your account status. Submitted requests still require review.</p><button class="btn primary" type="button" data-auth="signin">Open client dashboard →</button></div></div></section>
 
 <section class="section" id="how-it-works"><div class="wrap">
-<div class="section-head"><div class="eyebrow">Your investment journey</div><h2>How investing with GRASH FX works</h2><p>The account process in three steps.</p></div>
+<div class="section-head"><div class="eyebrow">Your investment journey</div><h2>Getting started</h2><p>Understand the process before opening or using an account.</p></div>
 <div class="steps">
 <div class="step"><strong>01 · Create an account</strong><span class="auth-muted">Create an account and verify your email.</span></div>
 <div class="step"><strong>02 · Review your options</strong><span class="auth-muted">Review plan terms, minimums and risks.</span></div>
@@ -111,7 +151,7 @@ footer{padding:32px 0}
 </div>
 </div></section>
 <section class="section" style="background:#0b1828" id="investor-services"><div class="wrap">
-<div class="section-head"><div class="eyebrow">Investor services</div><h2>Information and account services</h2><p>Key account and payment information.</p></div>
+<div class="section-head"><div class="eyebrow">Investor services</div><h2>Services and account information</h2><p>Explore the main services and the information clients should understand before proceeding.</p></div>
 <div class="info-grid">
 <article class="info-card"><h3>Deposits and withdrawals</h3><ul><li>Minimum deposit: $20</li><li>Minimum investment: $50</li><li>Minimum withdrawal request: $50</li><li>No platform deposit or withdrawal fees are currently stated.</li></ul><p>Payment methods, processing times, verification requirements and any third-party charges must be checked before a transaction.</p></article>
 <article class="info-card"><h3>Referral programme</h3><p>Eligible referrals can earn a $5 referral reward, subject to programme conditions.</p><p>Referral gains are held separately from the main account. Once the available referral balance reaches $60, the client can request a transfer to the main account through the client dashboard.</p></article>
@@ -122,7 +162,7 @@ footer{padding:32px 0}
 </div>
 </div></section>
 <section class="section" id="faq"><div class="wrap">
-<div class="section-head"><div class="eyebrow">Investor support</div><h2>Frequently asked questions</h2><p>Common questions about your account.</p></div>
+<div class="section-head"><div class="eyebrow">Investor support</div><h2>Questions, answered</h2><p>Find answers about account access, payment requests and important conditions.</p></div>
 <div class="faq-list">
 <details><summary>What is the minimum amount to deposit?</summary><p>The stated minimum deposit is $20. The minimum amount to participate in an investment plan is $50. Individual plan minimums may be higher.</p></details>
 <details><summary>What is the minimum withdrawal amount?</summary><p>The stated minimum withdrawal request is $50. Requests remain subject to account verification, available balance, review and the applicable payment conditions.</p></details>
@@ -133,7 +173,7 @@ footer{padding:32px 0}
 </div>
 </div></section>
 <section class="contact" id="contact"><div class="wrap">
-<div class="section-head"><div class="eyebrow">We're here to help</div><h2>Contact GRASH FX</h2><p>Choose the channel that works best for you. For account-specific matters, use the email address linked to your account.</p></div>
+<div class="section-head"><div class="eyebrow">We're here to help</div><h2>Speak with GRASH FX</h2><p>Choose the channel that works best for you. For account-specific matters, use the email address linked to your account.</p></div>
 <div class="contact-options">
 <a class="contact-option" href="https://wa.me/27721526863" target="_blank" rel="noopener noreferrer"><span class="contact-icon">☏</span><span><strong>WhatsApp</strong><small>+27 72 152 6863 · Chat with us</small></span><span class="contact-arrow">↗</span></a>
 <a class="contact-option" href="mailto:grashfxmw@gmail.com"><span class="contact-icon">✉</span><span><strong>Email</strong><small>grashfxmw@gmail.com · Send an email</small></span><span class="contact-arrow">↗</span></a>
