@@ -64,6 +64,18 @@ test("account API validates bearer tokens and gates administrative actions", () 
   assert.match(apiSource, /minimum withdrawal is \$50\.00/);
 });
 
+test("private client/admin messaging routes use the existing support_messages table", () => {
+  assert.match(apiSource, /path\.endsWith\("\/messages"\)/);
+  assert.match(apiSource, /path\.endsWith\("\/admin\/messages"\)/);
+  assert.match(apiSource, /path\.endsWith\("\/admin\/messages\/send"\)/);
+  assert.match(apiSource, /from\("support_messages"\)/);
+  assert.match(apiSource, /sender_role: "client"/);
+  assert.match(apiSource, /sender_role: "admin"/);
+  assert.match(apiSource, /if \(!\(await isAdmin\(\)\)\) return json\(\{ error: "Admin access required\." \}, 403\)/);
+  assert.match(clientPage, /api\("\/messages","POST"/);
+  assert.match(adminPage, /api\("\/admin\/messages\/send","POST"/);
+});
+
 test("active website and backend contain no Firebase implementation", () => {
   assert.doesNotMatch(homePage, /firebase|functions\.httpsCallable/i);
   assert.doesNotMatch(clientPage, /firebase|functions\.httpsCallable/i);
