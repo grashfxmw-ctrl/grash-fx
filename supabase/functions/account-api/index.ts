@@ -89,7 +89,7 @@ Deno.serve(async (req: Request) => {
       };
     };
 
-    if (req.method === "GET" && path.endsWith("/messages")) {
+    if (req.method === "GET" && path.endsWith("/messages") && !path.endsWith("/admin/messages")) {
       if (!profile) return json({ error: "Complete account registration first." }, 403);
       const { error: readError } = await adminClient.from("support_messages")
         .update({ read_at: new Date().toISOString() })
