@@ -39,6 +39,15 @@ test("administrator entry always opens the sign-in screen", () => {
   assert.doesNotMatch(adminPage, /sb\.auth\.getSession\(\)\.then\(async function\(r\).*await enter/);
 });
 
+test("administrator login rejects invalid credentials immediately and keeps the dashboard hidden", () => {
+  assert.match(adminPage, /Checking email and password/);
+  assert.match(adminPage, /Invalid email or password\. Please try again\./);
+  assert.match(adminPage, /if\(result\.error\)\{var authMessage=/);
+  assert.match(adminPage, /!result\.data\.user\|\|!result\.data\.session/);
+  assert.match(adminPage, /\$\("app"\)\.classList\.add\("hidden"\)/);
+  assert.match(adminPage, /This signed-in account does not have an active administrator role\./);
+});
+
 test("administrator dashboard stays hidden until the server authorizes the signed-in user", () => {
   assert.match(adminPage, /id="loginPanel"/);
   assert.match(adminPage, /id="app" class="hidden(?:\s|")/);
