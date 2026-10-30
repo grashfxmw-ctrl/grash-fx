@@ -21,7 +21,7 @@ test("public homepage supports email sign-up, sign-in, and email verification", 
 
 test("client dashboard requires a valid session and does not reload on SIGNED_IN", () => {
   assert.match(clientPage, /sb\.auth\.getUser\(\)/);
-  assert.match(clientPage, /location\.replace\("\.\/?auth=signin"\)/);
+  assert.match(clientPage, /location\.replace\("\.\/\?auth=signin"\)/);
   assert.doesNotMatch(clientPage, /event==="SIGNED_IN"[^;]*location\.reload/);
   assert.match(clientPage, /controller\.abort\(\),15000/);
   assert.match(clientPage, /\/functions\/v1\/account-api/);
@@ -45,7 +45,7 @@ test("administrator dashboard stays hidden until the server authorizes the signe
   assert.match(adminPage, /api\("\/admin\/queue"\)/);
   assert.match(adminPage, /var authorized=await loadQueue\(\);if\(!authorized\)/);
   assert.match(adminPage, /Admin access required/);
-  assert.match(adminPage, /controller\.abort\(\),15000/);
+  assert.match(adminPage, /setTimeout\(function\(\)\{controller\.abort\(\);\},15000\)/);
 });
 
 test("registration shortcut opens the homepage sign-up form", () => {
