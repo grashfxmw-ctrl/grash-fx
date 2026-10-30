@@ -3,7 +3,7 @@ name: Supabase client regression tests
 on:
   pull_request:
     paths:
-      - "public/supabase-auth.html"
+      - "public/account.html"
       - "public/admin-dashboard.html"
       - "public/admin.html"
       - "supabase/functions/**"
@@ -14,7 +14,7 @@ on:
     branches:
       - production-backend-integration
     paths:
-      - "public/supabase-auth.html"
+      - "public/account.html"
       - "public/admin-dashboard.html"
       - "public/admin.html"
       - "supabase/functions/**"
@@ -39,7 +39,7 @@ jobs:
         run: node --test tests/secure-client.test.mjs
       - name: Verify required Supabase files exist
         run: |
-          test -s public/supabase-auth.html
+          test -s public/account.html
           test -s public/admin-dashboard.html
           test -s supabase/functions/account-api/index.ts
           test -s supabase/migrations/20261029093429_enforce_financial_request_minimums.sql
