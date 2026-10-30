@@ -89,6 +89,68 @@ Deno.serve(async (req: Request) => {
       };
     };
 
+    if (req.method === "GET" && path.endsWith("/messages")) {
+      if (!profile) return json({ error: "Complete account registration first." }, 403);
+      const { error: readError } = await adminClient.from("support_messages")
+        .update({ read_at: new Date().toISOString() })
+        .eq("user_id", user.id).eq("sender_role", "admin").is("read_at", null);
+      if (readError) throw readError;
+      const { data, error } = await adminClient.from("support_messages")
+        .select("id,user_id,sender_user_id,sender_role,body,created_at,read_at")
+        .eq("user_id", user.id).order("created_at", { ascending: true }).limit(500);
+      if (error) throw error;
+      return json({ messages: data || [] });
+    }
+
+    if (req.method === "GET" && path.endsWith("/admin/messages")) {
+      if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
+      const targetUserId = clean(new URL(req.url).searchParams.get("user_id"), 64);
+      if (targetUserId) {
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetUserId)) {
+          return json({ error: "A valid client account is required." }, 400);
+        }
+        const { data: target, error: targetError } = await adminClient.from("profiles")
+          .select("user_id").eq("user_id", targetUserId).maybeSingle();
+        if (targetError) throw targetError;
+        if (!target) return json({ error: "Client account not found." }, 404);
+        const { error: readError } = await adminClient.from("support_messages").update({ read_at: new Date().toISOString() })
+          .eq("user_id", targetUserId).eq("sender_role", "client").is("read_at", null);
+        if (readError) throw readError;
+        const { data, error } = await adminClient.from("support_messages")
+          .select("id,user_id,sender_user_id,sender_role,body,created_at,read_at")
+          .eq("user_id", targetUserId).order("created_at", { ascending: true }).limit(500);
+        if (error) throw error;
+        return json({ messages: data || [] });
+      }
+
+      const { data: rows, error } = await adminClient.from("support_messages")
+        .select("id,user_id,sender_user_id,sender_role,body,created_at,read_at")
+        .order("created_at", { ascending: false }).limit(2000);
+      if (error) throw error;
+      const all = rows || [];
+      const ids = [...new Set(all.map(m => m.user_id))];
+      let profiles: Array<{user_id:string;full_name:string|null;email:string|null}> = [];
+      if (ids.length) {
+        const { data, error: profileListError } = await adminClient.from("profiles")
+          .select("user_id,full_name,email").in("user_id", ids);
+        if (profileListError) throw profileListError;
+        profiles = data || [];
+      }
+      const profileById = new Map(profiles.map(p => [p.user_id, p]));
+      const conversations = [...new Set(ids)].map(id => {
+        const thread = all.filter(m => m.user_id === id);
+        const last = thread[0];
+        const p = profileById.get(id);
+        return {
+          user_id: id, full_name: p?.full_name || "Client", email: p?.email || "",
+          unread_count: thread.filter(m => m.sender_role === "client" && !m.read_at).length,
+          last_message: last ? { body: last.body, sender_role: last.sender_role } : null,
+          last_at: last?.created_at || null
+        };
+      }).sort((a,b) => String(b.last_at || "").localeCompare(String(a.last_at || "")));
+      return json({ conversations });
+    }
+
     if (req.method === "GET" && path.endsWith("/plans")) {
       const { data, error } = await adminClient.from("investment_plans")
         .select("id,plan_code,display_name,daily_rate,minimum_amount,currency,term_days")
@@ -325,6 +387,34 @@ Deno.serve(async (req: Request) => {
       let body: Record<string, unknown>;
       try { body = await req.json(); } catch { return json({ error: "Invalid JSON body." }, 400); }
       if (!profile) return json({ error: "Your profile is not ready yet. Sign in again shortly." }, 403);
+
+      if (path.endsWith("/messages")) {
+        const message = clean(body.message, 4000);
+        if (!message) return json({ error: "Write a message before sending." }, 400);
+        const { data, error } = await adminClient.from("support_messages").insert({
+          user_id: user.id, sender_user_id: user.id, sender_role: "client", body: message
+        }).select("id,user_id,sender_user_id,sender_role,body,created_at,read_at").single();
+        if (error) throw error;
+        return json({ message: data }, 201);
+      }
+
+      if (path.endsWith("/admin/messages/send")) {
+        if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
+        const targetUserId = clean(body.user_id, 64);
+        const message = clean(body.message, 4000);
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetUserId) || !message) {
+          return json({ error: "Select a client and write a message before sending." }, 400);
+        }
+        const { data: target, error: targetError } = await adminClient.from("profiles")
+          .select("user_id").eq("user_id", targetUserId).maybeSingle();
+        if (targetError) throw targetError;
+        if (!target) return json({ error: "Client account not found." }, 404);
+        const { data, error } = await adminClient.from("support_messages").insert({
+          user_id: targetUserId, sender_user_id: user.id, sender_role: "admin", body: message
+        }).select("id,user_id,sender_user_id,sender_role,body,created_at,read_at").single();
+        if (error) throw error;
+        return json({ message: data }, 201);
+      }
 
       if (path.endsWith("/referrals/transfer")) {
         const idempotencyKey = keyOf(req, body);
