@@ -120,7 +120,8 @@ const refs=await api("/referrals"),s=refs.stats||{};$("refStats").textContent=(s
 $("refHistory").innerHTML=(refs.referrals||[]).map(r=>'<div class="rounded-lg bg-slate-50 p-3 text-xs"><b>'+esc(r.referred_name||"Referred client")+'</b><span class="float-right">'+esc(r.status)+'</span></div>').join("")||"<p class='text-xs text-slate-500'>No referrals yet.</p>";
 if(profile.status!=="active"){$("notice").classList.remove("hidden");$("notice").textContent="Your account status is "+profile.status+". Some account actions remain unavailable until your account is active.";}
 else $("notice").classList.add("hidden");
-await loadClientMessages();\nmessage("Account information loaded.");
+await loadClientMessages();
+message("Account information loaded.");
 }catch(e){message(e.message||"Unable to load your dashboard.");}}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 $("profileForm").onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{await api("/profile-update","POST",{full_name:$("fullName").value.trim(),phone:$("phone").value.trim()});const {error}=await sb.auth.updateUser({data:{full_name:$("fullName").value.trim()}});if(error)throw error;message("Profile updated successfully.");await load();}catch(err){message(err.message);}finally{b.disabled=false;}};
