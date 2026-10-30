@@ -112,7 +112,6 @@ $function$;
 revoke all on function public.handle_referral_email_verification()
   from public, anon, authenticated;
 
-drop trigger if exists on_auth_user_email_verified_referral_reward on auth.users;
 create trigger on_auth_user_email_verified_referral_reward
 after update of email_confirmed_at on auth.users
 for each row
