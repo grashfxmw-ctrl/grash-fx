@@ -41,7 +41,7 @@ test("administrator entry always opens the sign-in screen", () => {
 
 test("administrator dashboard stays hidden until the server authorizes the signed-in user", () => {
   assert.match(adminPage, /id="loginPanel"/);
-  assert.match(adminPage, /id="app" class="hidden(?:\\s|")/);
+  assert.match(adminPage, /id="app" class="hidden(?:\s|")/);
   assert.match(adminPage, /api\("\/admin\/queue"\)/);
   assert.match(adminPage, /var authorized=await loadQueue\(\);if\(!authorized\)/);
   assert.match(adminPage, /Admin access required/);
