@@ -57,13 +57,34 @@ footer{padding:32px 0}
  .risk-panel{padding:18px}
  .contact{padding:32px 0}
 }
+
+/* Homepage navigation and grouped contact panel */
+.nav-toggle{display:none;background:transparent;color:var(--text);border-color:#53657a;font-size:17px;min-width:42px}
+.contact{background:#0c1b2b;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.contact .section-head p{color:var(--muted)}
+.contact-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:900px;margin:0 auto}
+.contact-option{display:flex;align-items:center;gap:14px;min-width:0;padding:19px;background:#132b43;border:1px solid #38516a;border-radius:13px;transition:border-color .18s,transform .18s}
+.contact-option:hover{border-color:var(--gold);transform:translateY(-2px)}
+.contact-option>span:nth-child(2){display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+.contact-option strong{font-size:15px;color:#fff}
+.contact-option small{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.contact-icon{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;border-radius:11px;background:#0a1a2a;color:var(--gold);font-size:20px}
+.contact-arrow{color:var(--gold);font-size:18px}
+@media(max-width:850px){
+ .nav-toggle{display:inline-flex}
+ .links{display:none;position:absolute;top:100%;left:0;right:0;padding:14px 22px 18px;background:#07111e;border-bottom:1px solid var(--line);flex-direction:column;gap:0}
+ .links.open{display:flex}
+ .links a{padding:12px 4px;border-bottom:1px solid #21364b}
+ .links a:last-child{border-bottom:0}
+}
+@media(max-width:520px){.contact-options{grid-template-columns:1fr}.contact-option{padding:16px}}
 </style>
 </head>
 <body>
 <header class="topbar"><nav class="wrap">
 <a class="brand" href="#home"><span class="cat" aria-hidden="true">🐈‍⬛</span><span><strong>GRASH FX</strong><small>INVEST WITH PURPOSE</small></span></a>
-<div class="links"><a href="#home">Home</a><a href="#plans">Investment plans</a><a href="#how-it-works">How it works</a><a href="#faq">FAQ</a><a href="#contact">Contact</a></div>
-<div class="actions"><button class="btn" type="button" data-auth="signin">Sign in</button></div>
+<div class="links" id="primaryNav"><a href="#home">Home</a><a href="#plans">Plans</a><a href="#about">About</a><a href="#how-it-works">How it works</a><a href="#investor-services">Services</a><a href="#faq">FAQ</a><a href="#contact">Contact</a></div>
+<div class="actions"><button class="btn nav-toggle" type="button" id="navToggle" aria-expanded="false" aria-controls="primaryNav" aria-label="Open navigation">☰</button><button class="btn" type="button" data-auth="signin">Sign in</button></div>
 </nav></header>
 <main id="home">
 <section class="hero"><div class="wrap hero-grid">
@@ -96,7 +117,7 @@ footer{padding:32px 0}
 <article class="info-card"><h3>Referral programme</h3><p>Eligible referrals can earn a $5 referral reward, subject to programme conditions.</p><p>Referral gains are held separately from the main account. Once the available referral balance reaches $60, the client can request a transfer to the main account through the client dashboard.</p></article>
 <article class="info-card"><h3>Account monitoring</h3><p>Clients can sign in to review available account information, investment activity, referral gains and submitted financial requests.</p><p>Submitting a request does not mean it has been approved or completed. Status updates are shown through the account process.</p></article>
 <article class="info-card"><h3>Investor education</h3><p>Review information about investment periods, plan conditions, deposits, withdrawals and the risks involved. Make sure you understand the terms before committing funds.</p></article>
-<article class="info-card"><h3>Investor support</h3><p>For account or payment support, contact us below.</p><p>Email: <a href="mailto:grashfxmw@gmail.com">grashfxmw@gmail.com</a></p></article>
+<article class="info-card"><h3>Investor support</h3><p>Need help with your account or a payment? Open the Contact section to choose your preferred support channel.</p><p><a href="#contact" style="color:var(--gold);font-weight:750">View contact options →</a></p></article>
 <article class="info-card"><h3>Before you invest</h3><p>Only proceed after independently reviewing the business, applicable legal requirements, plan documentation, payment instructions and the risks. Never invest money you cannot afford to lose.</p></article>
 </div>
 </div></section>
@@ -111,21 +132,33 @@ footer{padding:32px 0}
 <details><summary>Are investment returns guaranteed?</summary><p>No. Investment returns are not guaranteed. You may lose some or all of the money you invest. Read all plan terms and risk disclosures before participating.</p></details>
 </div>
 </div></section>
-<section class="contact" id="contact"><div class="wrap contact-inner"><div><h2>Need help?</h2><p>Contact GRASH FX using the support email below.</p></div><a class="btn primary" href="mailto:grashfxmw@gmail.com">grashfxmw@gmail.com</a></div></section>
+<section class="contact" id="contact"><div class="wrap">
+<div class="section-head"><div class="eyebrow">We're here to help</div><h2>Contact GRASH FX</h2><p>Choose the channel that works best for you. For account-specific matters, use the email address linked to your account.</p></div>
+<div class="contact-options">
+<a class="contact-option" href="https://wa.me/27721526863" target="_blank" rel="noopener noreferrer"><span class="contact-icon">☏</span><span><strong>WhatsApp</strong><small>+27 72 152 6863 · Chat with us</small></span><span class="contact-arrow">↗</span></a>
+<a class="contact-option" href="mailto:grashfxmw@gmail.com"><span class="contact-icon">✉</span><span><strong>Email</strong><small>grashfxmw@gmail.com · Send an email</small></span><span class="contact-arrow">↗</span></a>
+<a class="contact-option" href="https://t.me/grashfxmw" target="_blank" rel="noopener noreferrer"><span class="contact-icon">➤</span><span><strong>Telegram</strong><small>@grashfxmw · Message us</small></span><span class="contact-arrow">↗</span></a>
+<a class="contact-option" href="tel:+27721526863"><span class="contact-icon">☎</span><span><strong>Call</strong><small>+27 72 152 6863 · Phone support</small></span><span class="contact-arrow">↗</span></a>
+</div></div></section>
 <section class="section" id="risk-disclosure" style="padding-top:10px"><div class="wrap">
 <div class="risk-panel"><h3>Important investment risk warning</h3><p>Investing involves risk, including the possible loss of some or all of your invested capital. Any rates or potential returns displayed in a plan are not a guarantee of future results. Past performance, projections or illustrative figures are not reliable indicators of future performance. Consider your financial circumstances, objectives and ability to bear losses, and seek independent professional advice where appropriate. Do not deposit funds until you have reviewed the full investment agreement, verified the operator and confirmed the applicable legal and regulatory position.</p>
 <p>Services may not be available in every jurisdiction. GRASH FX does not intend to offer its services to residents of the European Economic Area (EEA), the United States, Israel, the United Kingdom, the Philippines, Japan or Brazil, subject to applicable law and final legal review. Visitors should confirm eligibility before registering or attempting to fund an account.</p>
 <div class="legal-links" aria-label="Legal and policy information"><a href="#risk-disclosure">Risk Disclosure</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20Terms%20and%20Conditions">Terms and Conditions</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20AML%20and%20KYC%20Policy">AML and KYC Policy</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20Privacy%20Policy">Privacy Policy</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20Payment%20Policy">Payment Policy</a></div>
 <p>Full policy documents should be published and reviewed before accepting investor registrations or funds. The jurisdiction restrictions and all marketing claims require appropriate legal and regulatory confirmation.</p></div>
 </div></section>
-<section class="contact" id="contact"><div class="wrap contact-inner"><div><h2>Need help?</h2><p>Contact GRASH FX using the support email below.</p></div><a class="btn primary" href="mailto:grashfxmw@gmail.com">grashfxmw@gmail.com</a></div></section>
+
 </main>
 <div id="authLayer" class="auth-layer" role="dialog" aria-modal="true" aria-labelledby="authTitle"><section class="auth-box"><button type="button" id="authClose" class="auth-close">✕</button><div class="eyebrow">GRASH FX secure access</div><h2 id="authTitle">Welcome</h2><p class="auth-muted">Sign in to your account or sign up with your name, email and password.</p><div class="auth-tabs"><button type="button" id="authSignupTab" class="btn primary">Create account</button><button type="button" id="authSigninTab" class="btn">Sign in</button></div>
 <form id="homeSignup"><div class="auth-field"><label for="homeFullName">Full name</label><input id="homeFullName" minlength="2" maxlength="100" autocomplete="name" required></div><div class="auth-field"><label for="homeReferral">Referral code (optional)</label><input id="homeReferral" maxlength="9" pattern="GRASH[0-9]{4}" placeholder="GRASH1234"></div><div class="auth-field"><label for="homeSignupEmail">Email address</label><input id="homeSignupEmail" type="email" autocomplete="email" required></div><div class="auth-field"><label for="homeSignupPassword">Password (at least 8 characters)</label><input id="homeSignupPassword" type="password" minlength="8" autocomplete="new-password" required></div><button class="auth-submit" type="submit">Create account</button></form>
 <form id="homeSignin" class="auth-hidden"><div class="auth-field"><label for="homeSigninEmail">Email address</label><input id="homeSigninEmail" type="email" autocomplete="email" required></div><div class="auth-field"><label for="homeSigninPassword">Password</label><input id="homeSigninPassword" type="password" autocomplete="current-password" required></div><button class="auth-submit" type="submit">Sign in</button><button type="button" id="homeReset" class="btn" style="width:100%;margin-top:9px">Send password reset email</button></form>
 <p id="homeAuthMessage" class="auth-message" role="status" aria-live="polite">Ready.</p><p class="auth-muted">Email verification is required before an account becomes active.</p></section></div>
 <footer><div class="wrap foot"><span>© <span id="year"></span> GRASH FX</span><div class="foot-links"><a href="#risk-disclosure">Risk disclosure</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20Terms%20and%20Conditions">Terms</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20Privacy%20Policy">Privacy</a><a href="#contact">Contact</a><button type="button" data-auth="signin" style="background:none;border:0;color:inherit;cursor:pointer">Client sign in</button></div></div></footer>
-<script>document.getElementById("year").textContent=new Date().getFullYear();</script>
+<script>
+document.getElementById("year").textContent=new Date().getFullYear();
+const navToggle=document.getElementById("navToggle"),primaryNav=document.getElementById("primaryNav");
+navToggle.addEventListener("click",()=>{const opened=primaryNav.classList.toggle("open");navToggle.setAttribute("aria-expanded",String(opened));navToggle.setAttribute("aria-label",opened?"Close navigation":"Open navigation");navToggle.textContent=opened?"✕":"☰";});
+primaryNav.querySelectorAll("a").forEach(link=>link.addEventListener("click",()=>{primaryNav.classList.remove("open");navToggle.setAttribute("aria-expanded","false");navToggle.setAttribute("aria-label","Open navigation");navToggle.textContent="☰";}));
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 (()=>{const URL="https://vwghcjkgzeausfxqphmf.supabase.co",KEY="sb_publishable_gn3ndWb6xAtoaZ4FYFaHug_sbnCJI33",API=URL+"/functions/v1/account-api",sb=window.supabase.createClient(URL,KEY),$=id=>document.getElementById(id);
 const say=t=>$("homeAuthMessage").textContent=t;
