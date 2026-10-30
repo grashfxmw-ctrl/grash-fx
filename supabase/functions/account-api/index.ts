@@ -266,7 +266,7 @@ Deno.serve(async (req: Request) => {
         investments: (investments.data || []).map(i => ({ id: i.id, user_id: i.user_id, plan_code: plans[i.plan_id] || "investment",
           principal: Number(i.principal_amount), daily_rate: Number(i.daily_rate_snapshot), duration_days: i.term_days_snapshot,
           status: i.status, started_at: i.started_at, matures_at: i.matures_at, completed_at: i.matured_at,
-          last_processed_day: ledgerRows.filter(e => e.investment_id === i.id && e.entry_type === "profit_credit").length })),
+          last_processed_hour: ledgerRows.filter(e => e.investment_id === i.id && e.entry_type === "profit_credit").length })),
         customers: (profiles.data || []).map(p => {
           const item = balances.get(p.user_id) || {balance:0,profit_balance:0};
           const reserved = pendingByUser.get(p.user_id) || 0;
