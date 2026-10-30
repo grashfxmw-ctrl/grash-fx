@@ -2,17 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const authPage = await readFile(new URL("../public/supabase-auth.html", import.meta.url), "utf8");
+const accountPage = await readFile(new URL("../public/account.html", import.meta.url), "utf8");
 const adminPage = await readFile(new URL("../public/admin-dashboard.html", import.meta.url), "utf8");
 const apiSource = await readFile(new URL("../supabase/functions/account-api/index.ts", import.meta.url), "utf8");
 
-test("client portal points to the active Supabase project and account API", () => {
-  assert.match(authPage, /https:\/\/vwghcjkgzeausfxqphmf\.supabase\.co/);
-  assert.match(authPage, /\/functions\/v1\/account-api/);
-  assert.match(authPage, /signUp\(/);
-  assert.match(authPage, /signInWithPassword\(/);
-  assert.match(authPage, /verifyOtp\(/);
-  assert.match(authPage, /callApi\("\/history"\)/);
+test("client account page points to the active Supabase project and account API", () => {
+  assert.match(accountPage, /https:\/\/vwghcjkgzeausfxqphmf\.supabase\.co/);
+  assert.match(accountPage, /\/functions\/v1\/account-api/);
+  assert.match(accountPage, /signUp\(/);
+  assert.match(accountPage, /signInWithPassword\(/);
+  assert.match(accountPage, /verifyOtp\(/);
+  assert.match(accountPage, /callApi\("\/history"\)/);
 });
 
 test("administrator portal calls protected Supabase endpoints", () => {
@@ -34,7 +34,7 @@ test("account API validates bearer tokens and gates administrative actions", () 
 });
 
 test("legacy platform files are not dependencies of the current test suite", async () => {
-  assert.doesNotMatch(authPage, /firebase|functions\.httpsCallable/i);
+  assert.doesNotMatch(accountPage, /firebase|functions\.httpsCallable/i);
   assert.doesNotMatch(adminPage, /firebase|functions\.httpsCallable/i);
   assert.doesNotMatch(apiSource, /firebase|functions\.httpsCallable/i);
 });
