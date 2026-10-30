@@ -3,6 +3,9 @@ name: Supabase client regression tests
 on:
   pull_request:
     paths:
+      - "public/index.html"
+      - "public/client-dashboard.html"
+      - "public/register.html"
       - "public/supabase-auth.html"
       - "public/admin-dashboard.html"
       - "public/admin.html"
@@ -12,6 +15,7 @@ on:
       - ".github/workflows/secure-client-tests.yml"
   push:
     branches:
+      - grash-fx-clean-website
       - production-backend-integration
     paths:
       - "public/supabase-auth.html"
