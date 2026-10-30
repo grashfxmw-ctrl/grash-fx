@@ -94,6 +94,8 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
  $("showSignup").onclick=()=>mode(true); $("showSignin").onclick=()=>mode(false);
  const query = new URLSearchParams(window.location.search);
  const requestedMode = query.get("mode");
+ const forceFreshLogin = requestedMode === "signin" || requestedMode === "signup";
+ let startupAuthReady = Promise.resolve();
  const incomingReferral = (query.get("ref") || "").trim().toUpperCase();
  if (/^GRASH[0-9]{4}$/.test(incomingReferral)) $("referralCode").value = incomingReferral;
  $("referralCode").addEventListener("input", () => {
@@ -163,14 +165,25 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    }catch(err){say(err.message||"Could not create account.");}finally{busy(e.currentTarget,false);}
  };
  $("signinForm").onsubmit=async e=>{
-   e.preventDefault();busy(e.currentTarget,true);
+   e.preventDefault();
+   if(!e.currentTarget.reportValidity()) return;
+   busy(e.currentTarget,true);
+   $("accountSection").classList.add("hidden");
+   $("financialActions").classList.add("hidden");
+   $("investmentActions").classList.add("hidden");
+   say("Checking email and password…");
    try{
+    await startupAuthReady;
+    await client.auth.signOut();
     const {data,error}=await client.auth.signInWithPassword({email:$("signinEmail").value.trim(),password:$("signinPassword").value});
-    if(error)throw error;
+    if(error) {
+      if(/invalid login credentials|invalid credentials/i.test(error.message||"")) throw new Error("Invalid email or password.");
+      throw error;
+    }
     $("accountEmail").textContent=data.user.email||"";
     await recordLoginEvent();
     await loadAccount();
-   }catch(err){say(err.message||"Could not sign in.");}finally{busy(e.currentTarget,false);}
+   }catch(err){await client.auth.signOut();say(err.message||"Could not sign in.");}finally{busy(e.currentTarget,false);}
  };
  async function loadAccount(){
    $("accountSection").classList.add("hidden");$("financialActions").classList.add("hidden");$("investmentActions").classList.add("hidden");
@@ -309,7 +322,17 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    }catch(err){$("investmentHistory").textContent="Could not load history."; $("transactionHistory").textContent=err.message||"Could not load history.";}
  }
  $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("financialActions").classList.add("hidden");$("investmentActions").classList.add("hidden");mode(false);say("Signed out.");};
- client.auth.getSession().then(async({data})=>{if(data.session){$("accountEmail").textContent=data.session.user.email||"";await recordLoginEvent();loadAccount();}});
+ startupAuthReady = client.auth.getSession().then(async({data})=>{
+   if(forceFreshLogin) {
+     if(data.session) await client.auth.signOut();
+     return;
+   }
+   if(data.session) {
+     $("accountEmail").textContent=data.session.user.email||"";
+     await recordLoginEvent();
+     await loadAccount();
+   }
+ }).catch(()=>{ if(forceFreshLogin) say("Sign in with your email and password."); });
 })();
 </script>
 </body></html>
