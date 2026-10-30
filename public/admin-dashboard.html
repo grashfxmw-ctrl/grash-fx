@@ -106,6 +106,33 @@ $("menu").onclick=function(){$("sidebar").classList.toggle("open");};
 $("refresh").onclick=function(){loadQueue();};
 $("modalClose").onclick=function(){$("modal").classList.remove("open");};
 function openModal(title,body){$("modalTitle").textContent=title;$("modalBody").innerHTML=body;$("modal").classList.add("open");}
+function openBalanceModal(id){
+var c=state.customers.find(function(x){return x.id===id;});
+if(!c){say("Client record not found. Refresh the user list and try again.");return;}
+var balance=Number(c.balance||0);
+openModal("Adjust client balance",'<form id="balanceAdjustmentForm" class="space-y-3">'+
+'<div class="rounded-lg bg-slate-50 border p-3"><div class="font-bold text-slate-900">'+esc(c.full_name||"Client")+'</div><div class="text-[11px] text-slate-500 break-all">'+esc(c.email||c.id)+'</div><div class="mt-2 text-[11px] text-slate-500">Current main balance</div><div class="text-xl font-extrabold text-slate-900">'+money(balance)+'</div></div>'+
+'<input type="hidden" id="balanceTargetUser" value="'+esc(id)+'">'+
+'<label class="block font-semibold text-slate-700">Adjustment type<select id="balanceDirection" class="field mt-1" required><option value="credit">Credit · Add funds</option><option value="debit">Debit · Subtract funds</option></select></label>'+
+'<label class="block font-semibold text-slate-700">Amount (USD)<input id="balanceAmount" class="field mt-1" type="number" min="0.01" max="10000000" step="0.01" inputmode="decimal" placeholder="e.g. 25.00" required></label>'+
+'<label class="block font-semibold text-slate-700">Reason for adjustment<textarea id="balanceReason" class="field mt-1" rows="3" minlength="5" maxlength="500" placeholder="Explain why this balance is being adjusted…" required></textarea></label>'+
+'<label class="flex items-start gap-2 text-[11px] text-slate-600"><input id="balanceConfirm" type="checkbox" class="mt-0.5" required><span>I confirm this adjustment is authorized. It will create a permanent, audited ledger entry.</span></label>'+
+'<div id="balanceFormMessage" class="text-[11px] text-rose-700" role="alert"></div>'+
+'<div class="flex gap-2 justify-end pt-1"><button type="button" id="balanceCancel" class="btn btn-light">Cancel</button><button id="balanceSave" type="submit" class="btn btn-dark">Save adjustment</button></div></form>');
+$("balanceCancel").onclick=function(){$("modal").classList.remove("open");};
+$("balanceAdjustmentForm").onsubmit=async function(e){
+e.preventDefault();
+var button=$("balanceSave"),target=$("balanceTargetUser").value,direction=$("balanceDirection").value,amount=Number($("balanceAmount").value),reason=$("balanceReason").value.trim();
+if(!Number.isFinite(amount)||amount<=0||Math.round(amount*100)!==amount*100){$("balanceFormMessage").textContent="Enter a valid amount with up to two decimal places.";return;}
+if(reason.length<5){$("balanceFormMessage").textContent="Please provide a reason of at least 5 characters.";return;}
+if(!$("balanceConfirm").checked){$("balanceFormMessage").textContent="Confirm the adjustment before saving.";return;}
+button.disabled=true;button.textContent="Saving securely…";
+try{
+await api("/admin/balance-adjustment","POST",{user_id:target,direction:direction,amount:amount,reason:reason,idempotency_key:crypto.randomUUID()});
+$("modal").classList.remove("open");say("Balance adjustment saved and audited. Refreshing the client balance…");await loadQueue();
+}catch(err){$("balanceFormMessage").textContent=err.message||"The adjustment could not be saved.";button.disabled=false;button.textContent="Save adjustment";}
+};
+}
 function customerName(id){var c=state.customers.find(function(x){return x.id===id;});return c?(c.full_name||c.email||id):id;}
 function renderDashboard(q){
 var s=q.stats||{};$("statDeposits").textContent=money(s.total_deposits_amount);$("statDepositCount").textContent=(s.total_deposits_count||0)+" approved / paid deposits";
@@ -144,7 +171,7 @@ $("userSearch").addEventListener("input",renderUsers);
 document.addEventListener("click",async function(e){
 var b=e.target.closest("button");if(!b)return;
 try{
-if(b.dataset.balance){var id=b.dataset.balance,dir=(prompt("Type CREDIT to add simulated balance or DEBIT to subtract it:")||"").trim().toLowerCase();if(!["credit","debit"].includes(dir))return;var amount=Number(prompt("Amount in USD (positive number):"));if(!Number.isFinite(amount)||amount<=0||Math.round(amount*100)!==amount*100)throw Error("Enter a valid amount with up to two decimals.");var reason=(prompt("Reason for this balance adjustment:")||"").trim();if(reason.length<5)throw Error("A reason of at least 5 characters is required.");if(!confirm("Confirm "+dir+" of "+money(amount)+" for "+customerName(id)+"? This creates a permanent ledger entry."))return;b.disabled=true;await api("/admin/balance-adjustment","POST",{user_id:id,direction:dir,amount:amount,reason:reason,idempotency_key:crypto.randomUUID()});say("Balance adjustment saved and audited.");await loadQueue();return;}
+if(b.dataset.balance){openBalanceModal(b.dataset.balance);return;}
 if(b.dataset.status){var uid=b.dataset.status,next=b.dataset.next,why=(prompt("Reason for changing this account status:")||"").trim();if(why.length<5)throw Error("Enter a reason of at least 5 characters.");if(!confirm("Change "+customerName(uid)+" to "+next+"?"))return;b.disabled=true;await api("/admin/customer-status","POST",{user_id:uid,status:next,reason:why});say("Customer account status updated.");await loadQueue();return;}
 if(b.dataset.conversation){await openAdminConversation(b.dataset.conversation);return;}
 if(b.dataset.rejectCancel){$("reject-box-"+b.dataset.rejectCancel).classList.add("hidden");var rejectButton=document.querySelector('[data-review="'+b.dataset.rejectCancel+'"][data-decision="reject"]:not([data-reject-confirm])');if(rejectButton)rejectButton.classList.remove("hidden");return;}
