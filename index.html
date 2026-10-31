@@ -388,6 +388,14 @@ footer{background:#07111F;border-color:var(--line);color:var(--muted)}
 <footer><div class="wrap foot"><a class="footer-brand" href="#home" aria-label="GRASH FX home"><img src="assets/grash-fx-logo.svg" alt="GRASH FX — Trade Analyze Grow"></a><span>© <span id="year"></span> GRASH FX</span><div class="foot-links"><a href="#risk-disclosure">Risk disclosure</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20Terms%20and%20Conditions">Terms</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20Privacy%20Policy">Privacy</a><a href="#contact">Contact</a></div></div></footer>
 <script>
 document.getElementById("year").textContent=new Date().getFullYear();
+const incomingReferral=(new URLSearchParams(window.location.search).get("ref")||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,32);
+if(incomingReferral){
+  document.querySelectorAll('a[href="register.html"],a[href="./register.html"]').forEach(link=>{
+    const target=new URL(link.getAttribute("href"),window.location.href);
+    target.searchParams.set("ref",incomingReferral);
+    link.href=target.pathname.split("/").pop()+target.search;
+  });
+}
 const navToggle=document.getElementById("navToggle"),primaryNav=document.getElementById("primaryNav");
 navToggle.addEventListener("click",()=>{const opened=primaryNav.classList.toggle("open");navToggle.setAttribute("aria-expanded",String(opened));navToggle.setAttribute("aria-label",opened?"Close navigation":"Open navigation");navToggle.textContent=opened?"✕":"☰";});
 function closeMobileNav(){primaryNav.classList.remove("open");navToggle.setAttribute("aria-expanded","false");navToggle.setAttribute("aria-label","Open navigation");navToggle.textContent="☰";}
