@@ -3,19 +3,19 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#080b12">
-<title>GRASH FX — Client Account</title>
+<title>GRASH FX — Client Sign In</title>
 <style>
 :root{color-scheme:dark;--bg:#080b12;--panel:#111827;--line:#273449;--text:#f3f6fb;--muted:#9aa9bd;--accent:#48d6a5;--danger:#ff8585}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#16263a 0, var(--bg) 55%);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text);min-height:100vh;display:grid;place-items:center;padding:24px}
-main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font-size:34px}.brand h1{font-size:28px;letter-spacing:.1em;margin:4px 0}.brand p{color:var(--muted);margin:0}.panel{background:rgba(17,24,39,.96);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:0 20px 70px #0006}h2{font-size:20px;margin:0 0 14px}.tabs{display:flex;gap:8px;margin-bottom:18px}.tabs button{flex:1}.field{margin:12px 0}label{display:block;color:#c7d2e1;font-size:13px;margin-bottom:6px}input{width:100%;padding:12px 13px;border-radius:10px;border:1px solid var(--line);background:#0a111d;color:var(--text);font:inherit}button{border:1px solid var(--line);border-radius:10px;padding:11px 14px;background:#1c2b3d;color:var(--text);font:600 14px system-ui;cursor:pointer}button.primary{background:var(--accent);color:#05261d;border-color:transparent}button:disabled{opacity:.55;cursor:wait}.full{width:100%;margin-top:8px}.muted{color:var(--muted);font-size:13px}.status{white-space:pre-wrap;margin:14px 0 0;padding:11px;border-radius:10px;background:#0a111d;color:#d7e5f4;min-height:40px;font-size:14px}.hidden{display:none!important}.account{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}.balance{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.tile{background:#0a111d;border:1px solid var(--line);padding:12px;border-radius:12px}.tile strong{display:block;font-size:20px}.tile span{font-size:12px;color:var(--muted)}footer{text-align:center;color:var(--muted);font-size:12px;margin-top:14px}
+main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font-size:34px} .brand h1{font-size:34px;letter-spacing:.12em;margin:5px 0}.brand p{color:var(--muted);margin:0;font-size:15px;letter-spacing:.06em}.panel{background:rgba(17,24,39,.96);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:0 20px 70px #0006}h2{font-size:23px;margin:0 0 14px}.auth-title{font-size:27px;line-height:1.2;letter-spacing:.035em;margin-bottom:10px}.auth-intro{font-size:15px;color:var(--muted);margin:0 0 22px}.field{margin:17px 0}label{display:block;color:#e0e7f0;font-size:15px;font-weight:700;margin-bottom:8px}input{width:100%;padding:15px 15px;border-radius:11px;border:1px solid var(--line);background:#0a111d;color:var(--text);font:16px system-ui}button{border:1px solid var(--line);border-radius:11px;padding:14px 16px;background:#1c2b3d;color:var(--text);font:700 16px system-ui;cursor:pointer}button.primary{background:var(--accent);color:#05261d;border-color:transparent}.auth-switch{text-align:center;margin:22px 0 4px;font-size:16px;color:var(--muted)}.auth-switch a{color:var(--accent);font-weight:900;font-size:17px;text-decoration:underline;text-underline-offset:4px}button:disabled{opacity:.55;cursor:wait}.full{width:100%;margin-top:8px}.muted{color:var(--muted);font-size:13px}.status{white-space:pre-wrap;margin:14px 0 0;padding:11px;border-radius:10px;background:#0a111d;color:#d7e5f4;min-height:40px;font-size:14px}.hidden{display:none!important}.account{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}.balance{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.tile{background:#0a111d;border:1px solid var(--line);padding:12px;border-radius:12px}.tile strong{display:block;font-size:20px}.tile span{font-size:12px;color:var(--muted)}footer{text-align:center;color:var(--muted);font-size:12px;margin-top:14px}
 </style>
 </head>
 <body><main>
-<header class="brand"><div class="cat" aria-hidden="true">🐈‍⬛</div><h1>GRASH FX</h1><p>Client account</p></header>
+<header class="brand"><div class="cat" aria-hidden="true">🐈‍⬛</div><h1>GRASH FX</h1><p>CLIENT ACCESS PORTAL</p></header>
 <section class="panel">
-<h2>Your account</h2>
-<div class="tabs"><button id="showSignup" class="primary" type="button">Create account</button><button id="showSignin" type="button">Sign in</button></div>
-<form id="signupForm">
+<h2 class="auth-title">SIGN IN TO YOUR ACCOUNT</h2>
+<p class="auth-intro">Welcome back. Enter your details to access your GRASH FX account.</p>
+
 <div class="field"><label for="fullName">Full name</label><input id="fullName" autocomplete="name" minlength="2" maxlength="100" required></div>
 <div class="field"><label for="signupPhone">Phone number (international format)</label><input id="signupPhone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" required pattern="\+[1-9][0-9]{7,14}" placeholder="+265XXXXXXXXX"><p class="muted">Include your country code, e.g. +265. One account per phone number.</p></div>
 <div class="field"><label for="referralCode">Referral code (optional)</label><input id="referralCode" maxlength="9" autocomplete="off" pattern="GRASH[0-9]{4}" placeholder="GRASH1234"></div>
@@ -23,13 +23,13 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
 <div class="field"><label for="signupPassword">Password (at least 8 characters)</label><input id="signupPassword" type="password" minlength="8" autocomplete="new-password" required></div>
 <button class="primary full" type="submit">Create account</button>
 <p class="muted">After signup, verify your email, then sign in using your email and password.</p>
-</form>
-<form id="signinForm" class="hidden">
+<form id="signinForm">
 <div class="field"><label for="signinEmail">Email address</label><input id="signinEmail" type="email" autocomplete="email" required></div>
 <div class="field"><label for="signinPassword">Password</label><input id="signinPassword" type="password" autocomplete="current-password" required></div>
 <button class="primary full" type="submit">Sign in</button>
 <button id="resetPassword" class="full" type="button">Send password reset email</button>
 </form>
+<p class="auth-switch">Don’t have an account? <a href="./signup.html">SIGN UP</a></p>
 <div id="accountSection" class="hidden account">
 <h2>Your account</h2><div id="accountStatus" class="muted"></div><div class="tile"><span>Your referral code · $5 simulated reward after the referred user verifies email and signs in</span><strong id="myReferralCode">Loading…</strong><div class="field"><label for="referralLink">Personal referral link</label><input id="referralLink" readonly value="Loading…"></div><button id="copyReferralLink" type="button" class="full">Copy referral link</button><p class="muted">The code fills automatically when someone opens your link.</p></div><div class="tile"><span>Referral overview</span><div id="referralStats" class="muted">Loading…</div></div><div id="referralHistory" class="muted">Loading referral history…</div><button id="refreshAccount" class="full" type="button">Refresh account status</button>
 <div class="balance"><div class="tile"><span>Main balance</span><strong id="balance">—</strong></div><div class="tile"><span>Profit balance</span><strong id="profit">—</strong></div></div>
@@ -95,20 +95,10 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
    if(!res.ok) throw new Error(data.error || "Request failed.");
    return data;
  };
- function mode(signup){
-   $("signupForm").classList.toggle("hidden",!signup); $("signinForm").classList.toggle("hidden",signup);
-   $("showSignup").classList.toggle("primary",signup); $("showSignin").classList.toggle("primary",!signup);
- }
- $("showSignup").onclick=()=>mode(true); $("showSignin").onclick=()=>mode(false);
- const query = new URLSearchParams(window.location.search);
+  const query = new URLSearchParams(window.location.search);
  const requestedMode = query.get("mode");
  const forceFreshLogin = requestedMode === "signin" || requestedMode === "signup";
  let startupAuthReady = Promise.resolve();
- const incomingReferral = (query.get("ref") || "").trim().toUpperCase();
- if (/^GRASH[0-9]{4}$/.test(incomingReferral)) $("referralCode").value = incomingReferral;
- $("referralCode").addEventListener("input", () => {
-   $("referralCode").value = $("referralCode").value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0,9);
- });
  $("copyReferralLink").onclick = async () => {
    const link = $("referralLink").value;
    if (!link || link === "Loading…") { say("Your referral link is not ready yet. Refresh your account."); return; }
@@ -142,7 +132,6 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
  }
  const requestedPlan = (query.get("plan") || "").toLowerCase();
  if (["starter","basic","premium","vip"].includes(requestedPlan)) $("planCode").value = requestedPlan;
- mode(requestedMode !== "signin");
 
  // Supabase confirmation links can return token_hash/type; verify them on this hosted page.
  (async () => {
@@ -155,23 +144,12 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
        if (error) throw error;
        history.replaceState({}, document.title, window.location.pathname);
        say(authType === "recovery" ? "Email verified. Continue password recovery." : "Email verified successfully. Please sign in.");
-       mode(false);
-     } catch (err) {
+           } catch (err) {
        say(err.message || "This verification link is invalid or expired. Request a new email.");
      }
    }
  })();
 
- $("signupForm").onsubmit=async e=>{
-   e.preventDefault();busy(e.currentTarget,true);
-   try{
-    const {data,error}=await client.auth.signUp({email:$("signupEmail").value.trim(),password:$("signupPassword").value,options:{data:{full_name:$("fullName").value.trim(),phone:$("signupPhone").value.replace(/\s+/g,"").trim(),referral_code:$("referralCode").value.trim().toUpperCase()},emailRedirectTo:window.location.origin+window.location.pathname}});
-    if(error)throw error;
-    if(data.session){say("Account created. Verify your email, then sign in using your email and password.");}
-    else say("Signup started. Check your email for the verification link. After verification, return here and sign in.");
-    mode(false);
-   }catch(err){say(err.message||"Could not create account.");}finally{busy(e.currentTarget,false);}
- };
  $("signinForm").onsubmit=async e=>{
    e.preventDefault();
    if(!e.currentTarget.reportValidity()) return;
@@ -317,7 +295,7 @@ main{width:min(100%,520px)}.brand{text-align:center;margin-bottom:20px}.cat{font
     });
    }catch(err){$("investmentHistory").textContent="Could not load history."; $("transactionHistory").textContent=err.message||"Could not load history.";}
  }
- $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("financialActions").classList.add("hidden");$("investmentActions").classList.add("hidden");mode(false);say("Signed out.");};
+ $("signout").onclick=async()=>{await client.auth.signOut();$("accountSection").classList.add("hidden");$("financialActions").classList.add("hidden");$("investmentActions").classList.add("hidden");say("Signed out.");};
  startupAuthReady = client.auth.getSession().then(async({data})=>{
    if(forceFreshLogin) {
      if(data.session) await client.auth.signOut();
