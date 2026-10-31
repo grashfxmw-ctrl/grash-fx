@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111318">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#05070c">
 <title>GRASH FX | Administrator Portal</title>
 <script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/lucide@latest"></script>
 <style>
@@ -88,6 +88,37 @@ header .text-slate-500,header .text-slate-600,header .text-slate-700{color:#aebb
 .panel .btn-light{background:#1e293b!important;color:#dbeafe!important}
 #adminNotificationPanel button{color:#dbe4f0!important}
 #adminNotificationPanel button:hover{background:#1e293b!important}
+
+
+/* GRASH FX final admin palette: near-black canvas, Ethereum-blue navigation, deep surfaces */
+:root{--eth-blue:#627eea;--eth-blue-hover:#5069cf;--admin-canvas:#05070c;--admin-surface:#0b0f18;--admin-border:#202b3d}
+html,body{background:var(--admin-canvas)!important;color:#fff!important}
+#main{background:var(--admin-canvas)!important}
+#sidebar{background:var(--eth-blue)!important;border-color:var(--eth-blue-hover)!important}
+#sidebar nav{font-weight:800!important;color:#fff!important}
+#sidebar nav button{font-weight:800!important;color:#fff!important}
+#sidebar nav button:hover{background:var(--eth-blue-hover)!important;color:#fff!important}
+#sidebar .nav-active{background:#111827!important;color:#fff!important;font-weight:900!important}
+#sidebar .nav-active .nav-icon{color:#9db0ff!important}
+#sidebar .text-amber-500,#sidebar .text-amber-400{color:#fff!important}
+#sidebar>div{color:#fff!important;border-color:#ffffff35!important}
+.bg-white,.panel,header.bg-white,.bg-white.border-b,.modal>div,
+#adminNotificationPanel,#adminProfilePanel{
+ background:var(--admin-surface)!important;
+ border-color:var(--admin-border)!important;
+ color:#fff!important;
+}
+.panel{box-shadow:0 8px 24px #0008!important}
+header.bg-white,.bg-white.border-b{background:var(--admin-surface)!important}
+.panel *:not(.pill):not(.btn),header *{color:#fff!important}
+.panel .stat-value{color:#fff!important}
+.panel th{background:#111827!important;color:#fff!important}
+.panel td{color:#fff!important;border-color:var(--admin-border)!important}
+.panel tr:hover td{background:#151c2a!important}
+.panel .field{background:#05070c!important;color:#fff!important;border-color:#334155!important}
+.panel .field::placeholder{color:#aab5c5!important}
+#adminNotificationPanel button{color:#fff!important}
+#adminNotificationPanel button:hover{background:#172033!important}
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script></head>
