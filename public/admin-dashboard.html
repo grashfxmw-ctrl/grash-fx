@@ -20,6 +20,23 @@
 /* Preserve the current sidebar and menu order; scroll the complete sidebar on short screens. */
 #sidebar{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;max-height:100vh;max-height:100dvh}
 @media(max-width:767px){#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#main{padding-left:0}}
+
+/* GRASH FX dark administrator theme */
+body{background:#0b1020!important;color:#e5e7eb!important}
+.bg-white{background-color:#111827!important}
+.panel{background:#111827!important;border-color:#273449!important;box-shadow:0 8px 24px #0003!important}
+header.bg-white,.bg-white.border-b{background:#0f172a!important;border-color:#273449!important}
+.field{background:#0b1220!important;color:#e5e7eb!important;border-color:#334155!important}
+.field::placeholder{color:#64748b!important}
+th{background:#172033!important;color:#94a3b8!important}
+td{border-color:#273449!important;color:#dbe4f0}
+tr:hover td{background:#172033!important}
+.text-slate-800{color:#e2e8f0!important}.text-slate-700{color:#cbd5e1!important}.text-slate-600{color:#aebbd0!important}.text-slate-500{color:#94a3b8!important}
+.border-slate-200{border-color:#273449!important}.border-slate-100{border-color:#253247!important}
+.bg-slate-50{background:#172033!important}.bg-slate-100{background:#1e293b!important}
+.hover\\:bg-slate-50:hover{background:#1e293b!important}
+.empty{border-color:#334155!important;color:#94a3b8!important}
+.modal>div{background:#111827!important;color:#e5e7eb!important}
 </style>
 </head>
 <body class="min-h-screen">
@@ -58,7 +75,7 @@
   <div class="flex items-center gap-4 min-w-0"><button id="menu" class="md:hidden p-2 rounded-lg hover:bg-slate-100"><i data-lucide="menu"></i></button><div class="min-w-0"><div id="pageTitle" class="font-extrabold text-sm">Dashboard Overview</div><div class="text-[10px] text-slate-500">GRASH FX administrator workspace</div></div></div>
   <div class="relative flex items-center gap-3"><div class="hidden sm:block text-right"><div id="adminName" class="text-xs font-bold text-slate-800">Administrator</div><div id="adminEmail" class="text-[10px] text-slate-500"></div></div><button id="adminNotificationToggle" type="button" aria-label="Open administrator notifications" aria-expanded="false" aria-controls="adminNotificationPanel" title="Notifications" class="relative w-9 h-9 rounded-full bg-slate-100 text-slate-700 grid place-items-center hover:bg-amber-100"><i data-lucide="bell"></i><span id="adminNotificationDot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white"></span></button><div id="adminNotificationPanel" class="hidden absolute right-12 top-12 z-50 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white p-3 shadow-xl text-slate-800"><div class="font-bold text-sm px-1 pb-2">Admin notifications</div><button type="button" data-admin-notice="deposits" class="w-full flex justify-between items-center rounded-lg px-3 py-2 text-xs hover:bg-slate-100"><span>Pending deposits</span><b id="adminBellDeposits">0</b></button><button type="button" data-admin-notice="withdrawals" class="w-full flex justify-between items-center rounded-lg px-3 py-2 text-xs hover:bg-slate-100"><span>Pending withdrawals</span><b id="adminBellWithdrawals">0</b></button><button type="button" data-admin-notice="tickets" class="w-full flex justify-between items-center rounded-lg px-3 py-2 text-xs hover:bg-slate-100"><span>Open support tickets</span><b id="adminBellTickets">0</b></button><button type="button" data-admin-notice="messages" class="w-full flex justify-between items-center rounded-lg px-3 py-2 text-xs hover:bg-slate-100"><span>Unread client messages</span><b id="adminBellMessages">0</b></button></div><button id="adminProfileToggle" type="button" aria-label="Open administrator profile" aria-expanded="false" aria-controls="adminProfilePanel" class="w-9 h-9 rounded-full bg-slate-900 text-amber-400 grid place-items-center"><i data-lucide="shield-check"></i></button><div id="adminProfilePanel" class="hidden absolute right-0 top-12 z-50 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white p-4 shadow-xl text-slate-800"><div class="font-bold text-sm mb-3">Administrator account</div><div class="space-y-3 text-xs"><div><div class="text-slate-500">Full name</div><div id="adminProfileName" class="font-semibold break-words">—</div></div><div><div class="text-slate-500">Email</div><div id="adminProfileEmail" class="font-semibold break-all">—</div></div><div><div class="text-slate-500">Phone number</div><div id="adminProfilePhone" class="font-semibold break-words">Not provided</div></div><div><div class="text-slate-500">Account type</div><div class="font-semibold">Administrator</div></div></div></div></div>
  </header>
- <div class="bg-white border-b border-slate-200 px-4 md:px-8 py-2"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>{"symbols":[{"proName":"FX:EURUSD","title":"EUR/USD"},{"proName":"FX:GBPUSD","title":"GBP/USD"},{"proName":"BITSTAMP:BTCUSD","title":"BTC/USD"},{"proName":"BITSTAMP:ETHUSD","title":"ETH/USD"},{"proName":"NASDAQ:NDX","title":"NASDAQ 100"}],"showSymbolLogo":true,"isTransparent":true,"displayMode":"adaptive","colorTheme":"light","locale":"en"}</script></div></div>
+ <div class="bg-white border-b border-slate-200 px-4 md:px-8 py-2"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>{"symbols":[{"proName":"FX:EURUSD","title":"EUR/USD"},{"proName":"FX:GBPUSD","title":"GBP/USD"},{"proName":"BITSTAMP:BTCUSD","title":"BTC/USD"},{"proName":"BITSTAMP:ETHUSD","title":"ETH/USD"},{"proName":"NASDAQ:NDX","title":"NASDAQ 100"}],"showSymbolLogo":true,"isTransparent":true,"displayMode":"adaptive","colorTheme":"dark","locale":"en"}</script></div></div>
  <main class="w-full max-w-[1500px] mx-auto p-4 md:p-8 space-y-6 flex-1">
   <div class="flex items-center justify-between gap-3"><p id="globalMessage" class="text-xs text-slate-500" role="status">Loading administrator workspace…</p><button id="refresh" class="btn btn-dark flex items-center gap-2"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>Refresh data</button></div>
   <section id="view-dashboard" class="view active space-y-6">
