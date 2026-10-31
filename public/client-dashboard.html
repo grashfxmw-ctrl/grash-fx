@@ -200,7 +200,7 @@ $("refHistory").innerHTML=refRows.length?refRows.map(r=>{const status=String(r.s
 if(profile.status!=="active"){$("notice").classList.remove("hidden");$("notice").textContent="Your account status is "+profile.status+". Some account actions remain unavailable until your account is active.";}
 else $("notice").classList.add("hidden");
 renderNotifications(statementData.transactions,statementData.investments,clientMessages,profile);renderRecentActivity(statementData.transactions,statementData.investments,clientMessages,profile);void loadClientMessages();
-message("Account information loaded.");
+
 }catch(e){const reason=e&&e.message?e.message:"Unable to load your dashboard.";message("Dashboard could not finish loading: "+reason);const status=$("status");if(status&&status.textContent==="Checking…")status.textContent="Temporarily unavailable";const news=$("clientAnnouncements");if(news&&news.textContent.includes("Loading platform updates"))news.innerHTML='<div class="rounded-xl border border-rose-400/30 bg-rose-500/10 p-4 text-xs text-rose-200">Platform updates could not be loaded. Use Refresh data to retry.</div>';const portfolio=$("portfolioSnapshot");if(portfolio&&portfolio.textContent.includes("Loading portfolio"))portfolio.innerHTML='<p class="text-xs text-rose-300">Portfolio data could not be loaded. Use Refresh data to retry.</p>';console.error("GRASH FX dashboard load failed:",e);}}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 
