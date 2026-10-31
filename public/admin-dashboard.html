@@ -25,7 +25,7 @@
 <body class="min-h-screen">
 <section id="loginPanel" class="min-h-screen grid place-items-center p-5">
  <div class="panel w-full max-w-md p-7">
-  <div class="flex items-center gap-3 mb-6"><div class="w-11 h-11 rounded-xl bg-amber-500 grid place-items-center text-slate-950 text-2xl">🐈‍⬛</div><div><h1 class="font-extrabold tracking-wider">GRASH <span class="text-amber-500">FX</span></h1><p class="text-[10px] tracking-[.2em] text-slate-500 font-bold">ADMINISTRATOR PORTAL</p></div></div>
+  <div class="mb-6"><img src="assets/grash-fx-logo.svg" alt="GRASH FX — Trade Analyze Grow" class="block w-full max-w-[300px] max-h-[82px] object-contain object-left"><p class="text-[10px] tracking-[.2em] text-slate-500 font-bold mt-2">ADMINISTRATOR PORTAL</p></div>
   <h2 class="text-xl font-extrabold">Secure administrator sign in</h2><p class="text-xs text-slate-500 mt-2 mb-5">Only accounts with an active administrator or finance role can enter. Access is verified by the server.</p>
   <form id="loginForm" class="space-y-3"><label class="block text-xs font-semibold">Email<input id="email" class="field mt-1" type="email" autocomplete="username" required></label><label class="block text-xs font-semibold">Password<input id="password" class="field mt-1" type="password" autocomplete="current-password" required></label><button id="loginButton" class="btn btn-dark w-full py-3" type="submit">Sign in securely</button></form>
   <p id="loginMessage" class="text-xs text-slate-500 mt-4" role="status">Administrator permissions are checked after sign in.</p>
@@ -33,7 +33,7 @@
 </section>
 <div id="app" class="hidden min-h-screen">
 <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-[#111318] border-r border-[#1e222d] flex flex-col transition-transform duration-300">
- <div class="h-16 flex items-center px-5 border-b border-white/10 gap-3"><div class="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 text-xl">🐈‍⬛</div><div><h1 class="font-extrabold text-white tracking-wide text-sm">GRASH <span class="text-amber-400">FX</span></h1><p class="text-[10px] text-slate-400 tracking-wider font-bold">ADMIN PORTAL</p></div></div>
+ <div class="h-[76px] flex items-center px-4 border-b border-white/10"><img src="assets/grash-fx-logo.svg" alt="GRASH FX — Trade Analyze Grow" class="block w-[190px] max-h-[64px] object-contain"></div>
  <nav class="p-4 space-y-1 text-sm font-medium text-slate-300 flex-1 overflow-y-auto">
   <button data-view="dashboard" class="nav nav-active w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-left"><i data-lucide="layout-grid" class="nav-icon w-5 h-5"></i>Dashboard</button>
   <button data-view="users" class="nav w-full flex items-center gap-3 px-3.5 py-3 rounded-lg hover:bg-white/5 text-left"><i data-lucide="users" class="nav-icon w-5 h-5 text-slate-400"></i>Registered Users</button>
