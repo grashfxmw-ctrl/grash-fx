@@ -29,7 +29,7 @@ header{background:#203d5b!important;border-color:#365673!important;color:#f1f6fc
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:6px}
 /* Keep the existing sidebar intact; allow the whole menu to scroll on short screens. */
 #sidebar{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;max-height:100vh;max-height:100dvh}
-@media print{body{background:#fff!important;color:#111!important;font:12px Arial,sans-serif!important}body>*{display:none!important}#printStatement{display:block!important;padding:24px!important;color:#111!important}#printStatement h1{font-size:22px}#printStatement h2{font-size:15px;margin-top:22px}#printStatement table{width:100%;border-collapse:collapse;margin-top:8px}#printStatement th,#printStatement td{border:1px solid #bbb;padding:7px;text-align:left}}
+@media print{body{background:#fff!important;color:#111!important;font:12px Arial,sans-serif!important}body>*{visibility:hidden!important}#printStatement{visibility:visible!important;display:block!important;position:absolute;left:0;top:0;width:100%;padding:24px!important;color:#111!important}#printStatement h1{font-size:22px}#printStatement h2{font-size:15px;margin-top:22px}#printStatement table{width:100%;border-collapse:collapse;margin-top:8px}#printStatement th,#printStatement td{border:1px solid #bbb;padding:7px;text-align:left}}
 </style></head>
 <body class="min-h-screen">
 <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-[#203d5b] border-r border-[#365673] flex flex-col -translate-x-full md:translate-x-0 transition-transform">
