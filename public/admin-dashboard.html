@@ -94,7 +94,7 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
         <p>Main balance: ${money(c.balance)} · Profit balance: ${money(c.profit_balance)}</p>
         <p class="muted">Customer ID: ${esc(c.id)}</p>
         <p class="muted">Phone: ${esc(c.phone_e164||"Not verified / not supplied")}</p><p class="muted">Referral code: ${esc(c.referral_code||"Not assigned")}</p>
-        <div class="actions"><button class="primary" data-balance-user="${esc(c.id)}" data-customer-name="${esc(c.full_name||c.email||c.id)}">Adjust simulated balance</button></div>
+        <div class="actions"><button class="primary" data-balance-user="${esc(c.id)}" data-customer-name="${esc(c.full_name||c.email||c.id)}">Manage Main Balance</button></div>
        </article>`).join(""):empty("No customer profiles found.");
      $("investments").innerHTML=investments.length?investments.map(i=>`
        <article class="item">
@@ -175,9 +175,9 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
    const button=event.target.closest("button[data-profile],button[data-transaction],button[data-balance-user]");
    if(!button)return;
    if(button.dataset.balanceUser) {
-     const direction=(prompt("Type CREDIT to add simulated balance, or DEBIT to subtract it:")||"").trim().toLowerCase();
+     const direction=(prompt("Type CREDIT to add funds to the client's Main Balance (confirmed deposit), or DEBIT to subtract funds (paid withdrawal):")||"").trim().toLowerCase();
      if(!["credit","debit"].includes(direction)) return;
-     if(direction==="debit"&&!confirm("Confirm this simulated balance debit? It will be permanent and audited.")) return;
+     if(direction==="debit"&&!confirm("Confirm this Main Balance debit? It will be permanent and recorded in the audit log.")) return;
      const rawAmount=prompt("Amount in USD (positive number):");
      const amount=Number(rawAmount);
      if(!Number.isFinite(amount)||amount<=0||amount>10000000||Math.round(amount*100)!==amount*100) { say("Enter a valid positive amount with up to two decimals."); return; }
@@ -186,7 +186,7 @@ main{width:min(1200px,100%);margin:auto}.brand{display:flex;justify-content:spac
      button.disabled=true;
      try {
        await api("/admin/balance-adjustment","POST",{user_id:button.dataset.balanceUser,direction,amount,reason,idempotency_key:crypto.randomUUID()});
-       say("Balance adjustment recorded in the ledger and audit log. Refreshing queue…");
+       say("Main Balance updated. The adjustment is recorded in the ledger and audit log. Refreshing queue…");
        await loadQueue();
      } catch(error) { say(error.message||"Balance adjustment failed."); button.disabled=false; }
      return;
