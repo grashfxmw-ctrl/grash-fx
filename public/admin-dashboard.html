@@ -90,6 +90,65 @@ button.bg-amber-500,button.bg-yellow-500{background:#F59E0B!important;color:#111
   color:#22C55E!important;
 }
 
+/* COMPLETE ADMIN WORKSPACE COLOR SYSTEM — consistent across every dashboard tab. */
+#app{color:#F8FAFC!important}
+#app .panel,#app .card,#app article,#app .modal>div{
+  color:#F8FAFC!important;
+}
+#app .panel h1,#app .panel h2,#app .panel h3,
+#app .panel p,#app .panel label,#app .panel span,
+#app .panel div,#app .panel td,#app .panel th,
+#app .card h1,#app .card h2,#app .card h3,
+#app .card p,#app .card label,#app .card span,
+#app .card div,#app .card td,#app .card th{
+  color:inherit;
+}
+/* All ordinary dashboard copy and figures use high-contrast white. */
+#app .text-slate-900,#app .text-slate-800,#app .text-slate-700,
+#app .text-slate-600,#app .text-slate-500,#app .text-slate-400,
+#app .muted,#app .stat-label,#app .stat-value,
+#app th,#app td,#app .panel p,#app .panel label{
+  color:#F8FAFC!important;
+}
+/* Supporting copy is slightly softened but remains clearly legible. */
+#app .text-slate-500,#app .text-slate-400,#app .muted,
+#app .stat-label{color:#D1D5DB!important}
+/* Surface layers: page, main cards, nested blocks and fields. */
+#app .panel,#app .card{background:#172033!important;border-color:#475569!important}
+#app .bg-white{background:#172033!important;color:#F8FAFC!important}
+#app .bg-slate-50{background:#1E293B!important}
+#app .bg-slate-100{background:#263449!important}
+#app .bg-slate-200{background:#334155!important}
+#app .border,#app [class*="border-slate-"]{border-color:#475569!important}
+#app input,#app select,#app textarea,#app .field{
+  background:#0B1220!important;color:#FFFFFF!important;border-color:#64748B!important;
+}
+#app input::placeholder,#app textarea::placeholder{color:#AEBBD0!important}
+#app th{background:#1E293B!important}
+#app td{border-color:#475569!important}
+#app tr:hover td{background:#263449!important}
+/* Keep action colors meaningful and readable. */
+#app .btn-amber,#app .btn-primary,#app .bg-amber-500,#app .bg-yellow-500,
+#app button.bg-amber-500,#app button.bg-yellow-500{background:#F59E0B!important;color:#111827!important}
+#app .btn-dark{background:#334155!important;color:#FFFFFF!important}
+#app .btn-light{background:#475569!important;color:#FFFFFF!important}
+#app .btn-red{background:#7F1D1D!important;color:#FFFFFF!important}
+#app .pill{background:#334155!important;color:#FFFFFF!important}
+#app .pill-green{background:#14532D!important;color:#BBF7D0!important}
+#app .pill-amber{background:#78350F!important;color:#FDE68A!important}
+#app .pill-red{background:#7F1D1D!important;color:#FECACA!important}
+/* Green is reserved for profit and positive financial performance. */
+#app .profit-figure,#app #statProfit,#app [data-profit],
+#app .profit,#app .text-green-500,#app .text-green-600,
+#app .text-emerald-500,#app .text-emerald-600{color:#4ADE80!important}
+#app .bg-green-50,#app .bg-emerald-50{background:#123524!important}
+#app .text-red-500,#app .text-red-600,#app .text-rose-500{color:#FCA5A5!important}
+#app .text-amber-400,#app .text-amber-500,#app .text-yellow-500{color:#FBBF24!important}
+#app .empty{background:#1E293B!important;border-color:#64748B!important;color:#E5E7EB!important}
+#app .modal>div{background:#172033!important;color:#FFFFFF!important;border-color:#475569!important}
+#app .nav-active{background:#263449!important;color:#FFFFFF!important}
+#app .nav-active .nav-icon,#app .nav-active i{color:#FBBF24!important}
+
 </style>
 </head>
 <body class="min-h-screen">
