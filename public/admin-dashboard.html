@@ -77,6 +77,19 @@ button.bg-amber-500,button.bg-yellow-500{background:#F59E0B!important;color:#111
 .modal>div{background:#172033!important;color:#E5E7EB!important;border-color:#334155!important}
 .empty{border-color:#475569!important;color:#AEBBD0!important}
 
+/* Surface-page readability: white labels and figures; profit amounts stay green. */
+.panel,.card{color:#FFFFFF!important}
+.panel .stat-label,.panel .stat-value,.panel h1,.panel h2,.panel h3,
+.panel p,.panel label,.panel td,.panel th,
+.panel .text-slate-900,.panel .text-slate-800,.panel .text-slate-700,
+.panel .text-slate-600,.panel .text-slate-500,.panel .text-slate-400{
+  color:#FFFFFF!important;
+}
+.panel .pill,.panel .btn,.panel input,.panel select,.panel textarea{color:inherit}
+.profit-figure,#statProfit,.panel .profit-figure{
+  color:#22C55E!important;
+}
+
 </style>
 </head>
 <body class="min-h-screen">
@@ -122,7 +135,7 @@ button.bg-amber-500,button.bg-yellow-500{background:#F59E0B!important;color:#111
    <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
     <article class="panel stat"><div class="stat-label">Total Deposits</div><div id="statDeposits" class="stat-value">$0.00</div><div id="statDepositCount" class="text-[11px] text-slate-500 mt-3 pt-3 border-t">0 approved deposits</div></article>
     <article class="panel stat"><div class="stat-label">Total Invested</div><div id="statInvested" class="stat-value">$0.00</div><div id="statInvestments" class="text-[11px] text-slate-500 mt-3 pt-3 border-t">0 active · 0 completed</div></article>
-    <article class="panel stat"><div class="stat-label">Profit Credited</div><div id="statProfit" class="stat-value">$0.00</div><div class="text-[11px] text-slate-500 mt-3 pt-3 border-t">Recorded in the account ledger</div></article>
+    <article class="panel stat"><div class="stat-label">Profit Credited</div><div id="statProfit" class="stat-value profit-figure">$0.00</div><div class="text-[11px] text-slate-500 mt-3 pt-3 border-t">Recorded in the account ledger</div></article>
     <article class="panel stat"><div class="stat-label">Registered Users</div><div id="statUsers" class="stat-value">0</div><div id="statUserBreakdown" class="text-[11px] text-slate-500 mt-3 pt-3 border-t">0 active · 0 restricted</div></article>
     <article class="panel stat"><div class="stat-label">Support Tickets</div><div id="statTickets" class="stat-value">0</div><div id="statTicketBreakdown" class="text-[11px] text-slate-500 mt-3 pt-3 border-t">0 open · 0 closed</div></article>
     <article class="panel stat"><div class="stat-label">Investments</div><div id="statInvestmentCount" class="stat-value">0</div><div id="statInvestmentBreakdown" class="text-[11px] text-slate-500 mt-3 pt-3 border-t">0 active · 0 completed</div></article>
@@ -263,7 +276,7 @@ async function openClientDetail(id){
    ["Account status",c.status||"Unknown"],["Email verification",c.email_confirmed_at?"Verified":"Not verified"],
    ["Registered",date(c.auth_created_at||c.created_at)],["Last sign-in",date(c.last_sign_in_at)],["User ID",c.user_id],["Referral code",c.referral_code||"Not assigned"]
   ].map(function(x){return '<div><span class="text-slate-500">'+esc(x[0])+'</span><b class="block break-all">'+esc(x[1])+'</b></div>';}).join("")+'</div>';
-  var balances='<div class="grid grid-cols-2 gap-2">'+[["Main balance",c.main_balance],["Available balance",c.available_balance],["Profit balance",c.profit_balance],["Referral balance",c.referral_balance]].map(function(x){return '<div class="rounded-lg bg-slate-50 p-3"><span class="text-[10px] text-slate-500">'+x[0]+'</span><b class="block text-lg">'+money(x[1])+'</b></div>';}).join("")+'</div>';
+  var balances='<div class="grid grid-cols-2 gap-2">'+[["Main balance",c.main_balance],["Available balance",c.available_balance],["Profit balance",c.profit_balance],["Referral balance",c.referral_balance]].map(function(x){return '<div class="rounded-lg bg-slate-50 p-3"><span class="text-[10px] text-slate-500">'+x[0]+'</span><b class="block text-lg '+(String(x[0]).toLowerCase().includes("profit")?"profit-figure":"")+'">'+money(x[1])+'</b></div>';}).join("")+'</div>';
   var investments=rows(d.investments,"No investments recorded.",function(x){return '<div class="border-t pt-2 text-xs"><div class="flex justify-between gap-2"><b>'+esc(x.plan_name)+' · '+money(x.principal_amount)+'</b>'+statusPill(x.status)+'</div><p class="text-slate-500 mt-1">Rate: '+(Number(x.daily_rate_snapshot)*100).toFixed(2)+'% daily · Term: '+esc(x.term_days_snapshot)+' days</p><p class="text-slate-500">Started: '+esc(date(x.started_at||x.created_at))+' · Matures: '+esc(date(x.matures_at))+'</p></div>';});
   var requests=rows(d.requests,"No deposit or withdrawal requests.",function(x){return '<div class="border-t pt-2 text-xs"><div class="flex justify-between gap-2"><b>'+esc(x.request_type)+' · '+money(x.amount)+'</b>'+statusPill(x.status)+'</div><p class="text-slate-500 mt-1">'+esc(x.payment_method||"Payment method not recorded")+' · '+esc(date(x.created_at))+'</p><p class="text-slate-500 break-all">Reference: '+esc(x.external_payment_reference||x.client_reference||"—")+'</p></div>';});
   var logins=rows(d.login_events,"No login events recorded.",function(x){return '<div class="border-t pt-2 text-xs"><b>'+esc(x.country_code||"Country unavailable")+'</b><p class="text-slate-500">'+esc(date(x.created_at))+'</p><p class="text-slate-500 break-all">'+esc(x.user_agent||"Device not recorded")+'</p></div>';});
