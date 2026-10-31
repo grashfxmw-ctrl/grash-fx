@@ -315,11 +315,12 @@ footer{background:#07111F;border-color:var(--line);color:var(--muted)}
 .auth-submit{background:var(--gold);color:#111a25}
 @media(max-width:850px){.links{background:#111C2E;border-color:var(--line)}.links a{border-color:var(--line)}}
 
+.brand{display:flex;align-items:center;min-width:0}.brand-logo{display:block;width:216px;height:auto;max-height:66px;object-fit:contain}.footer-brand{display:inline-flex;align-items:center;flex:0 0 auto}.footer-brand img{display:block;width:250px;height:auto;max-height:78px;object-fit:contain}.foot{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}@media(max-width:520px){.brand-logo{width:184px;max-height:58px}.footer-brand img{width:210px}}
 </style>
 </head>
 <body>
 <header class="topbar"><nav class="wrap">
-<a class="brand" href="#home"><span class="cat" aria-hidden="true">🐈‍⬛</span><span><strong>GRASH FX</strong><small>INVEST WITH PURPOSE</small></span></a>
+<a class="brand" href="#home" aria-label="GRASH FX home"><img class="brand-logo" src="assets/grash-fx-logo.svg" alt="GRASH FX — Trade Analyze Grow"></a>
 <div class="links" id="primaryNav"><a href="#home">Home</a><a href="#plans">Plans</a><a href="#about">About</a><a href="#how-it-works">How it works</a><a href="#investor-services">Services</a><a href="#faq">FAQ</a><a href="#contact">Contact</a><button class="btn nav-login" type="button" data-auth="signin">Login</button></div>
 <div class="actions"><button class="btn nav-toggle" type="button" id="navToggle" aria-expanded="false" aria-controls="primaryNav" aria-label="Open navigation">☰</button></div>
 </nav></header>
@@ -388,7 +389,7 @@ footer{background:#07111F;border-color:var(--line);color:var(--muted)}
 <form id="homeSignup"><div class="auth-field"><label for="homeFullName">Full name</label><input id="homeFullName" minlength="2" maxlength="100" autocomplete="name" required></div><div class="auth-field"><label for="homeReferral">Referral code (optional)</label><input id="homeReferral" maxlength="9" pattern="GRASH[0-9]{4}" placeholder="GRASH1234"></div><div class="auth-field"><label for="homeSignupEmail">Email address</label><input id="homeSignupEmail" type="email" autocomplete="email" required></div><div class="auth-field"><label for="homeSignupPassword">Password (at least 8 characters)</label><input id="homeSignupPassword" type="password" minlength="8" autocomplete="new-password" required></div><button class="auth-submit" type="submit">Create account</button></form>
 <form id="homeSignin" class="auth-hidden"><div class="auth-field"><label for="homeSigninEmail">Email address</label><input id="homeSigninEmail" type="email" autocomplete="email" required></div><div class="auth-field"><label for="homeSigninPassword">Password</label><input id="homeSigninPassword" type="password" autocomplete="current-password" required></div><button class="auth-submit" type="submit">Sign in</button><button type="button" id="homeReset" class="btn" style="width:100%;margin-top:9px">Send password reset email</button></form>
 <p id="homeAuthMessage" class="auth-message" role="status" aria-live="polite">Ready.</p><p class="auth-muted">Email verification is required before an account becomes active.</p></section></div>
-<footer><div class="wrap foot"><span>© <span id="year"></span> GRASH FX</span><div class="foot-links"><a href="#risk-disclosure">Risk disclosure</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20Terms%20and%20Conditions">Terms</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20Privacy%20Policy">Privacy</a><a href="#contact">Contact</a></div></div></footer>
+<footer><div class="wrap foot"><a class="footer-brand" href="#home" aria-label="GRASH FX home"><img src="assets/grash-fx-logo.svg" alt="GRASH FX — Trade Analyze Grow"></a><span>© <span id="year"></span> GRASH FX</span><div class="foot-links"><a href="#risk-disclosure">Risk disclosure</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20Terms%20and%20Conditions">Terms</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20Privacy%20Policy">Privacy</a><a href="#contact">Contact</a></div></div></footer>
 <script>
 document.getElementById("year").textContent=new Date().getFullYear();
 const navToggle=document.getElementById("navToggle"),primaryNav=document.getElementById("primaryNav");
