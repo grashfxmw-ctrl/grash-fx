@@ -189,6 +189,7 @@ function refreshPortfolioCountdowns(){
  });
 }
 
+setInterval(refreshPortfolioCountdowns,1000);
 function renderPortfolioSnapshot(items){
  const active=(items||[]).filter(i=>String(i.status||"").toLowerCase()==="active");
  const total=active.reduce((sum,i)=>sum+Number(i.principal||0),0);
