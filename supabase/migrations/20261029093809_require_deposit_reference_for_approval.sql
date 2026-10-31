@@ -1,3 +1,0 @@
--- SUPERSEDED SAFETY PLACEHOLDER.
--- The original migration targeted public.financial_transactions, which does not exist in the active GRASH FX Supabase schema.
--- Intentionally no-op. Deposit approval reference validation is implemented by the live public.review_money_request / private.review_money_request functions.
