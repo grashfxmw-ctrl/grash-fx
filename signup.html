@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080b12">
+<title>GRASH FX — Create Account</title>
+<style>
+:root{color-scheme:dark;--bg:#080b12;--panel:#111827;--line:#273449;--text:#f3f6fb;--muted:#9aa9bd;--accent:#d6a83b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1a2c40 0,var(--bg) 58%);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text);min-height:100vh;display:grid;place-items:center;padding:24px}
+main{width:min(100%,540px)}.brand{text-align:center;margin:0 0 22px}.cat{font-size:42px}.brand h1{font-size:36px;letter-spacing:.13em;margin:4px 0;color:var(--accent)}.brand p{color:var(--muted);margin:0;font-size:14px;letter-spacing:.12em;font-weight:700}.panel{background:rgba(17,24,39,.97);border:1px solid var(--line);border-radius:20px;padding:30px;box-shadow:0 22px 75px #0008}.title{font-size:29px;line-height:1.2;margin:0 0 9px;letter-spacing:.02em}.intro{color:var(--muted);font-size:15px;margin:0 0 23px}.field{margin:18px 0}label{display:block;color:#e0e7f0;font-size:15px;font-weight:750;margin-bottom:8px}input,select{width:100%;padding:15px;border-radius:11px;border:1px solid var(--line);background:#0a111d;color:var(--text);font:16px system-ui;min-width:0}.phone{display:flex;gap:9px}.phone select{flex:0 0 44%;font-weight:700}.phone input{flex:1}.hint{font-size:12px;color:var(--muted);margin:7px 0 0}.primary{width:100%;padding:16px;border:0;border-radius:11px;background:var(--accent);color:#17130a;font:900 17px system-ui;letter-spacing:.035em;cursor:pointer;margin-top:10px}.primary:disabled{opacity:.6;cursor:wait}.switch{text-align:center;color:var(--muted);font-size:16px;margin:24px 0 2px}.switch a{color:var(--accent);font-size:18px;font-weight:900;text-decoration:underline;text-underline-offset:4px}.status{white-space:pre-wrap;margin-top:16px;padding:12px;border-radius:10px;background:#0a111d;color:#e1eaf5;font-size:14px;min-height:42px}.fine{color:var(--muted);font-size:12px;text-align:center;margin:17px 0 0}@media(max-width:480px){body{padding:16px}.panel{padding:22px 18px}.title{font-size:26px}.phone select{flex-basis:43%;padding:14px 9px}.phone input{padding:14px 10px}}
+</style>
+</head>
+<body><main>
+<header class="brand"><div class="cat" aria-hidden="true">🐈‍⬛</div><h1>GRASH FX</h1><p>CREATE YOUR ACCOUNT</p></header>
+<section class="panel">
+<h2 class="title">CREATE ACCOUNT</h2>
+<p class="intro">Join GRASH FX. Complete the details below to get started.</p>
+<form id="signupForm">
+<div class="field"><label for="fullName">FULL NAME</label><input id="fullName" autocomplete="name" minlength="2" maxlength="100" placeholder="Enter your full name" required></div>
+<div class="field"><label for="signupPhone">PHONE NUMBER</label><div class="phone"><select id="countryCode" aria-label="Choose country calling code"><option value="265" data-country="MW">🇲🇼 Malawi (+265)</option><option value="255" data-country="TZ">🇹🇿 Tanzania (+255)</option><option value="27" data-country="ZA">🇿🇦 South Africa (+27)</option><option value="263" data-country="ZW">🇿🇼 Zimbabwe (+263)</option><option value="267" data-country="BW">🇧🇼 Botswana (+267)</option><option value="258" data-country="MZ">🇲🇿 Mozambique (+258)</option></select><input id="signupPhone" type="tel" autocomplete="tel-national" inputmode="numeric" maxlength="15" placeholder="Enter phone number" required></div><p class="hint">Choose your country code and enter your number in the same phone field. Suggested from your device settings; you can change it.</p></div>
+<div class="field"><label for="signupEmail">EMAIL ADDRESS</label><input id="signupEmail" type="email" autocomplete="email" placeholder="Enter your email address" required></div>
+<div class="field"><label for="signupPassword">PASSWORD</label><input id="signupPassword" type="password" minlength="8" autocomplete="new-password" placeholder="Create a password (at least 8 characters)" required></div>
+<div class="field"><label for="confirmPassword">CONFIRM PASSWORD</label><input id="confirmPassword" type="password" minlength="8" autocomplete="new-password" placeholder="Enter your password again" required></div>
+<div class="field"><label for="referralCode">REFERRAL CODE <span style="font-weight:400;color:var(--muted)">(OPTIONAL)</span></label><input id="referralCode" maxlength="9" autocomplete="off" pattern="GRASH[0-9]{4}" placeholder="GRASH1234"></div>
+<button class="primary" type="submit">CREATE ACCOUNT</button>
+</form>
+<p class="switch">Already have an account? <a id="signinLink" href="./account.html?mode=signin">SIGN IN</a></p>
+<div id="message" class="status" role="status" aria-live="polite">Ready to create your account.</div>
+<p class="fine">Your information is protected by the GRASH FX account system.</p>
+</section></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+ const SUPABASE_URL="https://vwghcjkgzeausfxqphmf.supabase.co";
+ const SUPABASE_PUBLISHABLE_KEY="sb_publishable_gn3ndWb6xAtoaZ4FYFaHug_sbnCJI33";
+ const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+ const $=id=>document.getElementById(id),say=msg=>$("message").textContent=msg;
+ const params=new URLSearchParams(location.search),ref=(params.get("ref")||"").trim().toUpperCase();
+ const selectedPlan=["starter","basic","premium","vip"].includes((params.get("plan")||"").toLowerCase())?(params.get("plan")||"").toLowerCase():"";
+ if(selectedPlan) $("signinLink").href="./account.html?mode=signin&plan="+encodeURIComponent(selectedPlan);
+ if(/^GRASH[0-9]{4}$/.test(ref)) $("referralCode").value=ref;
+ $("referralCode").addEventListener("input",()=>{$("referralCode").value=$("referralCode").value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,9);});
+ const regionMap={MW:"265",TZ:"255",ZA:"27",ZW:"263",BW:"267",MZ:"258"};
+ const locale=(navigator.language||"").split("-").pop().toUpperCase();
+ if(regionMap[locale]) $("countryCode").value=regionMap[locale];
+ $("signupForm").onsubmit=async e=>{
+   e.preventDefault();const form=e.currentTarget,button=form.querySelector('button[type="submit"]');
+   if($("signupPassword").value!==$("confirmPassword").value){say("Your passwords do not match.");$("confirmPassword").focus();return;}
+   const digits=$("signupPhone").value.replace(/\D/g,"");
+   const fullPhone="+"+$("countryCode").value+digits;
+   if(digits.length<6||digits.length>12||fullPhone.length<9||fullPhone.length>16){say("Please enter a valid phone number for the selected country.");$("signupPhone").focus();return;}
+   button.disabled=true;button.textContent="PLEASE WAIT…";
+   try{
+     const {data,error}=await client.auth.signUp({email:$("signupEmail").value.trim(),password:$("signupPassword").value,options:{data:{full_name:$("fullName").value.trim(),phone:fullPhone,referral_code:$("referralCode").value.trim().toUpperCase()},emailRedirectTo:location.origin+location.pathname.replace(/signup\.html$/,"account.html")+"?mode=signin"+(selectedPlan?"&plan="+encodeURIComponent(selectedPlan):"")}});
+     if(error)throw error;
+     say(data.session?"Your account has been created. Please sign in to continue.":"Registration started. Check your email for the verification link. After verifying, return to GRASH FX and sign in.");
+     form.reset();if(regionMap[locale]) $("countryCode").value=regionMap[locale];
+   }catch(err){say(err.message||"Could not create your account. Please try again.");}
+   finally{button.disabled=false;button.textContent="CREATE ACCOUNT";}
+ };
+})();
+</script>
+</body></html>
