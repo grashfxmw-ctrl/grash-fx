@@ -43,6 +43,23 @@ html,body{background:#203d5b!important;color:#fff!important}
 #sidebar .nav-active i{color:#806313!important}
 #sidebar nav>div{color:#806313!important}
 
+
+/* Restore the original navy-and-gold dashboard palette. */
+:root{color-scheme:dark;--grash-bg:#070A11;--grash-panel:#111827;--grash-field:#1F2937;--grash-border:#334155;--grash-text:#F1F5F9;--grash-muted:#94A3B8;--grash-gold:#EAB308}
+html,body{background:var(--grash-bg)!important;color:var(--grash-text)!important}
+#sidebar{background:var(--grash-bg)!important;border-color:var(--grash-border)!important}
+#sidebar nav,#sidebar nav button,#sidebar nav>div{color:var(--grash-gold)!important;font-weight:800!important}
+#sidebar nav button:hover,#sidebar .nav-active{background:#1F2937!important;color:var(--grash-gold)!important}
+#sidebar nav button i,#sidebar .nav-active i{color:var(--grash-gold)!important}
+.card,.bg-white,header,#depositPaymentDetails{background:var(--grash-panel)!important;border-color:var(--grash-border)!important;color:var(--grash-text)!important}
+.card *{color:var(--grash-text)!important}
+.text-slate-900,.text-slate-800{color:var(--grash-text)!important}
+.text-slate-600,.text-slate-500,.text-slate-400{color:var(--grash-muted)!important}
+.border-slate-200,.border-slate-100,hr{border-color:var(--grash-border)!important}
+.bg-slate-50,.bg-slate-100{background:#1F2937!important}
+.field,#depositPaymentDetails code{background:var(--grash-field)!important;color:var(--grash-text)!important;border-color:var(--grash-border)!important}
+.field::placeholder{color:var(--grash-muted)!important}
+.rate,.text-amber-400,.text-amber-500{color:var(--grash-gold)!important}
 </style><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script></head>
 <body class="min-h-screen">
 <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-[#203d5b] border-r border-[#365673] flex flex-col -translate-x-full md:translate-x-0 transition-transform">
