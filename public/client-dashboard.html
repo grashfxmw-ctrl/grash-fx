@@ -60,6 +60,15 @@ header{background:#203d5b!important;border-color:#365673!important;color:#f1f6fc
   <div id="notice" class="hidden rounded-lg p-3 text-sm bg-amber-50 text-amber-800 border border-amber-200"></div>
   <section id="view-overview" class="view space-y-6">
    <div class="flex flex-wrap justify-between items-end gap-3"><div><p class="text-xs text-slate-500">Welcome back</p><h1 id="welcomeName" class="text-2xl font-extrabold text-slate-900">Client</h1><p class="text-xs text-slate-500 mt-1">Here is your account overview.</p></div><button id="refresh" class="px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-bold">Refresh data</button></div>
+   <section id="whatsNew" class="card border border-amber-400/40 space-y-3" aria-labelledby="whatsNewTitle">
+    <div class="flex flex-wrap items-center justify-between gap-2"><div><p class="text-[10px] uppercase tracking-[.2em] text-amber-300 font-bold">Platform updates</p><h2 id="whatsNewTitle" class="text-lg font-extrabold mt-1">What’s New at GRASH FX</h2></div><span class="rounded-full bg-amber-400/15 text-amber-300 px-3 py-1 text-[10px] font-bold">LATEST NEWS</span></div>
+    <article class="rounded-xl bg-[#172f49] border border-[#365673] p-4">
+     <div class="flex flex-wrap items-center gap-2 mb-2"><span class="rounded bg-emerald-500/15 text-emerald-300 px-2 py-1 text-[10px] font-bold">NEW FEATURE</span><time class="text-[10px] text-slate-400" datetime="2026-10-31">31 October 2026</time></div>
+     <h3 class="font-bold text-sm">A clearer Investment Plans and History page</h3>
+     <p class="text-xs text-slate-300 mt-2 leading-relaxed">You can now review available plans, see an investment estimate before submitting, and follow each investment’s principal, credited profit, progress and maturity details in a clearer layout.</p>
+     <p class="text-[10px] text-slate-400 mt-3">We’ll post important new features and platform changes here so you don’t miss them.</p>
+    </article>
+   </section>
    <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
     <div class="card"><p class="text-xs font-semibold text-slate-500">Total balance</p><p id="balance" class="text-2xl font-extrabold mt-2">$0.00</p><p class="text-[11px] text-slate-400 mt-3">USD account balance</p></div>
     <div class="card"><p class="text-xs font-semibold text-slate-500">Available balance</p><p id="available" class="text-2xl font-extrabold mt-2">$0.00</p><p class="text-[11px] text-slate-400 mt-3">After pending withdrawals</p></div>
