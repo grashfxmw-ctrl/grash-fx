@@ -32,35 +32,6 @@ header{background:#203d5b!important;border-color:#365673!important;color:#f1f6fc
 #sidebar{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;max-height:100vh;max-height:100dvh}
 @media print{body{background:#fff!important;color:#111!important;font:12px Arial,sans-serif!important}body>*{visibility:hidden!important}#printStatement{visibility:visible!important;display:block!important;position:absolute;left:0;top:0;width:100%;padding:24px!important;color:#111!important}#printStatement h1{font-size:22px}#printStatement h2{font-size:15px;margin-top:22px}#printStatement table{width:100%;border-collapse:collapse;margin-top:8px}#printStatement th,#printStatement td{border:1px solid #bbb;padding:7px;text-align:left}}
 
-/* GRASH FX client palette: surface-colour canvas, black navigation, mustard-gold labels */
-html,body{background:#203d5b!important;color:#fff!important}
-#sidebar{background:#050505!important;border-color:#202020!important}
-#sidebar nav{font-weight:800!important;color:#806313!important}
-#sidebar nav button{font-weight:800!important;color:#806313!important}
-#sidebar nav button i{color:#806313!important}
-#sidebar nav button:hover{background:#191919!important;color:#806313!important}
-#sidebar .nav-active{background:#242424!important;color:#806313!important;font-weight:900!important}
-#sidebar .nav-active i{color:#806313!important}
-#sidebar nav>div{color:#806313!important}
-
-
-/* Restore the original navy-and-gold dashboard palette. */
-:root{color-scheme:dark;--grash-bg:#070A11;--grash-panel:#111827;--grash-field:#1F2937;--grash-border:#334155;--grash-text:#F1F5F9;--grash-muted:#94A3B8;--grash-gold:#EAB308}
-html,body{background:var(--grash-bg)!important;color:var(--grash-text)!important}
-#sidebar{background:var(--grash-bg)!important;border-color:var(--grash-border)!important}
-#sidebar nav,#sidebar nav button,#sidebar nav>div{color:var(--grash-gold)!important;font-weight:800!important}
-#sidebar nav button:hover,#sidebar .nav-active{background:#1F2937!important;color:var(--grash-gold)!important}
-#sidebar nav button i,#sidebar .nav-active i{color:var(--grash-gold)!important}
-.card,.bg-white,header,#depositPaymentDetails{background:var(--grash-panel)!important;border-color:var(--grash-border)!important;color:var(--grash-text)!important}
-.card *{color:var(--grash-text)!important}
-.text-slate-900,.text-slate-800{color:var(--grash-text)!important}
-.text-slate-600,.text-slate-500,.text-slate-400{color:var(--grash-muted)!important}
-.border-slate-200,.border-slate-100,hr{border-color:var(--grash-border)!important}
-.bg-slate-50,.bg-slate-100{background:#1F2937!important}
-.field,#depositPaymentDetails code{background:var(--grash-field)!important;color:var(--grash-text)!important;border-color:var(--grash-border)!important}
-.field::placeholder{color:var(--grash-muted)!important}
-.rate,.text-amber-400,.text-amber-500{color:var(--grash-gold)!important}
-
 /* Sidebar labels: bold and easy to scan. */
 #sidebar nav button,#sidebar nav a,#sidebar nav>div{font-weight:800!important}
 #sidebar nav button span,#sidebar nav a span{font-weight:800!important}
