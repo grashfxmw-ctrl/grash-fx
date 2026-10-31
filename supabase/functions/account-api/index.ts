@@ -89,6 +89,86 @@ Deno.serve(async (req: Request) => {
       };
     };
 
+
+    if (req.method === "GET" && path.endsWith("/admin/referral-management")) {
+      if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
+      const [profilesResult, referralsResult, ledgerResult, transfersResult, controlsResult, adjustmentsResult] = await Promise.all([
+        adminClient.from("profiles").select("user_id,full_name,email,referral_code").order("created_at", { ascending: false }).limit(5000),
+        adminClient.from("referrals").select("id,referrer_user_id,referred_user_id,referral_code,status,created_at,rewarded_at").order("created_at", { ascending: false }).limit(5000),
+        adminClient.from("ledger_entries").select("user_id,entry_type,amount,metadata,created_at").eq("currency", "USD").in("entry_type", ["referral_bonus_credit", "adjustment_debit"]).order("created_at", { ascending: false }).limit(20000),
+        adminClient.from("referral_transfers").select("user_id,amount,created_at").order("created_at", { ascending: false }).limit(5000),
+        adminClient.from("referral_code_controls").select("user_id,enabled,reason,updated_at"),
+        adminClient.from("audit_events").select("entity_id,reason,details,created_at").eq("action", "referral.bonus_adjusted").order("created_at", { ascending: false }).limit(100)
+      ]);
+      for (const result of [profilesResult, referralsResult, ledgerResult, transfersResult, controlsResult, adjustmentsResult]) {
+        if (result.error) throw result.error;
+      }
+      const profiles = profilesResult.data || [];
+      const profileById = new Map(profiles.map(p => [p.user_id, p]));
+      const referralsByUser = new Map<string, Array<Record<string, unknown>>>();
+      for (const referral of referralsResult.data || []) {
+        const rows = referralsByUser.get(referral.referrer_user_id) || [];
+        const referred = profileById.get(referral.referred_user_id);
+        rows.push({
+          id: referral.id,
+          status: referral.status,
+          referral_code: referral.referral_code,
+          created_at: referral.created_at,
+          rewarded_at: referral.rewarded_at,
+          referred_name: referred?.full_name || "Referred client",
+          referred_email: referred?.email || ""
+        });
+        referralsByUser.set(referral.referrer_user_id, rows);
+      }
+      const credits = new Map<string, number>();
+      const earned = new Map<string, number>();
+      const reductions = new Map<string, number>();
+      for (const entry of ledgerResult.data || []) {
+        const amount = Number(entry.amount || 0);
+        const metadata = entry.metadata && typeof entry.metadata === "object" ? entry.metadata as Record<string, unknown> : {};
+        if (entry.entry_type === "referral_bonus_credit") {
+          credits.set(entry.user_id, (credits.get(entry.user_id) || 0) + amount);
+          if (metadata.referral_id) earned.set(entry.user_id, (earned.get(entry.user_id) || 0) + amount);
+        } else if (entry.entry_type === "adjustment_debit" &&
+          metadata.source === "admin_referral_adjustment" && metadata.wallet === "referral" && metadata.direction === "reduce") {
+          reductions.set(entry.user_id, (reductions.get(entry.user_id) || 0) + Math.abs(amount));
+        }
+      }
+      const transferred = new Map<string, number>();
+      for (const transfer of transfersResult.data || []) {
+        transferred.set(transfer.user_id, (transferred.get(transfer.user_id) || 0) + Number(transfer.amount || 0));
+      }
+      const controls = new Map((controlsResult.data || []).map(c => [c.user_id, c]));
+      const clients = profiles.map(p => {
+        const referrals = referralsByUser.get(p.user_id) || [];
+        const control = controls.get(p.user_id);
+        const earnedTotal = earned.get(p.user_id) || 0;
+        const transferredTotal = transferred.get(p.user_id) || 0;
+        const referralBalance = (credits.get(p.user_id) || 0) - transferredTotal - (reductions.get(p.user_id) || 0);
+        return {
+          user_id: p.user_id,
+          full_name: p.full_name,
+          email: p.email,
+          referral_code: p.referral_code,
+          referrals,
+          enabled: control?.enabled !== false,
+          referral_balance: Math.round(referralBalance * 100) / 100,
+          earned_total: Math.round(earnedTotal * 100) / 100,
+          transferred_total: Math.round(transferredTotal * 100) / 100
+        };
+      });
+      const adjustments = (adjustmentsResult.data || []).map(a => {
+        const details = a.details && typeof a.details === "object" ? a.details as Record<string, unknown> : {};
+        return {
+          user_id: a.entity_id,
+          reason: a.reason,
+          amount: Number(details.signed_amount ?? (details.direction === "reduce" ? -Number(details.amount || 0) : Number(details.amount || 0))),
+          created_at: a.created_at
+        };
+      });
+      return json({ clients, adjustments });
+    }
+
     if (req.method === "GET" && path.endsWith("/admin/client-detail")) {
       if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
       const targetId = clean(new URL(req.url).searchParams.get("user_id"), 64);
@@ -565,6 +645,101 @@ Deno.serve(async (req: Request) => {
           }
         }
         return json({ recorded: true, notification_configured: Boolean(notificationUrl) });
+      }
+
+
+      if (path.endsWith("/admin/referral-management")) {
+        if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
+        const targetUserId = clean(body.user_id, 64);
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetUserId)) {
+          return json({ error: "Select a valid client account." }, 400);
+        }
+        const { data: target, error: targetError } = await adminClient.from("profiles")
+          .select("user_id,referral_code").eq("user_id", targetUserId).maybeSingle();
+        if (targetError) throw targetError;
+        if (!target) return json({ error: "Client account not found." }, 404);
+        const action = clean(body.action, 20).toLowerCase();
+        const reason = clean(body.reason, 500);
+        if (reason.length < 5) return json({ error: "A reason of at least 5 characters is required." }, 400);
+
+        if (action === "suspend" || action === "reactivate") {
+          const enabled = action === "reactivate";
+          const { error: controlError } = await adminClient.from("referral_code_controls").upsert({
+            user_id: targetUserId, enabled, reason, updated_by: user.id, updated_at: new Date().toISOString()
+          }, { onConflict: "user_id" });
+          if (controlError) throw controlError;
+          const { error: auditError } = await adminClient.from("audit_events").insert({
+            actor_user_id: user.id,
+            action: enabled ? "referral.code_reactivated" : "referral.code_suspended",
+            entity_type: "profile",
+            entity_id: targetUserId,
+            reason,
+            details: { enabled, referral_code: target.referral_code, previous_earned_bonuses_preserved: true }
+          });
+          if (auditError) throw auditError;
+          return json({ status: enabled ? "reactivated" : "suspended", enabled, previous_earned_bonuses_preserved: true });
+        }
+
+        if (action === "adjust") {
+          const direction = clean(body.direction, 16).toLowerCase();
+          const amount = money(body.amount);
+          const key = keyOf(req, body);
+          if (!["add", "reduce"].includes(direction) || amount === null || key.length < 8) {
+            return json({ error: "Choose ADD or REDUCE, enter a positive amount, and provide a valid idempotency key." }, 400);
+          }
+          const { data: existing, error: existingError } = await adminClient.from("ledger_entries")
+            .select("id").eq("idempotency_key", key).maybeSingle();
+          if (existingError) throw existingError;
+          if (existing) return json({ status: "already_processed", ledger_entry_id: existing.id });
+
+          if (direction === "reduce") {
+            const [creditResult, transferResult, reductionResult] = await Promise.all([
+              adminClient.from("ledger_entries").select("amount").eq("user_id", targetUserId).eq("entry_type", "referral_bonus_credit").eq("currency", "USD"),
+              adminClient.from("referral_transfers").select("amount").eq("user_id", targetUserId),
+              adminClient.from("ledger_entries").select("amount,metadata").eq("user_id", targetUserId).eq("entry_type", "adjustment_debit").eq("currency", "USD")
+            ]);
+            for (const result of [creditResult, transferResult, reductionResult]) if (result.error) throw result.error;
+            const totalCredits = (creditResult.data || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
+            const totalTransfers = (transferResult.data || []).reduce((sum, row) => sum + Number(row.amount || 0), 0);
+            const totalReductions = (reductionResult.data || []).reduce((sum, row) => {
+              const metadata = row.metadata && typeof row.metadata === "object" ? row.metadata as Record<string, unknown> : {};
+              return sum + (metadata.source === "admin_referral_adjustment" && metadata.wallet === "referral" && metadata.direction === "reduce" ? Math.abs(Number(row.amount || 0)) : 0);
+            }, 0);
+            const available = totalCredits - totalTransfers - totalReductions;
+            if (amount > available + 0.000001) return json({ error: "The reduction exceeds this client's available referral bonus balance." }, 400);
+          }
+
+          const entryType = direction === "add" ? "referral_bonus_credit" : "adjustment_debit";
+          const signedAmount = direction === "add" ? amount : -amount;
+          const metadata = direction === "add"
+            ? { source: "admin_referral_adjustment", direction, reason, admin_user_id: user.id }
+            : { source: "admin_referral_adjustment", wallet: "referral", direction, reason, admin_user_id: user.id };
+          const { data: entry, error: insertError } = await adminClient.from("ledger_entries").insert({
+            user_id: targetUserId,
+            entry_type: entryType,
+            amount: signedAmount,
+            currency: "USD",
+            idempotency_key: key,
+            description: "Admin referral bonus " + direction + ": " + reason,
+            created_by: user.id,
+            metadata
+          }).select("id").single();
+          if (insertError) {
+            if (insertError.code === "23505") return json({ error: "This adjustment has already been processed." }, 409);
+            throw insertError;
+          }
+          const { error: auditError } = await adminClient.from("audit_events").insert({
+            actor_user_id: user.id,
+            action: "referral.bonus_adjusted",
+            entity_type: "profile",
+            entity_id: targetUserId,
+            reason,
+            details: { amount, direction, signed_amount: signedAmount, referral_code: target.referral_code, ledger_entry_id: entry.id }
+          });
+          if (auditError) throw auditError;
+          return json({ status: "adjusted", ledger_entry_id: entry.id, amount: signedAmount }, 201);
+        }
+        return json({ error: "Unsupported referral management action." }, 400);
       }
 
       if (path.endsWith("/admin/customer-status")) {
