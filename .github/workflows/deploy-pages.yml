@@ -41,7 +41,9 @@ jobs:
       - name: Prepare clean root website
         run: |
           mkdir -p "$RUNNER_TEMP/grash-site"
-          cp index.html login.html register.html client-dashboard.html admin-dashboard.html admin.html assets/grash-fx-logo.svg "$RUNNER_TEMP/grash-site/"
+          cp index.html login.html register.html client-dashboard.html admin-dashboard.html admin.html "$RUNNER_TEMP/grash-site/"
+          mkdir -p "$RUNNER_TEMP/grash-site/assets"
+          cp assets/grash-fx-logo.svg "$RUNNER_TEMP/grash-site/assets/"
           touch "$RUNNER_TEMP/grash-site/.nojekyll"
 
       - name: Upload clean root website
