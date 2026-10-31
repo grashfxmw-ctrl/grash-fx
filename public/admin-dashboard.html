@@ -90,18 +90,18 @@ header .text-slate-500,header .text-slate-600,header .text-slate-700{color:#aebb
 #adminNotificationPanel button:hover{background:#1e293b!important}
 
 
-/* GRASH FX final admin palette: near-black canvas, Ethereum-blue navigation, deep surfaces */
-:root{--eth-blue:#627eea;--eth-blue-hover:#5069cf;--admin-canvas:#05070c;--admin-surface:#0b0f18;--admin-border:#202b3d}
-html,body{background:var(--admin-canvas)!important;color:#fff!important}
-#main{background:var(--admin-canvas)!important}
-#sidebar{background:var(--eth-blue)!important;border-color:var(--eth-blue-hover)!important}
-#sidebar nav{font-weight:800!important;color:#fff!important}
-#sidebar nav button{font-weight:800!important;color:#fff!important}
-#sidebar nav button:hover{background:var(--eth-blue-hover)!important;color:#fff!important}
-#sidebar .nav-active{background:#111827!important;color:#fff!important;font-weight:900!important}
-#sidebar .nav-active .nav-icon{color:#9db0ff!important}
-#sidebar .text-amber-500,#sidebar .text-amber-400{color:#fff!important}
-#sidebar>div{color:#fff!important;border-color:#ffffff35!important}
+/* GRASH FX admin palette: near-black canvas, black navigation, near-black surfaces, Ethereum-blue labels */
+:root{--eth-blue:#627eea;--eth-blue-hover:#5069cf;--admin-canvas:#050505;--admin-surface:#0b0b0d;--admin-border:#202024}
+html,body,#main{background:var(--admin-canvas)!important;color:#fff!important}
+#sidebar{background:#030304!important;border-color:#17171b!important}
+#sidebar nav{font-weight:800!important;color:var(--eth-blue)!important}
+#sidebar nav button{font-weight:800!important;color:var(--eth-blue)!important}
+#sidebar nav button i,#sidebar nav button .nav-icon{color:var(--eth-blue)!important}
+#sidebar nav button:hover{background:#17171b!important;color:var(--eth-blue)!important}
+#sidebar .nav-active{background:#202024!important;color:var(--eth-blue)!important;font-weight:900!important}
+#sidebar .nav-active .nav-icon{color:var(--eth-blue)!important}
+#sidebar .text-amber-500,#sidebar .text-amber-400{color:var(--eth-blue)!important}
+#sidebar>div{color:var(--eth-blue)!important;border-color:#ffffff20!important}
 .bg-white,.panel,header.bg-white,.bg-white.border-b,.modal>div,
 #adminNotificationPanel,#adminProfilePanel{
  background:var(--admin-surface)!important;
@@ -112,14 +112,13 @@ html,body{background:var(--admin-canvas)!important;color:#fff!important}
 header.bg-white,.bg-white.border-b{background:var(--admin-surface)!important}
 .panel *:not(.pill):not(.btn),header *{color:#fff!important}
 .panel .stat-value{color:#fff!important}
-.panel th{background:#111827!important;color:#fff!important}
+.panel th{background:#141418!important;color:#fff!important}
 .panel td{color:#fff!important;border-color:var(--admin-border)!important}
-.panel tr:hover td{background:#151c2a!important}
-.panel .field{background:#05070c!important;color:#fff!important;border-color:#334155!important}
+.panel tr:hover td{background:#18181d!important}
+.panel .field{background:#050505!important;color:#fff!important;border-color:#33333b!important}
 .panel .field::placeholder{color:#aab5c5!important}
 #adminNotificationPanel button{color:#fff!important}
-#adminNotificationPanel button:hover{background:#172033!important}
-
+#adminNotificationPanel button:hover{background:#18181d!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script></head>
 <body class="min-h-screen">
