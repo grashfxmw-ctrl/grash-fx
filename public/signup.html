@@ -24,7 +24,7 @@ main{width:min(100%,540px)}.brand{text-align:center;margin:0 0 22px}.cat{font-si
 <div class="field"><label for="referralCode">REFERRAL CODE <span style="font-weight:400;color:var(--muted)">(OPTIONAL)</span></label><input id="referralCode" maxlength="9" autocomplete="off" pattern="GRASH[0-9]{4}" placeholder="GRASH1234"></div>
 <button class="primary" type="submit">CREATE ACCOUNT</button>
 </form>
-<p class="switch">Already have an account? <a href="./account.html?mode=signin">SIGN IN</a></p>
+<p class="switch">Already have an account? <a id="signinLink" href="./account.html?mode=signin">SIGN IN</a></p>
 <div id="message" class="status" role="status" aria-live="polite">Ready to create your account.</div>
 <p class="fine">Your information is protected by the GRASH FX account system.</p>
 </section></main>
@@ -36,6 +36,8 @@ main{width:min(100%,540px)}.brand{text-align:center;margin:0 0 22px}.cat{font-si
  const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
  const $=id=>document.getElementById(id),say=msg=>$("message").textContent=msg;
  const params=new URLSearchParams(location.search),ref=(params.get("ref")||"").trim().toUpperCase();
+ const selectedPlan=["starter","basic","premium","vip"].includes((params.get("plan")||"").toLowerCase())?(params.get("plan")||"").toLowerCase():"";
+ if(selectedPlan) $("signinLink").href="./account.html?mode=signin&plan="+encodeURIComponent(selectedPlan);
  if(/^GRASH[0-9]{4}$/.test(ref)) $("referralCode").value=ref;
  $("referralCode").addEventListener("input",()=>{$("referralCode").value=$("referralCode").value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,9);});
  const regionMap={MW:"265",TZ:"255",ZA:"27",ZW:"263",BW:"267",MZ:"258"};
@@ -49,7 +51,7 @@ main{width:min(100%,540px)}.brand{text-align:center;margin:0 0 22px}.cat{font-si
    if(digits.length<6||digits.length>12||fullPhone.length<9||fullPhone.length>16){say("Please enter a valid phone number for the selected country.");$("signupPhone").focus();return;}
    button.disabled=true;button.textContent="PLEASE WAIT…";
    try{
-     const {data,error}=await client.auth.signUp({email:$("signupEmail").value.trim(),password:$("signupPassword").value,options:{data:{full_name:$("fullName").value.trim(),phone:fullPhone,referral_code:$("referralCode").value.trim().toUpperCase()},emailRedirectTo:location.origin+location.pathname.replace(/signup\.html$/,"account.html")}});
+     const {data,error}=await client.auth.signUp({email:$("signupEmail").value.trim(),password:$("signupPassword").value,options:{data:{full_name:$("fullName").value.trim(),phone:fullPhone,referral_code:$("referralCode").value.trim().toUpperCase()},emailRedirectTo:location.origin+location.pathname.replace(/signup\.html$/,"account.html")+"?mode=signin"+(selectedPlan?"&plan="+encodeURIComponent(selectedPlan):"")}});
      if(error)throw error;
      say(data.session?"Your account has been created. Please sign in to continue.":"Registration started. Check your email for the verification link. After verifying, return to GRASH FX and sign in.");
      form.reset();if(regionMap[locale]) $("countryCode").value=regionMap[locale];
