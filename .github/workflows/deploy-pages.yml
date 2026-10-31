@@ -1,11 +1,17 @@
-name: Deploy GRASH FX website to GitHub Pages
+name: Deploy GRASH FX clean website to GitHub Pages
 
 on:
   push:
     branches:
       - grash-fx-clean-website
     paths:
-      - "public/**"
+      - "index.html"
+      - "login.html"
+      - "register.html"
+      - "client-dashboard.html"
+      - "admin-dashboard.html"
+      - "admin.html"
+      - "assets/**"
       - ".github/workflows/deploy-pages.yml"
       - "supabase/**"
   workflow_dispatch:
@@ -26,16 +32,22 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Check out website
+      - name: Check out clean project
         uses: actions/checkout@v4
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload website files
+      - name: Prepare clean root website
+        run: |
+          mkdir -p "$RUNNER_TEMP/grash-site"
+          cp index.html login.html register.html client-dashboard.html admin-dashboard.html admin.html assets/grash-fx-logo.svg "$RUNNER_TEMP/grash-site/"
+          touch "$RUNNER_TEMP/grash-site/.nojekyll"
+
+      - name: Upload clean root website
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./public
+          path: ${{ runner.temp }}/grash-site
 
       - name: Deploy website
         id: deployment
