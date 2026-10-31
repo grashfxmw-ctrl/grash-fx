@@ -44,35 +44,38 @@ tr:hover td{background:#172033!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script><style>
 
-/* GRASH FX unified dashboard palette — navy surfaces, slate text, gold actions. */
+/* GRASH FX admin palette — layered surfaces for clear visual separation. */
 body{background:#0B1020!important;color:#E5E7EB!important}
 #sidebar{background:#0B1020!important;color:#E5E7EB!important}
 #sidebar nav button,#sidebar nav a{color:#CBD5E1}
 #sidebar nav button.nav-active,#sidebar nav a.nav-active,.nav-active{background:#1E293B!important;color:#F8FAFC!important}
 .nav-active .nav-icon,.nav-active i{color:#F59E0B!important}
-.bg-white,header.bg-white,header{background:#111827!important;color:#E5E7EB!important}
-.panel,.card{background:#111827!important;color:#E5E7EB!important;border:1px solid #273449!important;box-shadow:0 8px 24px #0003!important}
-.bg-slate-50{background:#111827!important}
-.bg-slate-100{background:#172033!important}
-.text-slate-900,.text-slate-800{color:#E5E7EB!important}
+/* Top navigation and main working cards are lighter than the page canvas. */
+header,header.bg-white,.bg-white.border-b{background:#111827!important;color:#E5E7EB!important;border-color:#273449!important}
+.bg-white{background:#172033!important;color:#E5E7EB!important}
+.panel,.card{background:#172033!important;color:#E5E7EB!important;border:1px solid #334155!important;box-shadow:0 8px 24px #0004!important}
+/* Nested information areas and table headers use a third surface shade. */
+.bg-slate-50{background:#1E293B!important}
+.bg-slate-100{background:#263449!important}
+.text-slate-900,.text-slate-800{color:#F1F5F9!important}
 .text-slate-700{color:#CBD5E1!important}
 .text-slate-600{color:#AEBBD0!important}
 .text-slate-500,.text-slate-400{color:#94A3B8!important}
-.border-slate-200,.border-slate-100{border-color:#273449!important}
-.field,input,select,textarea{background:#0B1220!important;color:#E5E7EB!important;border-color:#334155!important}
-.field::placeholder,input::placeholder,textarea::placeholder{color:#64748B!important}
-th{background:#172033!important;color:#94A3B8!important}
-td{border-color:#273449!important;color:#D5DEEA}
-tr:hover td{background:#172033!important}
+.border-slate-200,.border-slate-100{border-color:#334155!important}
+.field,input,select,textarea{background:#0B1220!important;color:#E5E7EB!important;border-color:#475569!important}
+.field::placeholder,input::placeholder,textarea::placeholder{color:#94A3B8!important}
+th{background:#1E293B!important;color:#CBD5E1!important}
+td{border-color:#334155!important;color:#E2E8F0}
+tr:hover td{background:#263449!important}
 .btn-amber,.btn-primary,.bg-amber-500,.bg-yellow-500{background:#F59E0B!important;color:#111827!important}
-.btn-dark{background:#1E293B!important;color:#F8FAFC!important}
-.btn-light{background:#172033!important;color:#E5E7EB!important}
+.btn-dark{background:#263449!important;color:#F8FAFC!important}
+.btn-light{background:#263449!important;color:#E5E7EB!important}
 button.bg-amber-500,button.bg-yellow-500{background:#F59E0B!important;color:#111827!important}
-.plan-choice,.investment-stat{background:#0B1220!important;color:#E5E7EB!important;border-color:#273449!important}
-.plan-choice.selected{background:#1E293B!important;border-color:#F59E0B!important}
-.investment-progress{background:#273449!important}
-.modal>div{background:#111827!important;color:#E5E7EB!important;border-color:#273449!important}
-.empty{border-color:#334155!important;color:#94A3B8!important}
+.plan-choice,.investment-stat{background:#0B1220!important;color:#E5E7EB!important;border-color:#334155!important}
+.plan-choice.selected{background:#263449!important;border-color:#F59E0B!important}
+.investment-progress{background:#334155!important}
+.modal>div{background:#172033!important;color:#E5E7EB!important;border-color:#334155!important}
+.empty{border-color:#475569!important;color:#AEBBD0!important}
 
 </style>
 </head>
