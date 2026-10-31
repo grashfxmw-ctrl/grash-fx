@@ -119,6 +119,24 @@ header.bg-white,.bg-white.border-b{background:var(--admin-surface)!important}
 .panel .field::placeholder{color:#aab5c5!important}
 #adminNotificationPanel button{color:#fff!important}
 #adminNotificationPanel button:hover{background:#18181d!important}
+
+/* Restore the original navy-and-gold dashboard palette. */
+:root{color-scheme:dark;--grash-bg:#070A11;--grash-panel:#111827;--grash-field:#1F2937;--grash-border:#334155;--grash-text:#F1F5F9;--grash-muted:#94A3B8;--grash-gold:#EAB308}
+html,body,#main,#app{background:var(--grash-bg)!important;color:var(--grash-text)!important}
+#sidebar{background:var(--grash-bg)!important;border-color:var(--grash-border)!important;color:var(--grash-gold)!important}
+#sidebar nav,#sidebar nav button,#sidebar nav>div{color:var(--grash-gold)!important;font-weight:800!important}
+#sidebar nav button:hover,#sidebar .nav-active{background:#1F2937!important;color:var(--grash-gold)!important}
+#sidebar .nav-active .nav-icon,#sidebar nav button i{color:var(--grash-gold)!important}
+.panel,.card,.bg-white,header,header.bg-white,.bg-white.border-b,.modal>div,#adminNotificationPanel,#adminProfilePanel{background:var(--grash-panel)!important;border-color:var(--grash-border)!important;color:var(--grash-text)!important}
+.panel *:not(.pill):not(.btn),.card *:not(.pill):not(.btn),header *{color:var(--grash-text)!important}
+.panel th{background:#1F2937!important;color:var(--grash-text)!important}
+.panel td{color:var(--grash-text)!important;border-color:var(--grash-border)!important}
+.panel tr:hover td{background:#1F2937!important}
+.field{background:var(--grash-field)!important;color:var(--grash-text)!important;border-color:var(--grash-border)!important}
+.field::placeholder{color:var(--grash-muted)!important}
+.stat-label,.muted{color:var(--grash-muted)!important}
+.stat-value{color:var(--grash-text)!important}
+.btn-amber,.primary{background:var(--grash-gold)!important;border-color:var(--grash-gold)!important;color:#111827!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script></head>
 <body class="min-h-screen">
