@@ -473,7 +473,29 @@ Deno.serve(async (req: Request) => {
           const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(forwarded));
           ipHash = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2,"0")).join("");
         }
-        const country = clean(req.headers.get("cf-ipcountry") || req.headers.get("x-vercel-ip-country") || "", 2).toUpperCase();
+        let country = clean(req.headers.get("cf-ipcountry") || req.headers.get("x-vercel-ip-country") || "", 2).toUpperCase();
+        // Supabase may not forward a country header. If it does not, use the public
+        // client IP for a country-only lookup; never store or return the raw IP.
+        const ipv4Parts = (forwarded || "").split(".").map(Number);
+        const isPublicIPv4 = ipv4Parts.length === 4 && ipv4Parts.every(n => Number.isInteger(n) && n >= 0 && n <= 255) &&
+          !(ipv4Parts[0] === 0 || ipv4Parts[0] === 10 || ipv4Parts[0] === 127 ||
+            (ipv4Parts[0] === 169 && ipv4Parts[1] === 254) ||
+            (ipv4Parts[0] === 172 && ipv4Parts[1] >= 16 && ipv4Parts[1] <= 31) ||
+            (ipv4Parts[0] === 192 && ipv4Parts[1] === 168) || ipv4Parts[0] >= 224);
+        if (!/^[A-Z]{2}$/.test(country) && isPublicIPv4) {
+          try {
+            const geoResponse = await fetch("https://ipwho.is/" + encodeURIComponent(forwarded), {
+              headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(3000)
+            });
+            if (geoResponse.ok) {
+              const geo = await geoResponse.json();
+              const detected = clean(geo?.country_code || "", 2).toUpperCase();
+              if (geo?.success === true && /^[A-Z]{2}$/.test(detected)) country = detected;
+            }
+          } catch (geoError) {
+            console.warn("Login country lookup unavailable:", geoError);
+          }
+        }
         const { error } = await adminClient.from("login_events").insert({
           user_id: user.id, ip_hash: ipHash, country_code: /^[A-Z]{2}$/.test(country) ? country : null,
           user_agent: clean(req.headers.get("user-agent") || "", 300)
