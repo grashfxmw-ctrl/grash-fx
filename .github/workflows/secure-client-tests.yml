@@ -1,0 +1,50 @@
+name: Supabase client regression tests
+
+on:
+  pull_request:
+    paths:
+      - "public/index.html"
+      - "public/client-dashboard.html"
+      - "public/register.html"
+      - "public/supabase-auth.html"
+      - "public/admin-dashboard.html"
+      - "public/admin.html"
+      - "supabase/functions/**"
+      - "supabase/migrations/**"
+      - "tests/**"
+      - ".github/workflows/secure-client-tests.yml"
+  push:
+    branches:
+      - grash-fx-clean-website
+      - production-backend-integration
+    paths:
+      - "public/supabase-auth.html"
+      - "public/admin-dashboard.html"
+      - "public/admin.html"
+      - "supabase/functions/**"
+      - "supabase/migrations/**"
+      - "tests/**"
+      - ".github/workflows/secure-client-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  supabase-client-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run current client regression tests
+        run: node --test tests/secure-client.test.mjs
+      - name: Verify required Supabase files exist
+        run: |
+          test -s public/supabase-auth.html
+          test -s public/admin-dashboard.html
+          test -s supabase/functions/account-api/index.ts
+          test -s supabase/migrations/20261029093429_enforce_financial_request_minimums.sql
+          test -s supabase/migrations/20261029093809_require_deposit_reference_for_approval.sql

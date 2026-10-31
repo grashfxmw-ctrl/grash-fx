@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2a0206">
+<meta name="description" content="Explore GRASH FX services, review plan information and access your client account.">
+<title>GRASH FX — Invest With Purpose</title>
+<style>
+:root{color-scheme:dark;--bg:#07111e;--panel:#101f30;--line:#2b4056;--text:#f7f9fc;--muted:#bdcad8;--gold:#f0b94f;--blue:#132b43}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}a{color:inherit;text-decoration:none}.wrap{width:min(1120px,calc(100% - 36px));margin:auto}.topbar{position:sticky;top:0;z-index:10;background:#07111eef;backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}nav{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:22px}.brand{display:flex;align-items:center;gap:11px;color:var(--gold)}.cat{width:42px;height:42px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;font-size:23px}.brand strong{display:block;font-size:20px;letter-spacing:.08em;line-height:1.1}.brand small{font-size:9px;letter-spacing:.22em;color:#d7dfeb}.links{display:flex;gap:24px;color:#d7dfeb;font-size:13px}.actions{display:flex;gap:9px}.auth-layer{position:fixed;inset:0;z-index:100;background:#020711df;backdrop-filter:blur(7px);display:none;align-items:center;justify-content:center;padding:18px}.auth-layer.open{display:flex}.auth-box{width:min(100%,470px);max-height:92vh;overflow:auto;background:#101f30;border:1px solid #38516a;border-radius:18px;padding:24px;box-shadow:0 24px 80px #0009}.auth-box h2{margin:0 0 8px;font-size:23px}.auth-tabs{display:flex;gap:8px;margin:18px 0}.auth-tabs button{flex:1}.auth-field{margin:12px 0}.auth-field label{display:block;font-size:12px;color:#cbd5e1;margin-bottom:6px}.auth-field input{width:100%;padding:12px;border:1px solid #40536a;border-radius:9px;background:#081522;color:white;font:inherit}.auth-submit{width:100%;border:0;border-radius:9px;padding:12px;background:var(--gold);color:#101820;font-weight:800;cursor:pointer}.auth-message{background:#081522;border:1px solid #344b62;border-radius:9px;padding:11px;margin-top:12px;color:#dce7f4;font-size:13px;white-space:pre-wrap}.auth-close{float:right;background:transparent;border:1px solid #53657a;color:#fff;border-radius:8px;padding:5px 10px;cursor:pointer}.auth-muted{color:#aebed0;font-size:12px}.auth-hidden{display:none!important}.btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 17px;border-radius:9px;border:1px solid #718095;font-weight:750;font-size:13px;cursor:pointer}.primary{background:var(--gold);color:#111a25;border-color:var(--gold)}.hero{background:radial-gradient(ellipse at 72% 25%,#214765 0,#10263b 35%,var(--bg) 75%);border-bottom:1px solid var(--line)}.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:45px;align-items:center;padding:76px 0 70px}.eyebrow{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}.hero h1{font-size:clamp(38px,5.5vw,64px);line-height:1.05;letter-spacing:-.045em;margin:14px 0 20px}.gold{color:var(--gold)}.hero p{max-width:570px;color:#c5d0dd;line-height:1.85}.hero-buttons{display:flex;gap:12px;flex-wrap:wrap;margin-top:25px}.chart{min-height:290px;border:1px solid #38516a;border-radius:20px;background:linear-gradient(140deg,#142d44,#091522);padding:25px;display:flex;align-items:center;position:relative;overflow:hidden}.chart:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 39px,#2a4760 40px),repeating-linear-gradient(90deg,transparent 0 44px,#2a4760 45px);opacity:.45}.chart iframe{position:relative;width:100%;height:320px;border:0;border-radius:12px;background:#091522}.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:25px 0}.trust article{border-right:1px solid var(--line);padding:5px 20px}.trust article:first-child{padding-left:0}.trust article:last-child{border:0}.trust strong{display:block;font-size:14px}.trust span{color:var(--muted);font-size:12px}.section{padding:65px 0}.light{background:#f4f7fb;color:#102035}.section-head{text-align:center;max-width:700px;margin:0 auto 30px}.section h2{font-size:clamp(27px,3vw,37px);line-height:1.2;margin:9px 0}.section-head p{color:#667589}.plans{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.plan{background:#0b1828;color:var(--text);border:1px solid #263c52;border-radius:14px;padding:23px 19px}.plan h3{margin:0 0 16px;font-size:16px}.rate{color:var(--gold);font-weight:850;font-size:19px}.term{color:#c5d0dd;font-size:12px;border-top:1px solid #33475c;margin-top:17px;padding-top:13px}.plan .btn{width:100%;margin-top:20px}.notice{font-size:12px;line-height:1.8;color:#6c798a;margin:20px auto 0;max-width:900px}.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}.about-grid p{color:var(--muted);line-height:1.9}.points{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px}.points span:before{content:"✓";color:var(--gold);font-weight:900;margin-right:9px}.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.info-card{background:#102238;border:1px solid #2b4056;border-radius:14px;padding:22px}.info-card h3{margin:0 0 9px;color:var(--gold);font-size:16px}.info-card p,.info-card li{color:#c2cfdd;font-size:13px;line-height:1.8}.info-card ul{padding-left:18px;margin:8px 0}.steps{counter-reset:step;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.step{background:#102238;border:1px solid #2b4056;border-radius:12px;padding:18px}.step strong{display:block;color:var(--gold);margin-bottom:6px}.faq-list{max-width:900px;margin:auto}.faq-list details{border-bottom:1px solid var(--line);padding:15px 2px}.faq-list summary{cursor:pointer;font-weight:750}.faq-list p{color:var(--muted);font-size:13px;line-height:1.8}.risk-panel{border:1px solid #725b32;background:#211d15;border-radius:14px;padding:22px;margin-top:22px}.risk-panel h3{color:#f2c66e;margin:0 0 8px}.risk-panel p,.risk-panel li{color:#d9cfb9;font-size:12px;line-height:1.85}.legal-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}.legal-links a{border:1px solid #53657a;border-radius:8px;padding:8px 11px;color:#dce7f4;font-size:12px}@media(max-width:850px){.info-grid,.steps{grid-template-columns:1fr 1fr}}@media(max-width:520px){.info-grid,.steps{grid-template-columns:1fr}}.contact{background:var(--blue);padding:36px 0}.contact-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}.contact h2{margin:0 0 6px;font-size:25px}.contact p{margin:0;color:var(--muted)}footer{padding:30px 0;color:#9eafc2;font-size:12px;border-top:1px solid var(--line)}.foot{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap}.foot-links{display:flex;gap:18px;flex-wrap:wrap}@media(max-width:850px){.links{display:none}.hero-grid{grid-template-columns:1fr;gap:25px;padding:52px 0}.chart{min-height:220px}.plans{grid-template-columns:repeat(2,1fr)}.about-grid{grid-template-columns:1fr}.trust article{padding:5px 10px}}@media(max-width:520px){.wrap{width:calc(100% - 28px)}nav{min-height:68px}.brand strong{font-size:17px}.cat{width:36px;height:36px}.actions .btn{padding:9px 10px;font-size:12px}.plans{grid-template-columns:1fr}.trust{grid-template-columns:1fr;gap:10px}.trust article{border-right:0;border-bottom:1px solid var(--line);padding:10px 0}.contact-inner{align-items:flex-start;flex-direction:column}.section{padding:48px 0}}
+
+/* Consistent homepage layout and responsive spacing */
+.wrap{width:min(1180px,calc(100% - 48px))}
+.section{padding:76px 0}
+.section-head{margin-bottom:38px}
+.section-head p{max-width:620px;margin:12px auto 0;line-height:1.8}
+.light{background:#0c1b2b;color:var(--text);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.light .section-head p{color:var(--muted)}
+.plans{align-items:stretch;gap:18px}
+.plan{display:flex;flex-direction:column;min-height:250px;padding:25px 22px;background:#132b43;border-color:#38516a}
+.plan h3{font-size:17px;margin-bottom:18px}
+.plan .term{flex:1;line-height:1.8}
+.plan .btn{margin-top:22px}
+.trust{padding-top:28px;padding-bottom:28px}
+.trust article{min-height:64px;display:flex;flex-direction:column;justify-content:center;gap:5px}
+.about-grid{gap:56px}
+.about-grid>div{min-width:0}
+.points{gap:14px 18px;margin-top:22px}
+.steps{align-items:stretch;gap:18px}
+.step{height:100%;padding:23px;line-height:1.8}
+.info-grid{align-items:stretch;gap:18px}
+.info-card{height:100%;padding:24px;line-height:1.8}
+.info-card h3{margin-bottom:12px}
+.faq-list details{padding:19px 4px}
+.faq-list summary{line-height:1.6}
+.faq-list p{max-width:820px;line-height:1.9}
+.risk-panel{padding:26px;line-height:1.9}
+.contact{padding:44px 0}
+footer{padding:32px 0}
+@media(max-width:850px){
+ .wrap{width:calc(100% - 36px)}
+ .section{padding:60px 0}
+ .hero-grid{padding:58px 0}
+ .about-grid{gap:30px}
+ .plans{gap:14px}
+}
+@media(max-width:520px){
+ .wrap{width:calc(100% - 30px)}
+ .section{padding:48px 0}
+ .section-head{margin-bottom:26px}
+ .hero-grid{padding:44px 0}
+ .hero h1{font-size:clamp(36px,10vw,48px)}
+ .hero-buttons .btn{flex:1}
+ .plan{min-height:0}
+ .about-grid{gap:22px}
+ .info-card,.step{padding:20px}
+ .risk-panel{padding:18px}
+ .contact{padding:32px 0}
+}
+
+/* Homepage navigation and grouped contact panel */
+.nav-toggle{display:none;background:transparent;color:var(--text);border-color:#53657a;font-size:17px;min-width:42px}
+.contact{background:#0c1b2b;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.contact .section-head p{color:var(--muted)}
+.contact-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:900px;margin:0 auto}
+.contact-option{display:flex;align-items:center;gap:14px;min-width:0;padding:19px;background:#132b43;border:1px solid #38516a;border-radius:13px;transition:border-color .18s,transform .18s}
+.contact-option:hover{border-color:var(--gold);transform:translateY(-2px)}
+.contact-option>span:nth-child(2){display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+.contact-option strong{font-size:15px;color:#fff}
+.contact-option small{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.contact-icon{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;border-radius:11px;background:#0a1a2a;color:var(--gold);font-size:20px}
+.contact-arrow{color:var(--gold);font-size:18px}
+@media(max-width:850px){
+ .topbar nav.wrap{min-height:0;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px 14px;padding:10px 0}
+ .nav-toggle{display:inline-flex;align-items:center;justify-content:center}
+ .actions{display:flex;margin-left:auto}
+ .links{display:none;order:3;flex:1 0 100%;width:100%;min-width:0;position:static;flex-direction:column;align-items:stretch;gap:0;padding:7px 12px 10px;background:#2a0206;border:1px solid #7a0c1e;border-radius:10px;white-space:normal;overflow:visible}
+ .links.open{display:flex}
+ .links a{display:block;width:100%;padding:12px 4px;border-bottom:1px solid #641020}
+ .links a:last-of-type{border-bottom:1px solid #641020}
+ .nav-login{align-self:stretch;margin:9px 0 0;padding:11px 14px;text-align:center}
+}
+@media(max-width:520px){.contact-options{grid-template-columns:1fr}.contact-option{padding:16px}}
+/* Professional fintech refresh */
+:root{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--line:#dce4ee;--text:#14243a;--muted:#63748a;--gold:#c6a15b;--blue:#0d2036}
+body{background:#f4f7fb;color:#14243a}
+.topbar{background:rgba(8,24,43,.97);border-bottom:1px solid #243b55}
+.brand{color:#d6b875}.brand small{color:#c5d1df}.cat{border-color:#d6b875}
+.links{color:#e2eaf3}.links a:hover{color:#d6b875}
+.btn{border-color:#b7c4d3;color:#18304b;background:#fff;transition:transform .18s,border-color .18s}
+.btn:hover{transform:translateY(-1px);border-color:#c6a15b}
+.primary,.btn.primary{background:#c6a15b;border-color:#c6a15b;color:#102238}
+.hero{background:radial-gradient(ellipse at 78% 18%,#1b4562 0,#102b46 42%,#081a2d 78%);border:0}
+.hero-grid{padding-top:86px;padding-bottom:82px}.hero h1{color:#fff}.hero p{color:#d0dbe7}
+.eyebrow{color:#c6a15b}.chart{background:linear-gradient(145deg,#173a56,#0b1c30);border-color:#36516b;box-shadow:0 24px 65px #020b1833}
+.trust{background:#fff;max-width:none;padding-left:max(24px,calc((100% - 1180px)/2));padding-right:max(24px,calc((100% - 1180px)/2));border-bottom:1px solid #e2e8f0}
+.trust article{border-color:#e3e9f0}.trust strong{color:#14243a}.trust span{color:#65758a}
+.section{background:#fff}.light{background:#f3f6fa;color:#14243a;border-color:#e1e8f0}
+.light .section-head p,.section-head p{color:#65758a}.section h2{letter-spacing:-.025em}
+.plans{gap:18px}.plan{background:#fff;color:#14243a;border:1px solid #dce4ee;box-shadow:0 10px 28px #122b460d;border-radius:16px}
+.plan h3{color:#14243a}.rate{color:#087f83}.term{color:#65758a;border-color:#e6ebf1}
+.plan .btn{background:#102b46;color:#fff;border-color:#102b46}.plan .btn:hover{background:#174365}
+.notice{color:#68798d}.about-grid p{color:#63748a}.points span:before{color:#07878a}
+#how-it-works,#faq{background:#f3f6fa}
+.step{background:#fff;border-color:#dce4ee;box-shadow:0 8px 24px #122b4608}.step strong{color:#087f83}
+.auth-muted{color:#65758a}#investor-services{background:#fff!important}
+.info-card{background:#f8fafc;border-color:#dce4ee;box-shadow:0 8px 24px #122b4608}
+.info-card h3{color:#087f83}.info-card p,.info-card li{color:#596c82}.info-card a{color:#087f83!important}
+.faq-list details{border-color:#dce4ee}.faq-list summary{color:#172b43}.faq-list p{color:#63748a}
+.contact{background:#0d2036;border-color:#243b55}.contact h2{color:#fff}.contact p{color:#c4d1df}
+.contact-option{background:#142d48;border-color:#36516b}.contact-option:hover{border-color:#d6b875}
+.contact-icon{background:#0b1d31;color:#d6b875}.contact-arrow{color:#d6b875}
+.risk-panel{background:#fffaf0;border-color:#e7d6ad}.risk-panel h3{color:#8b6725}.risk-panel p,.risk-panel li{color:#685a40}
+.legal-links a{border-color:#d7c59e;color:#6c562c}
+footer{background:#081a2d;border-color:#243b55;color:#bdc9d7}.foot-links a:hover{color:#d6b875}
+.auth-layer{background:#061321e8}.auth-box{background:#fff;color:#14243a;border-color:#dce4ee;box-shadow:0 24px 80px #020b1840}
+.auth-box .auth-muted{color:#65758a}.auth-field label{color:#43566d}
+.auth-field input{background:#f8fafc;color:#14243a;border-color:#cbd6e2}
+.auth-message{background:#f1f5f9;color:#34475e;border-color:#dce4ee}.auth-close{border-color:#cbd6e2;color:#34475e}
+.auth-submit{background:#c6a15b;color:#102238}
+@media(max-width:850px){.links{background:#0d2036;border-color:#29425d}.links a{border-color:#29425d}}
+@media(max-width:520px){.trust{padding-left:18px;padding-right:18px}.hero-grid{padding-top:52px;padding-bottom:52px}}
+
+
+/* GRASH FX crimson-sunset colour theme */
+:root{color-scheme:light;--bg:#fff7f8;--panel:#ffffff;--line:#f0cbd3;--text:#321018;--muted:#79535d;--gold:#c91c3f;--blue:#520410}
+body{background:#fff7f8;color:#321018}
+.topbar{background:rgba(42,2,6,.97);border-bottom:1px solid #7a0c1e}
+.brand{color:#ffd1dc}.brand small{color:#f4c2cc}.cat{border-color:#ff9aac}
+.links{color:#fff0f3}.links a:hover{color:#ff9aac}
+.nav-toggle{color:#fff0f3;border-color:#a94a5e}
+.links.open,.links{background-color:#2a0206}
+.links a{border-color:#641020}
+.btn{background:#fff;color:#7a0c1e;border:1px solid #e8b7c2}
+.btn:hover{border-color:#c91c3f;background:#fff0f3}
+.primary,.btn.primary{background:#c91c3f;border-color:#c91c3f;color:#fff}
+.hero{position:relative;isolation:isolate;overflow:hidden;background:linear-gradient(to bottom,#2a0206 0%,#7a0c1e 30%,#c91c3f 60%,#520410 85%,#1a0004 100%);border:0}
+.hero:before{content:"";position:absolute;z-index:-1;right:17%;bottom:17%;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,#fff 0%,#ffccd5 36%,rgba(255,77,109,.78) 65%,transparent 100%);box-shadow:0 0 48px #ff4d6d88,0 0 95px #ff758c66;pointer-events:none}
+.hero-grid{position:relative;z-index:1;padding-top:86px;padding-bottom:82px}
+.hero h1{color:#fff;text-shadow:0 4px 15px #0008}
+.hero h1 .gold{color:#ffd1dc}
+.hero p{color:#ffe0e6}
+.hero .eyebrow,.eyebrow{color:#ffd1dc}
+.hero .btn.primary{background:#fff;border-color:#fff;color:#7a0c1e}
+.hero .btn:not(.primary){background:#520410;border-color:#f2a6b5;color:#fff}
+.chart{background:linear-gradient(150deg,#7a0c1e 0%,#520410 58%,#1a0004 100%);border:1px solid #d85a73;box-shadow:0 24px 65px #1a000455}
+.chart .eyebrow{color:#ffb9c7}
+.chart strong{color:#ffd1dc!important}
+.trust{background:#fff;border-bottom:1px solid #f0dce1}
+.trust article{border-color:#f0dce1}.trust strong{color:#321018}.trust span{color:#79535d}
+.section{background:#fff}
+.light,#how-it-works,#faq{background:#fff3f5;color:#321018;border-color:#f3d9df}
+.section h2{color:#321018}.section-head p,.light .section-head p{color:#79535d}
+.plan{background:#fff;color:#321018;border:1px solid #edc8d1;box-shadow:0 10px 28px #7a0c1e0d;border-radius:16px}
+.plan h3{color:#321018}.rate{color:#c91c3f}.term{color:#79535d;border-color:#f1dfe3}
+.plan .btn{background:#7a0c1e;color:#fff;border-color:#7a0c1e}
+.plan .btn:hover{background:#520410}
+.notice{color:#79535d}.about-grid p{color:#79535d}
+.points span:before,.step strong{color:#c91c3f}
+.step,.info-card{background:#fff;border-color:#edc8d1;box-shadow:0 8px 24px #7a0c1e0b}
+.info-card h3{color:#a40f2d}.info-card p,.info-card li{color:#79535d}.info-card a{color:#a40f2d!important}
+.faq-list details{border-color:#edc8d1}.faq-list summary{color:#321018}.faq-list p{color:#79535d}
+.contact{background:linear-gradient(145deg,#2a0206,#520410 70%,#1a0004);border-color:#7a0c1e}
+.contact h2{color:#fff}.contact p{color:#ffd1dc}
+.contact-option{background:#520410;border-color:#8c3348}
+.contact-option:hover{border-color:#ff9aac}
+.contact-option strong{color:#fff}.contact-option small{color:#ffd1dc}
+.contact-icon{background:#2a0206;color:#ffb9c7}.contact-arrow{color:#ffb9c7}
+.risk-panel{background:#fff7f0;border-color:#e9c7b8}
+.risk-panel h3{color:#8b342d}.risk-panel p,.risk-panel li{color:#71534d}
+.legal-links a{border-color:#e7b8c3;color:#7a0c1e}
+footer{background:#1a0004;border-color:#641020;color:#f4c2cc}
+.foot-links a:hover{color:#ff9aac}
+.auth-layer{background:#1a0004e8}
+.auth-box{background:#fff;color:#321018;border-color:#edc8d1;box-shadow:0 24px 80px #1a000455}
+.auth-box .auth-muted{color:#79535d}.auth-field label{color:#65414b}
+.auth-field input{background:#fff7f8;color:#321018;border-color:#e4bdc7}
+.auth-message{background:#fff3f5;color:#65414b;border-color:#edc8d1}
+.auth-close{border-color:#e4bdc7;color:#65414b}
+.auth-submit{background:#c91c3f;color:#fff}
+@media(max-width:850px){
+ .links{background:#2a0206;border-color:#7a0c1e}
+ .links a{border-color:#641020}
+ .hero:before{right:5%;bottom:13%;width:110px;height:110px}
+}
+@media(max-width:520px){.hero-grid{padding-top:52px;padding-bottom:52px}}
+
+
+/* Dark steel-blue surfaces and integrated navigation login */
+:root{--bg:#172b40;--panel:#263d54;--line:#405a73;--text:#f2f6fb;--muted:#c0cfdd}
+body{background:#172b40;color:#f2f6fb}
+.trust,.section,.light,#how-it-works,#faq,#investor-services{background:#263d54!important;color:#f2f6fb;border-color:#405a73}
+.trust{border-top:1px solid #405a73;border-bottom:1px solid #405a73}
+.trust article{border-color:#405a73}.trust strong,.section h2,.plan h3,.faq-list summary{color:#f2f6fb}
+.trust span,.section-head p,.light .section-head p,.about-grid p,.notice,.faq-list p{color:#c0cfdd}
+.plan,.step,.info-card{background:#1d344b;color:#f2f6fb;border-color:#49647e;box-shadow:0 10px 28px #07152255}
+.plan .term,.info-card p,.info-card li{color:#c0cfdd;border-color:#405a73}
+.rate,.step strong,.points span:before,.info-card h3{color:#ff9aac}
+.faq-list details{border-color:#405a73}
+.risk-panel{background:#263d54;border-color:#8d5362}
+.risk-panel h3{color:#ffb9c7}.risk-panel p,.risk-panel li{color:#e0e8f0}
+.legal-links a{border-color:#8d5362;color:#ffd1dc}
+.auth-box{background:#263d54;color:#f2f6fb;border-color:#49647e}
+.auth-box .auth-muted,.auth-muted{color:#c0cfdd}
+.auth-field label{color:#e0e8f0}
+.auth-field input{background:#172b40;color:#f2f6fb;border-color:#49647e}
+.auth-message{background:#1d344b;color:#e0e8f0;border-color:#49647e}
+.auth-close{border-color:#71869a;color:#f2f6fb}
+.nav-login{background:#c91c3f;color:#fff;border-color:#c91c3f;padding:8px 15px}
+.nav-login:hover{background:#a91433;border-color:#ff9aac}
+@media(max-width:850px){
+ .links{background:#263d54;border-color:#49647e}
+ .links a{border-color:#405a73}
+ .nav-login{align-self:flex-start;margin-top:12px}
+}
+
+
+/* Clear, prominent homepage account access actions */
+.hero-auth-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px}
+.hero-auth-actions .btn{min-width:154px;min-height:50px;padding:13px 22px;border-radius:12px;font-size:14px;font-weight:800;gap:12px;box-shadow:0 10px 26px #16000633}
+.hero-auth-actions .hero-auth-signup{background:linear-gradient(135deg,#ff8fa5,#c91c3f);border:1px solid #ffb4c2;color:#fff}
+.hero-auth-actions .hero-auth-signup:hover{background:linear-gradient(135deg,#ffa5b6,#a90e30);border-color:#ffd1dc}
+.hero-auth-actions .hero-auth-signin{background:#fff;color:#520410;border:1px solid #ffd1dc}
+.hero-auth-actions .hero-auth-signin:hover{background:#fff0f3;border-color:#ff9aac}
+.hero-plans-link{display:inline-flex;align-items:center;gap:8px;margin-top:16px;color:#ffd1dc;font-size:13px;font-weight:750;border-bottom:1px solid #ff9aac;padding-bottom:3px}
+@media(max-width:520px){.hero-auth-actions{gap:10px}.hero-auth-actions .btn{flex:1;min-width:0;padding:12px 15px}}
+
+/* Final mobile/tablet dropdown navigation override */
+@media(max-width:1100px){
+ .topbar nav.wrap{display:flex!important;flex-wrap:wrap!important;align-items:center!important;justify-content:space-between!important;gap:8px 14px!important;padding:10px 0!important}
+ .topbar nav.wrap .actions{display:flex!important;margin-left:auto!important}
+ .topbar nav.wrap .nav-toggle{display:inline-flex!important;align-items:center!important;justify-content:center!important}
+ .topbar nav.wrap .links{display:none!important;order:3!important;flex:1 0 100%!important;width:100%!important;flex-direction:column!important;align-items:stretch!important;gap:0!important;position:static!important;overflow:visible!important;white-space:normal!important;padding:8px 12px!important;background:#2a0206!important;border:1px solid #7a0c1e!important;border-radius:10px!important}
+ .topbar nav.wrap .links.open{display:flex!important}
+ .topbar nav.wrap .links a{display:block!important;width:100%!important;padding:12px 4px!important;border-bottom:1px solid #641020!important}
+ .topbar nav.wrap .links .nav-login{display:block!important;align-self:stretch!important;width:100%!important;margin:10px 0 0!important;padding:11px 14px!important;text-align:center!important}
+}
+</style>
+</head>
+<body>
+<header class="topbar"><nav class="wrap">
+<a class="brand" href="#home"><span class="cat" aria-hidden="true">🐈‍⬛</span><span><strong>GRASH FX</strong><small>INVEST WITH PURPOSE</small></span></a>
+<div class="links" id="primaryNav"><a href="#home">Home</a><a href="#plans">Plans</a><a href="#about">About</a><a href="#how-it-works">How it works</a><a href="#investor-services">Services</a><a href="#faq">FAQ</a><a href="#contact">Contact</a><button class="btn nav-login" type="button" data-auth="signin">Login</button></div>
+<div class="actions"><button class="btn nav-toggle" type="button" id="navToggle" aria-expanded="false" aria-controls="primaryNav" aria-label="Open navigation">☰</button></div>
+</nav></header>
+<main id="home">
+<section class="hero"><div class="wrap hero-grid">
+<div><div class="eyebrow">WELCOME TO GRASH FX</div><h1>Your Investment Journey <span class="gold">Starts Here</span></h1><p>Explore financial markets, discover investment opportunities and manage your account through a platform designed with your ambitions in mind. Take your next step with GRASH FX.</p><div class="hero-buttons hero-auth-actions"><button class="btn primary hero-auth-signup" type="button" data-auth="signup">Sign up <span aria-hidden="true">→</span></button><button class="btn hero-auth-signin" type="button" data-auth="signin">Sign in <span aria-hidden="true">↗</span></button></div><a class="hero-plans-link" href="#plans">Explore plans <span aria-hidden="true">↓</span></a></div>
+<div class="chart investor-overview" aria-label="GRASH FX investor account overview"><div style="position:relative;width:100%"><div class="eyebrow">The GRASH FX experience</div><h2 style="font-size:27px;margin:12px 0;color:#fff">Information first. Clear decisions.</h2><p style="color:#d0dbe7;line-height:1.8">Find the information you need, understand the terms and manage your account through one central place.</p><div style="display:grid;gap:12px;margin-top:22px"><div style="border:1px solid #38516a;background:#0b1b2b;border-radius:10px;padding:13px"><strong style="color:#f0b94f">01</strong> <span style="color:#e4edf7">Review investment plan information</span></div><div style="border:1px solid #38516a;background:#0b1b2b;border-radius:10px;padding:13px"><strong style="color:#f0b94f">02</strong> <span style="color:#e4edf7">Understand the terms and risks</span></div><div style="border:1px solid #38516a;background:#0b1b2b;border-radius:10px;padding:13px"><strong style="color:#f0b94f">03</strong> <span style="color:#e4edf7">Manage your account securely</span></div></div></div></div>
+</div></section>
+<section class="wrap trust" aria-label="Platform information"><article><strong>Clear plan information</strong><span>Review terms before investing.</span></article><article><strong>Account activity</strong><span>View account activity after signing in.</span></article><article><strong>Requests reviewed</strong><span>Requests are reviewed before processing.</span></article></section>
+<section class="section light" id="plans"><div class="wrap"><div class="section-head"><div class="eyebrow">Investment plans</div><h2>Explore the available plans</h2><p>Compare the displayed minimums and terms. Read the full agreement and risk information before making a decision.</p></div>
+<div class="plans">
+<article class="plan"><h3>Starter Plan</h3><div class="rate">10% daily*</div><div class="term">7-day term · Minimum $50</div><button class="btn primary" type="button" data-auth="signup" data-plan="starter">Continue</button></article>
+<article class="plan"><h3>Basic Plan</h3><div class="rate">20% daily*</div><div class="term">7-day term · Minimum $500</div><button class="btn primary" type="button" data-auth="signup" data-plan="basic">Continue</button></article>
+<article class="plan"><h3>Premium Plan</h3><div class="rate">30% daily*</div><div class="term">7-day term · Minimum $1,000</div><button class="btn primary" type="button" data-auth="signup" data-plan="premium">Continue</button></article>
+<article class="plan"><h3>VIP Plan</h3><div class="rate">40% daily*</div><div class="term">7-day term · Minimum $5,000</div><button class="btn primary" type="button" data-auth="signup" data-plan="vip">Continue</button></article>
+</div><p class="notice">*Rates displayed here must be confirmed against the active backend plan configuration and are not a promise or guarantee of returns. Investment activity involves risk. This website records account activity; it does not itself confirm external payments. Do not send funds until the business, terms, regulatory status, and payment instructions have been independently verified.</p>
+</div></section>
+<section class="section" id="about"><div class="wrap about-grid"><div><div class="eyebrow">About GRASH FX</div><h2>About our platform</h2><p>GRASH FX brings service information, client account access and request management together in one place. Review the information available here and contact the team if you need clarification.</p><div class="points"><span>Client account portal</span><span>Investment history</span><span>Transaction requests</span><span>Administrator review</span></div></div><div><div class="eyebrow">Secure account access</div><h2>Already registered?</h2><p>Sign in with your verified email. Available actions depend on your account status. Submitted requests still require review.</p><button class="btn primary" type="button" data-auth="signin">Open client dashboard →</button></div></div></section>
+
+<section class="section" id="how-it-works"><div class="wrap">
+<div class="section-head"><div class="eyebrow">Your investment journey</div><h2>Getting started</h2><p>Understand the process before opening or using an account.</p></div>
+<div class="steps">
+<div class="step"><strong>01 · Create an account</strong><span class="auth-muted">Create an account and verify your email.</span></div>
+<div class="step"><strong>02 · Review your options</strong><span class="auth-muted">Review plan terms, minimums and risks.</span></div>
+<div class="step"><strong>03 · Fund and monitor</strong><span class="auth-muted">Follow payment instructions and manage requests in your dashboard.</span></div>
+</div>
+</div></section>
+<section class="section" style="background:#0b1828" id="investor-services"><div class="wrap">
+<div class="section-head"><div class="eyebrow">Investor services</div><h2>Services and account information</h2><p>Explore the main services and the information clients should understand before proceeding.</p></div>
+<div class="info-grid">
+<article class="info-card"><h3>Deposits and withdrawals</h3><ul><li>Minimum deposit: $20</li><li>Minimum investment: $50</li><li>Minimum withdrawal request: $50</li><li>No platform deposit or withdrawal fees are currently stated.</li></ul><p>Payment methods, processing times, verification requirements and any third-party charges must be checked before a transaction.</p></article>
+<article class="info-card"><h3>Referral programme</h3><p>Eligible referrals can earn a $5 referral reward, subject to programme conditions.</p><p>Referral gains are held separately from the main account. Once the available referral balance reaches $60, the client can request a transfer to the main account through the client dashboard.</p></article>
+<article class="info-card"><h3>Account monitoring</h3><p>Clients can sign in to review available account information, investment activity, referral gains and submitted financial requests.</p><p>Submitting a request does not mean it has been approved or completed. Status updates are shown through the account process.</p></article>
+<article class="info-card"><h3>Investor education</h3><p>Review information about investment periods, plan conditions, deposits, withdrawals and the risks involved. Make sure you understand the terms before committing funds.</p></article>
+<article class="info-card"><h3>Investor support</h3><p>Need help with your account or a payment? Open the Contact section to choose your preferred support channel.</p><p><a href="#contact" style="color:var(--gold);font-weight:750">View contact options →</a></p></article>
+<article class="info-card"><h3>Before you invest</h3><p>Only proceed after independently reviewing the business, applicable legal requirements, plan documentation, payment instructions and the risks. Never invest money you cannot afford to lose.</p></article>
+</div>
+</div></section>
+<section class="section" id="faq"><div class="wrap">
+<div class="section-head"><div class="eyebrow">Investor support</div><h2>Questions, answered</h2><p>Find answers about account access, payment requests and important conditions.</p></div>
+<div class="faq-list">
+<details><summary>What is the minimum amount to deposit?</summary><p>The stated minimum deposit is $20. The minimum amount to participate in an investment plan is $50. Individual plan minimums may be higher.</p></details>
+<details><summary>What is the minimum withdrawal amount?</summary><p>The stated minimum withdrawal request is $50. Requests remain subject to account verification, available balance, review and the applicable payment conditions.</p></details>
+<details><summary>Are there deposit or withdrawal fees?</summary><p>GRASH FX currently states no platform deposit or withdrawal fees. Your bank, wallet provider or payment intermediary may apply separate charges.</p></details>
+<details><summary>How can I monitor my investment?</summary><p>Sign in to your client dashboard to review the account information and investment activity made available to you.</p></details>
+<details><summary>How does the referral reward work?</summary><p>Eligible referrals may earn a $5 reward under the referral programme rules. Referral gains can be transferred to the main account once the available referral balance reaches $60.</p></details>
+<details><summary>Are investment returns guaranteed?</summary><p>No. Investment returns are not guaranteed. You may lose some or all of the money you invest. Read all plan terms and risk disclosures before participating.</p></details>
+</div>
+</div></section>
+<section class="contact" id="contact"><div class="wrap">
+<div class="section-head"><div class="eyebrow">We're here to help</div><h2>Speak with GRASH FX</h2><p>Choose the channel that works best for you. For account-specific matters, use the email address linked to your account.</p></div>
+<div class="contact-options">
+<a class="contact-option" href="https://wa.me/27721526863" target="_blank" rel="noopener noreferrer"><span class="contact-icon">☏</span><span><strong>WhatsApp</strong><small>+27 72 152 6863 · Chat with us</small></span><span class="contact-arrow">↗</span></a>
+<a class="contact-option" href="mailto:grashfxmw@gmail.com"><span class="contact-icon">✉</span><span><strong>Email</strong><small>grashfxmw@gmail.com · Send an email</small></span><span class="contact-arrow">↗</span></a>
+<a class="contact-option" href="https://t.me/grashfxmw" target="_blank" rel="noopener noreferrer"><span class="contact-icon">➤</span><span><strong>Telegram</strong><small>@grashfxmw · Message us</small></span><span class="contact-arrow">↗</span></a>
+<a class="contact-option" href="tel:+27721526863"><span class="contact-icon">☎</span><span><strong>Call</strong><small>+27 72 152 6863 · Phone support</small></span><span class="contact-arrow">↗</span></a>
+</div></div></section>
+<section class="section" id="risk-disclosure" style="padding-top:10px"><div class="wrap">
+<div class="risk-panel"><h3>Important investment risk warning</h3><p>Investing involves risk, including the possible loss of some or all of your invested capital. Any rates or potential returns displayed in a plan are not a guarantee of future results. Past performance, projections or illustrative figures are not reliable indicators of future performance. Consider your financial circumstances, objectives and ability to bear losses, and seek independent professional advice where appropriate. Do not deposit funds until you have reviewed the full investment agreement, verified the operator and confirmed the applicable legal and regulatory position.</p>
+<p>Services may not be available in every jurisdiction. GRASH FX does not intend to offer its services to residents of the European Economic Area (EEA), the United States, Israel, the United Kingdom, the Philippines, Japan or Brazil, subject to applicable law and final legal review. Visitors should confirm eligibility before registering or attempting to fund an account.</p>
+</div>
+</div></section>
+
+</main>
+<div id="authLayer" class="auth-layer" role="dialog" aria-modal="true" aria-labelledby="authTitle"><section class="auth-box"><button type="button" id="authClose" class="auth-close">✕</button><div class="eyebrow">GRASH FX secure access</div><h2 id="authTitle">Welcome</h2><p class="auth-muted">Sign in to your account or sign up with your name, email and password.</p><div class="auth-tabs"><button type="button" id="authSignupTab" class="btn primary">Create account</button><button type="button" id="authSigninTab" class="btn">Sign in</button></div>
+<form id="homeSignup"><div class="auth-field"><label for="homeFullName">Full name</label><input id="homeFullName" minlength="2" maxlength="100" autocomplete="name" required></div><div class="auth-field"><label for="homeReferral">Referral code (optional)</label><input id="homeReferral" maxlength="9" pattern="GRASH[0-9]{4}" placeholder="GRASH1234"></div><div class="auth-field"><label for="homeSignupEmail">Email address</label><input id="homeSignupEmail" type="email" autocomplete="email" required></div><div class="auth-field"><label for="homeSignupPassword">Password (at least 8 characters)</label><input id="homeSignupPassword" type="password" minlength="8" autocomplete="new-password" required></div><button class="auth-submit" type="submit">Create account</button></form>
+<form id="homeSignin" class="auth-hidden"><div class="auth-field"><label for="homeSigninEmail">Email address</label><input id="homeSigninEmail" type="email" autocomplete="email" required></div><div class="auth-field"><label for="homeSigninPassword">Password</label><input id="homeSigninPassword" type="password" autocomplete="current-password" required></div><button class="auth-submit" type="submit">Sign in</button><button type="button" id="homeReset" class="btn" style="width:100%;margin-top:9px">Send password reset email</button></form>
+<p id="homeAuthMessage" class="auth-message" role="status" aria-live="polite">Ready.</p><p class="auth-muted">Email verification is required before an account becomes active.</p></section></div>
+<footer><div class="wrap foot"><span>© <span id="year"></span> GRASH FX</span><div class="foot-links"><a href="#risk-disclosure">Risk disclosure</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20Terms%20and%20Conditions">Terms</a><a href="mailto:grashfxmw@gmail.com?subject=Request%20for%20Privacy%20Policy">Privacy</a><a href="#contact">Contact</a></div></div></footer>
+<script>
+document.getElementById("year").textContent=new Date().getFullYear();
+const navToggle=document.getElementById("navToggle"),primaryNav=document.getElementById("primaryNav");
+navToggle.addEventListener("click",()=>{const opened=primaryNav.classList.toggle("open");navToggle.setAttribute("aria-expanded",String(opened));navToggle.setAttribute("aria-label",opened?"Close navigation":"Open navigation");navToggle.textContent=opened?"✕":"☰";});
+function closeMobileNav(){primaryNav.classList.remove("open");navToggle.setAttribute("aria-expanded","false");navToggle.setAttribute("aria-label","Open navigation");navToggle.textContent="☰";}
+primaryNav.querySelectorAll("a,button").forEach(item=>item.addEventListener("click",closeMobileNav));
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
+(()=>{const URL="https://vwghcjkgzeausfxqphmf.supabase.co",KEY="sb_publishable_gn3ndWb6xAtoaZ4FYFaHug_sbnCJI33",API=URL+"/functions/v1/account-api",sb=window.supabase.createClient(URL,KEY),$=id=>document.getElementById(id);
+const say=t=>$("homeAuthMessage").textContent=t;
+function authMode(signup){$("homeSignup").classList.toggle("auth-hidden",!signup);$("homeSignin").classList.toggle("auth-hidden",signup);$("authSignupTab").classList.toggle("primary",signup);$("authSigninTab").classList.toggle("primary",!signup);$("authTitle").textContent=signup?"Create your GRASH FX account":"Sign in to GRASH FX";}
+function openAuth(mode){$("authLayer").classList.add("open");document.body.style.overflow="hidden";authMode(mode!=="signin");}
+function closeAuth(){$("authLayer").classList.remove("open");document.body.style.overflow="";}
+document.querySelectorAll("[data-auth]").forEach(b=>b.addEventListener("click",()=>openAuth(b.dataset.auth)));
+$("authClose").onclick=closeAuth;$("authLayer").addEventListener("click",e=>{if(e.target===$("authLayer"))closeAuth();});$("authSignupTab").onclick=()=>authMode(true);$("authSigninTab").onclick=()=>authMode(false);
+const incomingReferral=(new URLSearchParams(location.search).get("ref")||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,9); $("homeReferral").value=incomingReferral; if(incomingReferral){$("homeReferral").readOnly=true;$("homeReferral").setAttribute("aria-readonly","true");$("homeReferral").title="This referral code came from your invitation link and cannot be changed.";} $("homeReferral").addEventListener("input",()=>{if(incomingReferral){$("homeReferral").value=incomingReferral;return;}$("homeReferral").value=$("homeReferral").value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,9);});
+async function api(path,method="GET",body){const {data:{session}}=await sb.auth.getSession();if(!session)throw Error("Please sign in again.");const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);let r;try{r=await fetch(API+path,{method,headers:{Authorization:"Bearer "+session.access_token,apikey:KEY,"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined,signal:controller.signal});}catch(err){if(err.name==="AbortError")throw Error("The server took too long to respond. Please try again.");throw Error("Could not reach the account server. Check your connection.");}finally{clearTimeout(timer);}const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Request failed.");return d;}
+async function enterDashboard(){const {data:{user},error}=await sb.auth.getUser();if(error||!user)throw error||Error("Please sign in again.");const d=await api("/me");if(!d.profile)throw Error("Your client profile is not ready. Please contact GRASH FX support; do not register again.");if(d.profile.status==="active"){say("Signed in. Opening your dashboard…");location.href="client-dashboard.html";}else say("Your account status is "+d.profile.status+". Verify your email or contact support.");}
+$("homeSignup").onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{const {data,error}=await sb.auth.signUp({email:$("homeSignupEmail").value.trim(),password:$("homeSignupPassword").value,options:{data:{full_name:$("homeFullName").value.trim(),referral_code:$("homeReferral").value.trim().toUpperCase()},emailRedirectTo:location.origin+location.pathname}});if(error)throw error;if(data.session){say("Account created. Opening your dashboard…");await enterDashboard();}else{say("Registration started. Check your email and verify your address. Then return here and sign in.");authMode(false);}}catch(err){say(err.message||"Registration failed.");}finally{b.disabled=false;}};
+$("homeSignin").onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{const {error}=await sb.auth.signInWithPassword({email:$("homeSigninEmail").value.trim(),password:$("homeSigninPassword").value});if(error)throw error;await enterDashboard();}catch(err){say(err.message||"Sign in failed.");}finally{b.disabled=false;}};
+$("homeReset").onclick=async()=>{const email=$("homeSigninEmail").value.trim();if(!email){say("Enter your email address first.");return;}try{const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});if(error)throw error;say("If the address is registered, a password reset email has been sent.");}catch(err){say(err.message);}};
+(async()=>{const q=new URLSearchParams(location.search),token=q.get("token_hash"),type=q.get("type");if(token&&type){try{const {error}=await sb.auth.verifyOtp({token_hash:token,type});if(error)throw error;history.replaceState({},document.title,location.pathname);openAuth("signin");say("Email verified. Please sign in.");}catch(err){openAuth("signin");say(err.message||"Verification link invalid or expired.");}}else if(new URLSearchParams(location.search).get("auth")==="signin")openAuth("signin");})();
+})();
+</script>
+</body></html>

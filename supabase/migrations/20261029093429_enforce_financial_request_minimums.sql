@@ -1,0 +1,3 @@
+-- SUPERSEDED SAFETY PLACEHOLDER.
+-- The original migration targeted public.financial_transactions, which does not exist in the active GRASH FX Supabase schema.
+-- Intentionally no-op. Live-schema minimum enforcement is recorded in 20261029181904_enforce_live_money_request_minimums.sql.
