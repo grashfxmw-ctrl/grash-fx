@@ -237,7 +237,7 @@ button.bg-amber-500,button.bg-yellow-500{background:#F59E0B!important;color:#111
 (function(){
 "use strict";
 var URL="https://vwghcjkgzeausfxqphmf.supabase.co",KEY="sb_publishable_gn3ndWb6xAtoaZ4FYFaHug_sbnCJI33",API=URL+"/functions/v1/account-api";
-var sb=window.supabase.createClient(URL,KEY),$=function(id){return document.getElementById(id);};
+var sb=window.supabase.createClient(URL,KEY,{auth:{storageKey:"grashfx-admin-auth-v1"}}),$=function(id){return document.getElementById(id);};
 var state={user:null,queue:null,customers:[],requests:[],investments:[],plans:[],tickets:[],referralData:null};
 var messageState={conversations:[],selectedUserId:null,messages:[]};
 var money=function(v){return "$"+Number(v||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});};
