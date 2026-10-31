@@ -31,7 +31,7 @@ header{background:#203d5b!important;border-color:#365673!important;color:#f1f6fc
 /* Keep the existing sidebar intact; allow the whole menu to scroll on short screens. */
 #sidebar{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;max-height:100vh;max-height:100dvh}
 @media print{body{background:#fff!important;color:#111!important;font:12px Arial,sans-serif!important}body>*{visibility:hidden!important}#printStatement{visibility:visible!important;display:block!important;position:absolute;left:0;top:0;width:100%;padding:24px!important;color:#111!important}#printStatement h1{font-size:22px}#printStatement h2{font-size:15px;margin-top:22px}#printStatement table{width:100%;border-collapse:collapse;margin-top:8px}#printStatement th,#printStatement td{border:1px solid #bbb;padding:7px;text-align:left}}
-</style></head>
+</style><script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script></head>
 <body class="min-h-screen">
 <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-[#203d5b] border-r border-[#365673] flex flex-col -translate-x-full md:translate-x-0 transition-transform">
  <button id="clientDashboardHome" type="button" class="h-[76px] w-full px-4 flex items-center justify-start border-b border-white/10 text-left"><img src="assets/grash-fx-logo.svg" alt="GRASH FX — Trade Analyze Grow" class="block w-[190px] max-h-[64px] object-contain"></button>
@@ -273,13 +273,17 @@ function renderRecentActivity(transactions,investments,messages,account){
  $("recentActivity").innerHTML=events.length?events.slice(0,5).map(e=>'<div class="border-b border-slate-100 pb-3 last:border-0"><div class="flex justify-between items-start gap-2"><b class="text-xs capitalize text-slate-800">'+esc(e.title)+'</b><span class="shrink-0 text-[10px] text-slate-400">'+(e.date?new Date(e.date).toLocaleDateString():"")+'</span></div><p class="text-xs text-slate-500 mt-1 break-words">'+esc(e.detail)+'</p></div>').join(""):'<p class="text-xs text-slate-500">No recent activity yet.</p>';
 }
 function prepareStatement(){
- $("statementClient").textContent="Client: "+(profile?.full_name||"Client")+" · Email: "+($("clientProfileEmail").textContent||"");
- $("statementPeriod").textContent="Generated: "+new Date().toLocaleString();
- $("statementSummary").innerHTML="<p>Total balance: "+money(profile?.balance)+"</p><p>Available balance: "+money(profile?.available_balance)+"</p><p>Profit balance: "+money(profile?.profit_balance)+"</p>";
+ if(!window.jspdf||!window.jspdf.jsPDF){message("PDF engine is unavailable. Check your internet connection and try again.");return;}
+ const doc=new window.jspdf.jsPDF({orientation:"portrait",unit:"mm",format:"a4"}),pageW=doc.internal.pageSize.getWidth(),margin=14,lineH=6;let y=18;
  const tx=statementData.transactions||[],iv=statementData.investments||[];
- $("statementTransactions").innerHTML=tx.length?'<table><thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead><tbody>'+tx.map(t=>'<tr><td>'+esc(new Date(t.created_at).toLocaleString())+'</td><td>'+esc(t.kind)+'</td><td>'+money(t.amount)+'</td><td>'+esc(t.status)+'</td></tr>').join("")+'</tbody></table>':"<p>No transactions recorded.</p>";
- $("statementInvestments").innerHTML=iv.length?'<table><thead><tr><th>Plan</th><th>Principal</th><th>Profit credited</th><th>Status</th><th>Maturity</th></tr></thead><tbody>'+iv.map(i=>'<tr><td>'+esc(i.plan_code)+'</td><td>'+money(i.principal)+'</td><td>'+money(i.credited_profit)+'</td><td>'+esc(i.status)+'</td><td>'+esc(new Date(i.matures_at).toLocaleString())+'</td></tr>').join("")+'</tbody></table>':"<p>No investments recorded.</p>";
- window.print();
+ function heading(title){if(y>270){doc.addPage();y=18;}doc.setFont("helvetica","bold");doc.setFontSize(12);doc.setTextColor(23,37,84);doc.text(title,margin,y);y+=8;}
+ function row(values,widths){if(y>278){doc.addPage();y=18;}let x=margin;doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(40,50,65);values.forEach((v,i)=>{const lines=doc.splitTextToSize(String(v??"—"),widths[i]-3);doc.text(lines[0]||"—",x,y);x+=widths[i];});doc.setDrawColor(220,225,234);doc.line(margin,y+2,pageW-margin,y+2);y+=lineH;}
+ doc.setFont("helvetica","bold");doc.setFontSize(20);doc.setTextColor(23,37,84);doc.text("GRASH FX — Account Statement",margin,y);y+=9;
+ doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(85,95,110);doc.text("Client: "+(profile?.full_name||"Client"),margin,y);y+=5;doc.text("Email: "+($("clientProfileEmail").textContent||"—"),margin,y);y+=5;doc.text("Generated: "+new Date().toLocaleString(),margin,y);y+=10;
+ heading("Account summary");row(["Total balance",money(profile?.balance)], [55,120]);row(["Available balance",money(profile?.available_balance)],[55,120]);row(["Profit balance",money(profile?.profit_balance)],[55,120]);y+=4;
+ heading("Transactions");const tw=[48,42,35,40];row(["Date","Type","Amount","Status"],tw);tx.forEach(t=>row([t.created_at?new Date(t.created_at).toLocaleString():"—",t.kind||"—",money(t.amount),t.status||"—"],tw));if(!tx.length)row(["No transactions recorded","","",""],tw);y+=4;
+ heading("Investments");const iw=[34,35,35,30,55];row(["Plan","Principal","Profit credited","Status","Maturity"],iw);iv.forEach(i=>row([i.plan_code||"—",money(i.principal),money(i.credited_profit),i.status||"—",i.matures_at?new Date(i.matures_at).toLocaleString():"—"],iw));if(!iv.length)row(["No investments recorded","","","",""],iw);
+ doc.save("GRASH-FX-Account-Statement-"+new Date().toISOString().slice(0,10)+".pdf");
 }
 
 $("profileForm").onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{await api("/profile-update","POST",{full_name:$("fullName").value.trim(),phone:$("phone").value.trim()});const {error}=await sb.auth.updateUser({data:{full_name:$("fullName").value.trim()}});if(error)throw error;message("Profile updated successfully.");await load();}catch(err){message(err.message);}finally{b.disabled=false;}};
