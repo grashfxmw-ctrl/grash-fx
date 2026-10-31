@@ -274,6 +274,25 @@ Deno.serve(async (req: Request) => {
       return json({ conversations });
     }
 
+    if (req.method === "GET" && path.endsWith("/announcements")) {
+      if (!profile) return json({ error: "Complete account registration first." }, 403);
+      const { data, error } = await adminClient.from("platform_announcements")
+        .select("id,title,body,label,published_at,created_at")
+        .eq("is_published", true).order("published_at", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false }).limit(20);
+      if (error) throw error;
+      return json({ announcements: data || [] });
+    }
+
+    if (req.method === "GET" && path.endsWith("/admin/announcements")) {
+      if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
+      const { data, error } = await adminClient.from("platform_announcements")
+        .select("id,title,body,label,is_published,published_at,created_at,updated_at")
+        .order("created_at", { ascending: false }).limit(100);
+      if (error) throw error;
+      return json({ announcements: data || [] });
+    }
+
     if (req.method === "GET" && path.endsWith("/plans")) {
       const { data, error } = await adminClient.from("investment_plans")
         .select("id,plan_code,display_name,daily_rate,minimum_amount,currency,term_days")
@@ -822,6 +841,39 @@ Deno.serve(async (req: Request) => {
         });
         if (error) return json({ error: error.message }, 400);
         return json({ ledger_entry_id: data, status: "adjusted" }, 201);
+      }
+
+      if (path.endsWith("/admin/announcement")) {
+        if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
+        const action = clean(body.action, 16).toLowerCase();
+        if (action === "create") {
+          const title = clean(body.title, 160), label = clean(body.label || "PLATFORM UPDATE", 40), content = clean(body.body, 3000);
+          if (title.length < 3 || content.length < 3) return json({ error: "Enter an announcement title and message." }, 400);
+          const publish = body.is_published === true;
+          const { data, error } = await adminClient.from("platform_announcements").insert({
+            title, label, body: content, is_published: publish, published_at: publish ? new Date().toISOString() : null, created_by: user.id
+          }).select("id,title,body,label,is_published,published_at,created_at").single();
+          if (error) throw error;
+          return json({ announcement: data }, 201);
+        }
+        const id = clean(body.id, 64);
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) return json({ error: "A valid announcement is required." }, 400);
+        if (action === "delete") {
+          const { data, error } = await adminClient.from("platform_announcements").delete().eq("id", id).select("id").maybeSingle();
+          if (error) throw error;
+          if (!data) return json({ error: "Announcement not found." }, 404);
+          return json({ deleted: true });
+        }
+        if (action === "toggle") {
+          const publish = body.is_published === true;
+          const { data, error } = await adminClient.from("platform_announcements").update({
+            is_published: !publish, published_at: !publish ? new Date().toISOString() : null, updated_at: new Date().toISOString()
+          }).eq("id", id).select("id,is_published").maybeSingle();
+          if (error) throw error;
+          if (!data) return json({ error: "Announcement not found." }, 404);
+          return json({ announcement: data });
+        }
+        return json({ error: "Unsupported announcement action." }, 400);
       }
 
       if (path.endsWith("/profile-update")) {
