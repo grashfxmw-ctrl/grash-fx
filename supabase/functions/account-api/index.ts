@@ -89,6 +89,15 @@ Deno.serve(async (req: Request) => {
       };
     };
 
+    if (req.method === "GET" && path.endsWith("/login-activity")) {
+      if (!profile) return json({ error: "Complete account registration first." }, 403);
+      const { data, error } = await adminClient.from("login_events")
+        .select("id,country_code,user_agent,created_at")
+        .eq("user_id", user.id).order("created_at", { ascending: false }).limit(10);
+      if (error) throw error;
+      return json({ events: data || [] });
+    }
+
     if (req.method === "GET" && path.endsWith("/messages") && !path.endsWith("/admin/messages")) {
       if (!profile) return json({ error: "Complete account registration first." }, 403);
       const { error: readError } = await adminClient.from("support_messages")
