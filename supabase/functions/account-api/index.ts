@@ -89,6 +89,40 @@ Deno.serve(async (req: Request) => {
       };
     };
 
+    if (req.method === "GET" && path.endsWith("/admin/client-detail")) {
+      if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
+      const targetId = clean(new URL(req.url).searchParams.get("user_id"), 64);
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetId)) return json({error:"A valid client account is required."},400);
+      const [profileResult,authResult,ledgerResult,requestsResult,investmentsResult,loginResult,referralsResult,ticketsResult] = await Promise.all([
+        adminClient.from("profiles").select("user_id,full_name,email,phone,referral_code,status,country_code,created_at,updated_at").eq("user_id",targetId).maybeSingle(),
+        adminClient.auth.admin.getUserById(targetId),
+        adminClient.from("ledger_entries").select("id,entry_type,amount,currency,description,created_at,investment_id").eq("user_id",targetId).order("created_at",{ascending:false}).limit(100),
+        adminClient.from("money_requests").select("id,request_type,amount,currency,status,client_reference,external_payment_reference,payment_method,payment_details,submitted_at,created_at,reviewed_at,paid_at").eq("user_id",targetId).order("created_at",{ascending:false}).limit(100),
+        adminClient.from("investments").select("id,plan_id,principal_amount,currency,daily_rate_snapshot,term_days_snapshot,status,started_at,matures_at,matured_at,created_at").eq("user_id",targetId).order("created_at",{ascending:false}).limit(100),
+        adminClient.from("login_events").select("id,country_code,user_agent,created_at").eq("user_id",targetId).order("created_at",{ascending:false}).limit(20),
+        adminClient.from("referrals").select("id,referrer_user_id,referred_user_id,referral_code,status,created_at,rewarded_at").or("referrer_user_id.eq."+targetId+",referred_user_id.eq."+targetId).order("created_at",{ascending:false}).limit(100),
+        adminClient.from("support_tickets").select("id,subject,message,status,created_at,updated_at").eq("user_id",targetId).order("created_at",{ascending:false}).limit(50)
+      ]);
+      for (const result of [profileResult,ledgerResult,requestsResult,investmentsResult,loginResult,referralsResult,ticketsResult]) if (result.error) throw result.error;
+      if (!profileResult.data) return json({error:"Client account not found."},404);
+      if (authResult.error) throw authResult.error;
+      const ledger = ledgerResult.data || [];
+      const balance = ledger.filter(x=>x.currency==="USD").reduce((sum,x)=>sum+Number(x.amount||0),0);
+      const profit = ledger.filter(x=>x.currency==="USD"&&x.entry_type==="profit_credit").reduce((sum,x)=>sum+Number(x.amount||0),0);
+      const pending = (requestsResult.data||[]).filter(x=>x.request_type==="withdrawal"&&["submitted","under_review","approved"].includes(x.status)).reduce((sum,x)=>sum+Number(x.amount||0),0);
+      const planIds=[...new Set((investmentsResult.data||[]).map(x=>x.plan_id).filter(Boolean))];
+      let planMap:Record<string,string>={};
+      if(planIds.length){const {data,error}=await adminClient.from("investment_plans").select("id,plan_code,display_name").in("id",planIds);if(error)throw error;planMap=Object.fromEntries((data||[]).map(x=>[x.id,x.display_name||x.plan_code]));}
+      const referralCredits=ledger.filter(x=>x.entry_type==="referral_bonus_credit").reduce((sum,x)=>sum+Number(x.amount||0),0);
+      const {data:transfers,error:transferError}=await adminClient.from("referral_transfers").select("amount").eq("user_id",targetId);
+      if(transferError)throw transferError;
+      const referralTransferred=(transfers||[]).reduce((sum,x)=>sum+Number(x.amount||0),0);
+      const authUser=authResult.data?.user, profileData=profileResult.data;
+      return json({client:{...profileData,auth_created_at:authUser?.created_at||null,last_sign_in_at:authUser?.last_sign_in_at||null,email_confirmed_at:authUser?.email_confirmed_at||null,main_balance:Math.round(balance*100)/100,available_balance:Math.round((balance-pending)*100)/100,profit_balance:Math.round(profit*100)/100,referral_balance:Math.round((referralCredits-referralTransferred)*100)/100},
+        ledger,requests:requestsResult.data||[],investments:(investmentsResult.data||[]).map(x=>({...x,plan_name:planMap[x.plan_id]||"Investment plan"})),
+        login_events:loginResult.data||[],referrals:referralsResult.data||[],support_tickets:ticketsResult.data||[]});
+    }
+
     if (req.method === "GET" && path.endsWith("/login-activity")) {
       if (!profile) return json({ error: "Complete account registration first." }, 403);
       const { data, error } = await adminClient.from("login_events")
