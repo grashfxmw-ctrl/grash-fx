@@ -37,6 +37,28 @@ tr:hover td{background:#172033!important}
 .hover\\:bg-slate-50:hover{background:#1e293b!important}
 .empty{border-color:#334155!important;color:#94a3b8!important}
 .modal>div{background:#111827!important;color:#e5e7eb!important}
+
+/* GRASH FX Ethereum-blue administrator surfaces */
+:root{--eth-blue:#627eea;--eth-blue-dark:#5069cf;--eth-blue-border:#8298f2}
+.bg-white,.panel,header.bg-white,.bg-white.border-b,.modal>div{
+ background-color:var(--eth-blue)!important;
+ border-color:var(--eth-blue-border)!important;
+ color:#fff!important;
+}
+.panel{box-shadow:0 8px 24px #0003!important}
+header.bg-white,.bg-white.border-b{background-color:var(--eth-blue)!important}
+#adminNotificationPanel,#adminProfilePanel{background-color:var(--eth-blue)!important;border-color:var(--eth-blue-border)!important;color:#fff!important}
+#adminNotificationPanel button,#adminProfilePanel .text-slate-500{color:#eef2ff!important}
+.panel .stat-label,.panel .muted,.panel .text-slate-500,.panel .text-slate-600,.panel .text-slate-700,
+header .text-slate-500,header .text-slate-600,header .text-slate-700{color:#eef2ff!important}
+.panel .stat-value{color:#fff!important}
+.panel th{background:#5069cf!important;color:#fff!important}
+.panel td{color:#fff!important;border-color:#8298f2!important}
+.panel tr:hover td{background:#5069cf!important}
+.panel .field{background:#f8faff!important;color:#172554!important;border-color:#dbe4ff!important}
+.panel .field::placeholder{color:#64748b!important}
+.panel .btn-light{background:#e8edff!important;color:#3047a5!important}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script></head>
 <body class="min-h-screen">
