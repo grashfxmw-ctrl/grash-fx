@@ -861,6 +861,67 @@ Deno.serve(async (req: Request) => {
         return json({ error: "Unsupported referral management action." }, 400);
       }
 
+      if (path.endsWith("/admin/delete-customer")) {
+        // Permanent deletion is an administrator-only operation; clients have no self-delete route.
+        const { data: adminRole, error: adminRoleError } = await adminClient.from("admin_roles")
+          .select("role_name").eq("user_id", user.id).eq("role_name", "administrator").is("revoked_at", null).limit(1).maybeSingle();
+        if (adminRoleError) throw adminRoleError;
+        if (!adminRole) return json({ error: "Only an active administrator can permanently delete a client account." }, 403);
+
+        const targetUserId = clean(body.user_id, 64);
+        const reason = clean(body.reason, 500);
+        const confirmation = clean(body.confirmation, 16);
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetUserId) ||
+            reason.length < 5 || confirmation !== "DELETE") {
+          return json({ error: "A valid client, a deletion reason (5+ characters), and DELETE confirmation are required." }, 400);
+        }
+        if (targetUserId === user.id) return json({ error: "You cannot delete your own administrator account." }, 400);
+
+        const { data: target, error: targetError } = await adminClient.from("profiles")
+          .select("user_id,full_name,email,status").eq("user_id", targetUserId).maybeSingle();
+        if (targetError) throw targetError;
+        if (!target) return json({ error: "Client account not found." }, 404);
+
+        const { data: targetAdminRole, error: targetAdminError } = await adminClient.from("admin_roles")
+          .select("role_name").eq("user_id", targetUserId).is("revoked_at", null).limit(1).maybeSingle();
+        if (targetAdminError) throw targetAdminError;
+        if (targetAdminRole) return json({ error: "Administrator or finance accounts cannot be deleted from the client list." }, 403);
+
+        const [ledger, requests, investments] = await Promise.all([
+          adminClient.from("ledger_entries").select("id", { count: "exact", head: true }).eq("user_id", targetUserId),
+          adminClient.from("money_requests").select("id", { count: "exact", head: true }).eq("user_id", targetUserId),
+          adminClient.from("investments").select("id", { count: "exact", head: true }).eq("user_id", targetUserId)
+        ]);
+        for (const result of [ledger, requests, investments]) if (result.error) throw result.error;
+        const hasFinancialHistory = (ledger.count || 0) > 0 || (requests.count || 0) > 0 || (investments.count || 0) > 0;
+
+        if (hasFinancialHistory) {
+          const { error: closeError } = await adminClient.from("profiles")
+            .update({ status: "closed", updated_at: new Date().toISOString() }).eq("user_id", targetUserId);
+          if (closeError) throw closeError;
+          const { error: banError } = await adminClient.auth.admin.updateUserById(targetUserId, { ban_duration: "876000h" });
+          if (banError) throw banError;
+          const { error: auditError } = await adminClient.from("audit_events").insert({
+            actor_user_id: user.id, action: "customer.deletion_blocked_financial_history",
+            entity_type: "profile", entity_id: targetUserId, reason,
+            details: { full_name: target.full_name, email: target.email, financial_records_preserved: true,
+              ledger_count: ledger.count || 0, money_request_count: requests.count || 0, investment_count: investments.count || 0 }
+          });
+          if (auditError) throw auditError;
+          return json({ deleted: false, blocked: true, warning: "This account has financial records. Its sign-in has been permanently blocked and its profile closed; financial history was preserved." });
+        }
+
+        const { error: auditError } = await adminClient.from("audit_events").insert({
+          actor_user_id: user.id, action: "customer.permanently_deleted",
+          entity_type: "profile", entity_id: targetUserId, reason,
+          details: { full_name: target.full_name, email: target.email, financial_records_preserved: true }
+        });
+        if (auditError) throw auditError;
+        const { error: deleteError } = await adminClient.auth.admin.deleteUser(targetUserId);
+        if (deleteError) throw deleteError;
+        return json({ deleted: true, warning: "Client authentication account permanently deleted. Financial history check was clear." });
+      }
+
       if (path.endsWith("/admin/customer-status")) {
         if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
         const targetUserId=clean(body.user_id,64), nextStatus=clean(body.status,32), reason=clean(body.reason,500);
