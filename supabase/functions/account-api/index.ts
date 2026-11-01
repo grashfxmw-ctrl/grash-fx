@@ -919,7 +919,13 @@ Deno.serve(async (req: Request) => {
         if (auditError) throw auditError;
         const { error: deleteError } = await adminClient.auth.admin.deleteUser(targetUserId);
         if (deleteError) throw deleteError;
-        return json({ deleted: true, warning: "Client authentication account permanently deleted. Financial history check was clear." });
+        // Explicitly remove the profile as well; do not rely on an auth.users cascade.
+        const { error: profileDeleteError } = await adminClient.from("profiles").delete().eq("user_id", targetUserId);
+        if (profileDeleteError) {
+          console.error("Auth user deleted but profile cleanup failed", profileDeleteError);
+          return json({ deleted: true, warning: "Login was deleted, but profile cleanup needs administrator follow-up." }, 202);
+        }
+        return json({ deleted: true, warning: "Client login and profile permanently deleted. Financial history check was clear." });
       }
 
       if (path.endsWith("/admin/customer-status")) {
