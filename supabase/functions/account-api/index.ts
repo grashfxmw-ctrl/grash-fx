@@ -20,11 +20,55 @@ const sendGrashEmail = async (to: string, name: string, subject: string, heading
     if (!response.ok) { console.error("Resend email failed", response.status, (await response.text()).slice(0, 300)); return { sent: false, warning: "Decision saved, but email notification could not be sent. Check Resend configuration." }; }
     return { sent: true, warning: null };
   } catch (error) { console.error("Resend email request failed", error); return { sent: false, warning: "Decision saved, but email notification could not be sent. Check Resend configuration." }; }
+
+};
+const payoutMethodLabel = (method: string) => ({
+  bank_transfer: "Bank transfer", eft: "EFT", airtel_money: "Airtel Money",
+  mpamba: "Mpamba", mtn_mobile_money: "MTN Mobile Money",
+  cashsend_cardless: "Cash Send / Cardless",
+  usdt_ethereum: "USDT — Ethereum (ERC-20)", usdc_ethereum: "USDC — Ethereum (ERC-20)",
+  bitcoin: "Bitcoin (BTC)"
+} as Record<string, string>)[method] || method.replaceAll("_", " ");
+const maskPayoutDestination = (details: Record<string, unknown>) => {
+  const value = clean(details.account_number, 160);
+  if (!value) return "Not recorded";
+  if (value.length > 24) return value.slice(0, 8) + "…" + value.slice(-6);
+  if (value.length > 8) return value.slice(0, 3) + "••••" + value.slice(-4);
+  return value;
 };
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (!["GET", "POST"].includes(req.method)) return json({ error: "Method not allowed." }, 405);
+  const requestPath = new URL(req.url).pathname;
+  if (req.method === "POST" && (requestPath.endsWith("/phone-login") || requestPath.endsWith("/phone-login/"))) {
+    try {
+      const body = await req.json().catch(() => ({}));
+      const phone = typeof body.phone === "string" ? body.phone.trim().replace(/[^+\\d]/g, "") : "";
+      const password = typeof body.password === "string" ? body.password : "";
+      if (!/^\+[1-9]\d{7,14}$/.test(phone) || password.length < 1 || password.length > 256) {
+        return json({ error: "Phone number or password is incorrect." }, 401);
+      }
+      const url = Deno.env.get("SUPABASE_URL");
+      const publishableKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SECRET_KEY");
+      if (!url || !publishableKey || !serviceKey) return json({ error: "Sign-in is temporarily unavailable." }, 503);
+      const adminClient = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+      const { data: matches, error: lookupError } = await adminClient.from("profiles")
+        .select("user_id,email").eq("phone", phone).limit(2);
+      if (lookupError) throw lookupError;
+      if (!matches || matches.length !== 1 || !matches[0].email) {
+        return json({ error: "Phone number or password is incorrect." }, 401);
+      }
+      const authClient = createClient(url, publishableKey, { auth: { persistSession: false, autoRefreshToken: false } });
+      const { data, error } = await authClient.auth.signInWithPassword({ email: matches[0].email, password });
+      if (error || !data.session) return json({ error: "Phone number or password is incorrect." }, 401);
+      return json({ session: data.session, user: data.user });
+    } catch (error) {
+      console.error("Phone sign-in failed", error);
+      return json({ error: "Phone sign-in is temporarily unavailable." }, 503);
+    }
+  }
   const auth = req.headers.get("Authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
   if (!token) return json({ error: "Sign in is required." }, 401);
@@ -929,6 +973,7 @@ Deno.serve(async (req: Request) => {
         });
         if (error) return json({ error: error.message }, 400);
         let adminEmailSent: boolean | null = null;
+        let clientEmailSent: boolean | null = null;
         let emailWarning: string | null = null;
         if (!withdrawal) {
           const mail = await sendGrashEmail(
@@ -947,10 +992,33 @@ Deno.serve(async (req: Request) => {
           );
           adminEmailSent = mail.sent;
           emailWarning = mail.warning || null;
+        } else {
+          const recipientEmail = profile.email || user.email || "";
+          const payout = details as Record<string, unknown>;
+          const mail = recipientEmail
+            ? await sendGrashEmail(
+                recipientEmail,
+                profile.full_name || "",
+                "GRASH FX: Withdrawal request received",
+                "Your withdrawal request has been received",
+                [
+                  "We have received your withdrawal request for " + value.toFixed(2) + " USD.",
+                  "Selected payout method: " + payoutMethodLabel(paymentMethod),
+                  "Recipient name: " + (clean(payout.account_holder, 120) || "Not provided"),
+                  "Bank: " + (clean(payout.bank_name, 120) || "Not applicable"),
+                  "Destination account / wallet: " + maskPayoutDestination(payout),
+                  "Status: Submitted — awaiting GRASH FX review. This email confirms the request only; it does not mean the payout has been sent.",
+                  "Request ID: " + String(data)
+                ]
+              )
+            : { sent: false, warning: "Client email address was not found." };
+          clientEmailSent = mail.sent;
+          emailWarning = mail.warning || null;
         }
         return json({
           request: { id: data, status: "submitted", request_type: withdrawal ? "withdrawal" : "deposit", amount: value },
           ...(adminEmailSent !== null ? { admin_email_sent: adminEmailSent } : {}),
+          ...(clientEmailSent !== null ? { client_email_sent: clientEmailSent } : {}),
           ...(emailWarning ? { email_warning: emailWarning } : {})
         }, 201);
       }
@@ -985,7 +1053,7 @@ Deno.serve(async (req: Request) => {
         if (!requestId || reason.length < 3) return json({ error: "Request ID and a review reason/reference of at least 3 characters are required." }, 400);
         let action = "";
         let rejectedRequest: { user_id: string; request_type: string; amount: number; currency: string | null } | null = null;
-        let approvedRequest: { user_id: string; request_type: string; amount: number; currency: string | null; client_reference: string | null; payment_method: string | null } | null = null;
+        let approvedRequest: { user_id: string; request_type: string; amount: number; currency: string | null; client_reference: string | null; payment_method: string | null; payment_details: Record<string, unknown> | null } | null = null;
         if (decision === "reject") {
           const { data: request, error } = await adminClient.from("money_requests")
             .select("user_id,request_type,amount,currency").eq("id", requestId).maybeSingle();
@@ -995,7 +1063,7 @@ Deno.serve(async (req: Request) => {
           action = "reject";
         } else if (decision === "approve" || decision === "complete") {
           const { data: request, error } = await adminClient.from("money_requests")
-            .select("user_id,request_type,status,amount,currency,client_reference,payment_method").eq("id", requestId).maybeSingle();
+            .select("user_id,request_type,status,amount,currency,client_reference,payment_method,payment_details").eq("id", requestId).maybeSingle();
           if (error) throw error;
           if (!request) return json({ error: "Money request not found." }, 404);
           approvedRequest = request as typeof approvedRequest;
@@ -1063,6 +1131,35 @@ Deno.serve(async (req: Request) => {
             admin_email_sent: adminMail.sent,
             ...(warnings.length ? { email_warning: warnings.join(" ") } : {})
           });
+        }
+        if (approvedRequest && approvedRequest.request_type === "withdrawal" &&
+            (decision === "approve" || decision === "complete")) {
+          const { data: recipient, error: recipientError } = await adminClient.from("profiles")
+            .select("email,full_name").eq("user_id", approvedRequest.user_id).maybeSingle();
+          if (recipientError) console.error("Could not load withdrawal email recipient", recipientError);
+          const payout = (approvedRequest.payment_details || {}) as Record<string, unknown>;
+          const isPaid = decision === "complete";
+          const mail = recipient?.email
+            ? await sendGrashEmail(
+                recipient.email,
+                recipient.full_name || "",
+                isPaid ? "GRASH FX: Withdrawal marked as paid" : "GRASH FX: Withdrawal approved",
+                isPaid ? "Your withdrawal has been marked as paid" : "Your withdrawal request has been approved",
+                [
+                  "Withdrawal amount: " + Number(approvedRequest.amount).toFixed(2) + " " + (approvedRequest.currency || "USD"),
+                  "Payout method: " + payoutMethodLabel(approvedRequest.payment_method || "unknown"),
+                  "Recipient name: " + (clean(payout.account_holder, 120) || "Not provided"),
+                  "Bank: " + (clean(payout.bank_name, 120) || "Not applicable"),
+                  "Destination account / wallet: " + maskPayoutDestination(payout),
+                  isPaid
+                    ? "GRASH FX has marked this withdrawal as paid. If the funds are not visible, contact support and quote the request ID below."
+                    : "Your request has been approved and is awaiting payout. This approval email does not mean the transfer has already been sent.",
+                  "Request ID: " + String(data)
+                ]
+              )
+            : { sent: false, warning: "Client email address was not found." };
+          return json({ request_id: data, status: "reviewed", email_sent: mail.sent,
+            ...(mail.warning ? { email_warning: mail.warning } : {}) });
         }
         return json({ request_id: data, status: "reviewed" });
       }
