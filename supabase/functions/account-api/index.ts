@@ -69,6 +69,43 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Phone sign-in is temporarily unavailable." }, 503);
     }
   }
+  if (req.method === "POST" && (requestPath.endsWith("/registration-ip-check") || requestPath.endsWith("/registration-ip-check/"))) {
+    try {
+      const body = await req.json().catch(() => ({}));
+      const email = clean(body.email, 254).toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "Enter a valid email address." }, 400);
+      const url = Deno.env.get("SUPABASE_URL");
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SECRET_KEY");
+      if (!url || !serviceKey) return json({ error: "Registration check is temporarily unavailable." }, 503);
+      const adminClient = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+      const forwarded = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") ||
+        (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
+      const digestHex = async (value: string) => {
+        const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+        return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
+      };
+      const emailHash = await digestHex(email);
+      const ipHash = forwarded ? await digestHex(forwarded) : null;
+      let matched = false;
+      let country = clean(req.headers.get("cf-ipcountry") || req.headers.get("x-vercel-ip-country") || "", 2).toUpperCase();
+      if (ipHash) {
+        const since = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString();
+        const { count, error: countError } = await adminClient.from("registration_ip_checks")
+          .select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", since);
+        if (countError) throw countError;
+        matched = (count || 0) > 0;
+      }
+      const { error: insertError } = await adminClient.from("registration_ip_checks").insert({
+        email_hash: emailHash, ip_hash: ipHash, country_code: /^[A-Z]{2}$/.test(country) ? country : null,
+        user_agent: clean(req.headers.get("user-agent") || "", 300), matched_prior_registration: matched
+      });
+      if (insertError) throw insertError;
+      return json({ checked: true, review_required: matched });
+    } catch (error) {
+      console.error("Registration IP check failed", error);
+      return json({ error: "Registration security check could not be completed. Please try again." }, 503);
+    }
+  }
   const auth = req.headers.get("Authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
   if (!token) return json({ error: "Sign in is required." }, 401);
@@ -485,6 +522,10 @@ Deno.serve(async (req: Request) => {
         if (row.entry_type === "profit_credit") item.profit_balance += Number(row.amount || 0);
         balances.set(row.user_id,item);
       }
+      const { data: registrationIpFlags, error: registrationIpError } = await adminClient.from("registration_ip_checks")
+        .select("id,email_hash,ip_hash,country_code,user_agent,matched_prior_registration,linked_user_id,created_at,reviewed_at,review_note")
+        .eq("matched_prior_registration", true).order("created_at", { ascending: false }).limit(100);
+      if (registrationIpError) throw registrationIpError;
       return json({
         stats: (() => {
           const ps=profiles.data||[], rs=requests.data||[], ins=investments.data||[];
@@ -552,6 +593,7 @@ Deno.serve(async (req: Request) => {
             }))
           };
         })(),
+        registration_ip_flags: registrationIpFlags || [],
         login_events: (loginEvents.data || []).map(e => ({
           id:e.id, user_id:e.user_id, ip_hash:e.ip_hash, country_code:e.country_code,
           user_agent:e.user_agent, created_at:e.created_at
@@ -710,6 +752,20 @@ Deno.serve(async (req: Request) => {
         return json({ recorded: true, notification_configured: Boolean(notificationUrl) });
       }
 
+
+      if (path.endsWith("/admin/registration-ip-review")) {
+        if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
+        const id = clean(body.id, 64);
+        const note = clean(body.note, 500);
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id) || note.length < 5) {
+          return json({ error: "Select a registration flag and enter a review note of at least 5 characters." }, 400);
+        }
+        const { data, error } = await adminClient.from("registration_ip_checks")
+          .update({ reviewed_at: new Date().toISOString(), review_note: note }).eq("id", id)
+          .select("id,reviewed_at,review_note").single();
+        if (error) throw error;
+        return json({ review: data });
+      }
 
       if (path.endsWith("/admin/referral-management")) {
         if (!(await isAdmin())) return json({ error: "Admin access required." }, 403);
