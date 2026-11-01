@@ -40,35 +40,6 @@ const maskPayoutDestination = (details: Record<string, unknown>) => {
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (!["GET", "POST"].includes(req.method)) return json({ error: "Method not allowed." }, 405);
-  const requestPath = new URL(req.url).pathname;
-  if (req.method === "POST" && (requestPath.endsWith("/phone-login") || requestPath.endsWith("/phone-login/"))) {
-    try {
-      const body = await req.json().catch(() => ({}));
-      const phone = typeof body.phone === "string" ? body.phone.trim().replace(/[^+\\d]/g, "") : "";
-      const password = typeof body.password === "string" ? body.password : "";
-      if (!/^\+[1-9]\d{7,14}$/.test(phone) || password.length < 1 || password.length > 256) {
-        return json({ error: "Phone number or password is incorrect." }, 401);
-      }
-      const url = Deno.env.get("SUPABASE_URL");
-      const publishableKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
-      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SECRET_KEY");
-      if (!url || !publishableKey || !serviceKey) return json({ error: "Sign-in is temporarily unavailable." }, 503);
-      const adminClient = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
-      const { data: matches, error: lookupError } = await adminClient.from("profiles")
-        .select("user_id,email").eq("phone", phone).limit(2);
-      if (lookupError) throw lookupError;
-      if (!matches || matches.length !== 1 || !matches[0].email) {
-        return json({ error: "Phone number or password is incorrect." }, 401);
-      }
-      const authClient = createClient(url, publishableKey, { auth: { persistSession: false, autoRefreshToken: false } });
-      const { data, error } = await authClient.auth.signInWithPassword({ email: matches[0].email, password });
-      if (error || !data.session) return json({ error: "Phone number or password is incorrect." }, 401);
-      return json({ session: data.session, user: data.user });
-    } catch (error) {
-      console.error("Phone sign-in failed", error);
-      return json({ error: "Phone sign-in is temporarily unavailable." }, 503);
-    }
-  }
   const auth = req.headers.get("Authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
   if (!token) return json({ error: "Sign in is required." }, 401);
