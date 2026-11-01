@@ -142,8 +142,8 @@ Deno.serve(async (req: Request) => {
       return (data || []).length > 0;
     };
     if (req.method === "POST" && path.endsWith("/admin/create-client")) {
-      let body: Record<string, unknown>;
-      try { body = await req.json(); } catch { return json({ error: "Invalid registration details. Please check the form and try again." }, 400); }
+      let createClientBody: Record<string, unknown>;
+      try { createClientBody = await req.json(); } catch { return json({ error: "Invalid registration details. Please check the form and try again." }, 400); }
       // Only a full administrator may create client credentials. Finance operators cannot.
       const { data: adminRole, error: adminRoleError } = await adminClient.from("admin_roles")
         .select("role_name").eq("user_id", user.id).eq("role_name", "administrator")
@@ -151,11 +151,11 @@ Deno.serve(async (req: Request) => {
       if (adminRoleError) throw adminRoleError;
       if (!adminRole) return json({ error: "Only an active administrator can register a client account." }, 403);
 
-      const fullName = clean(body.full_name, 100);
-      const email = clean(body.email, 254).toLowerCase();
-      const phone = clean(body.phone, 20).replace(/\s+/g, "");
-      const countryCode = clean(body.country_code, 2).toUpperCase();
-      const password = typeof body.password === "string" ? body.password : "";
+      const fullName = clean(createClientBody.full_name, 100);
+      const email = clean(createClientBody.email, 254).toLowerCase();
+      const phone = clean(createClientBody.phone, 20).replace(/\s+/g, "");
+      const countryCode = clean(createClientBody.country_code, 2).toUpperCase();
+      const password = typeof createClientBody.password === "string" ? createClientBody.password : "";
       const validCountries = ["MW", "TZ", "ZA", "ZW", "BW", "MZ"];
       if (fullName.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
           !/^\+[1-9][0-9]{7,14}$/.test(phone) || !validCountries.includes(countryCode) ||
