@@ -212,7 +212,7 @@ $("refreshInvestments").onclick=()=>load();
 
 $("investmentForm").onsubmit=async e=>{
  e.preventDefault();
- const form=e.currentTarget,button=form.querySelector('button[type="submit"]'),oldText=button.textContent;
+ const form=e.currentTarget,button=form.querySelector("button"),oldText=button.textContent;
  button.disabled=true;button.textContent="Submitting…";
  try{
   const plan=investmentPlans.find(p=>p.code===$("planCode").value),amount=Number($("investmentAmount").value);
