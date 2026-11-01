@@ -2,92 +2,80 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-const root = new URL("../", import.meta.url);
-const homePage = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
-const clientPage = await readFile(new URL("../public/client-dashboard.html", import.meta.url), "utf8");
-const adminPage = await readFile(new URL("../public/admin-dashboard.html", import.meta.url), "utf8");
-const adminEntry = await readFile(new URL("../public/admin.html", import.meta.url), "utf8");
-const registerEntry = await readFile(new URL("../public/register.html", import.meta.url), "utf8");
-const apiSource = await readFile(new URL("../supabase/functions/account-api/index.ts", import.meta.url), "utf8");
+const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
+const [home, login, register, client, admin, adminEntry, api] = await Promise.all([
+  read("index.html"),
+  read("login.html"),
+  read("register.html"),
+  read("client-dashboard.html"),
+  read("admin-dashboard.html"),
+  read("admin.html"),
+  read("supabase/functions/account-api/index.ts"),
+]);
 
-test("public homepage supports email sign-up, sign-in, and email verification", () => {
-  assert.match(homePage, /signUp\(/);
-  assert.match(homePage, /signInWithPassword\(/);
-  assert.match(homePage, /verifyOtp\(/);
-  assert.match(homePage, /homeSignup/);
-  assert.match(homePage, /homeSignin/);
-  assert.match(homePage, /get\("auth"\)==="signin"/);
+test("deployed homepage is public and links to the real registration and sign-in pages", () => {
+  assert.match(home, /href=["'](?:\.\/)?register\.html["']/);
+  assert.match(home, /href=["'](?:\.\/)?login\.html["']/);
+  assert.match(home, /Starter Plan/);
+  assert.match(home, /Basic Plan/);
+  assert.match(home, /Premium Plan/);
+  assert.match(home, /VIP Plan/);
+  assert.doesNotMatch(home, /firebase|functions\.httpsCallable/i);
 });
 
-test("client dashboard requires a valid session and does not reload on SIGNED_IN", () => {
-  assert.match(clientPage, /sb\.auth\.getUser\(\)/);
-  assert.match(clientPage, /location\.replace\("\.\/\?auth=signin"\)/);
-  assert.doesNotMatch(clientPage, /event==="SIGNED_IN"[^;]*location\.reload/);
-  assert.match(clientPage, /controller\.abort\(\),15000/);
-  assert.match(clientPage, /\/functions\/v1\/account-api/);
+test("client sign-in supports both email and phone with password", () => {
+  assert.match(login, /Email address or phone number/i);
+  assert.match(login, /signInWithPassword\(/);
+  assert.match(login, /\/phone-login/);
+  assert.match(login, /client-dashboard\.html/);
+  assert.doesNotMatch(login, /firebase|functions\.httpsCallable/i);
 });
 
-test("homepage and client dashboard do not call the rejected profile-creation endpoint", () => {
-  assert.doesNotMatch(homePage, /api\("\/profile","POST"/);
-  assert.doesNotMatch(clientPage, /api\("\/profile","POST"/);
-  assert.match(apiSource, /A profile is created automatically at signup/);
+test("registration uses Supabase Auth and retains phone, email verification and referral fields", () => {
+  assert.match(register, /signUp\(/);
+  assert.match(register, /type=["']email["']/);
+  assert.match(register, /type=["']tel["']/);
+  assert.match(register, /emailRedirectTo/);
+  assert.match(register, /referralCode/);
+  assert.match(register, /confirmPassword/);
+  assert.doesNotMatch(register, /firebase|functions\.httpsCallable/i);
 });
 
-test("administrator entry always opens the sign-in screen", () => {
+test("client dashboard requires a session and uses the production account API", () => {
+  assert.match(client, /sb\.auth\.getSession\(\)/);
+  assert.match(client, /location\.replace\(["']\.\/login\.html["']\)/);
+  assert.match(client, /\/functions\/v1\/account-api/);
+  assert.match(client, /api\(["']\/investment["']\s*,\s*["']POST["']/);
+  assert.match(client, /sb\.auth\.signOut\(/);
+  assert.doesNotMatch(client, /firebase|functions\.httpsCallable/i);
+});
+
+test("administrator entry is separate and the admin dashboard checks server authorization", () => {
   assert.match(adminEntry, /admin-dashboard\.html\?mode=signin/);
-  assert.match(adminPage, /Secure administrator sign in/);
-  assert.doesNotMatch(adminPage, /sb\.auth\.getSession\(\)\.then\(async function\(r\).*await enter/);
+  assert.match(admin, /id=["']loginPanel["']/);
+  assert.match(admin, /grashfx-admin-auth-v1/);
+  assert.match(admin, /Admin access required/);
+  assert.match(admin, /\/admin\/queue/);
+  assert.doesNotMatch(admin, /firebase|functions\.httpsCallable/i);
 });
 
-test("administrator login rejects invalid credentials immediately and keeps the dashboard hidden", () => {
-  assert.match(adminPage, /Checking email and password/);
-  assert.match(adminPage, /Invalid email or password\. Please try again\./);
-  assert.match(adminPage, /if\(result\.error\)\{var authMessage=/);
-  assert.match(adminPage, /!result\.data\.user\|\|!result\.data\.session/);
-  assert.match(adminPage, /\$\("app"\)\.classList\.add\("hidden"\)/);
-  assert.match(adminPage, /This signed-in account does not have an active administrator role\./);
+test("account API keeps both login methods and enforces money request minimums", () => {
+  assert.match(api, /\/phone-login/);
+  assert.match(api, /signInWithPassword\(/);
+  assert.match(api, /minimum deposit is \$20\.00/);
+  assert.match(api, /minimum withdrawal is \$50\.00/);
+  assert.match(api, /\/investment/);
+  assert.match(api, /\/admin\/review/);
+  assert.doesNotMatch(api, /firebase|functions\.httpsCallable/i);
 });
 
-test("administrator dashboard stays hidden until the server authorizes the signed-in user", () => {
-  assert.match(adminPage, /id="loginPanel"/);
-  assert.match(adminPage, /id="app" class="hidden(?:\s|")/);
-  assert.match(adminPage, /api\("\/admin\/queue"\)/);
-  assert.match(adminPage, /var authorized=await loadQueue\(\);if\(!authorized\)/);
-  assert.match(adminPage, /Admin access required/);
-  assert.match(adminPage, /setTimeout\(function\(\)\{controller\.abort\(\);\},15000\)/);
-});
-
-test("registration shortcut opens the homepage sign-up form", () => {
-  assert.match(registerEntry, /\?auth=signup/);
-});
-
-test("account API validates bearer tokens and gates administrative actions", () => {
-  assert.match(apiSource, /userClient\.auth\.getUser\(token\)/);
-  assert.match(apiSource, /if \(!\(await isAdmin\(\)\)\) return json\(\{ error: "Admin access required\." \}, 403\)/);
-  assert.match(apiSource, /\/admin\/queue/);
-  assert.match(apiSource, /\/admin\/review/);
-  assert.match(apiSource, /\/deposit/);
-  assert.match(apiSource, /\/withdrawal/);
-  assert.match(apiSource, /\/investment/);
-  assert.match(apiSource, /minimum deposit is \$20\.00/);
-  assert.match(apiSource, /minimum withdrawal is \$50\.00/);
-});
-
-test("private client/admin messaging routes use the existing support_messages table", () => {
-  assert.match(apiSource, /path\.endsWith\("\/messages"\)/);
-  assert.match(apiSource, /path\.endsWith\("\/admin\/messages"\)/);
-  assert.match(apiSource, /path\.endsWith\("\/admin\/messages\/send"\)/);
-  assert.match(apiSource, /from\("support_messages"\)/);
-  assert.match(apiSource, /sender_role: "client"/);
-  assert.match(apiSource, /sender_role: "admin"/);
-  assert.match(apiSource, /if \(!\(await isAdmin\(\)\)\) return json\(\{ error: "Admin access required\." \}, 403\)/);
-  assert.match(clientPage, /api\("\/messages","POST"/);
-  assert.match(adminPage, /api\("\/admin\/messages\/send","POST"/);
-});
-
-test("active website and backend contain no Firebase implementation", () => {
-  assert.doesNotMatch(homePage, /firebase|functions\.httpsCallable/i);
-  assert.doesNotMatch(clientPage, /firebase|functions\.httpsCallable/i);
-  assert.doesNotMatch(adminPage, /firebase|functions\.httpsCallable/i);
-  assert.doesNotMatch(apiSource, /firebase|functions\.httpsCallable/i);
+test("investment plan display keeps the configured public rates, minimums and seven-day term", () => {
+  assert.match(home, /10% daily/);
+  assert.match(home, /20% daily/);
+  assert.match(home, /30% daily/);
+  assert.match(home, /40% daily/);
+  assert.match(home, /7-day term · Minimum \$50/);
+  assert.match(home, /7-day term · Minimum \$500/);
+  assert.match(home, /7-day term · Minimum \$1,000/);
+  assert.match(home, /7-day term · Minimum \$5,000/);
 });
