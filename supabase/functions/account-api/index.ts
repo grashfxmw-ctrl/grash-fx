@@ -141,6 +141,86 @@ Deno.serve(async (req: Request) => {
       if (error) throw error;
       return (data || []).length > 0;
     };
+    if (req.method === "POST" && path.endsWith("/admin/create-client")) {
+      // Only a full administrator may create client credentials. Finance operators cannot.
+      const { data: adminRole, error: adminRoleError } = await adminClient.from("admin_roles")
+        .select("role_name").eq("user_id", user.id).eq("role_name", "administrator")
+        .is("revoked_at", null).limit(1).maybeSingle();
+      if (adminRoleError) throw adminRoleError;
+      if (!adminRole) return json({ error: "Only an active administrator can register a client account." }, 403);
+
+      const fullName = clean(body.full_name, 100);
+      const email = clean(body.email, 254).toLowerCase();
+      const phone = clean(body.phone, 20).replace(/\\s+/g, "");
+      const countryCode = clean(body.country_code, 2).toUpperCase();
+      const password = typeof body.password === "string" ? body.password : "";
+      const validCountries = ["MW", "TZ", "ZA", "ZW", "BW", "MZ"];
+      if (fullName.length < 2 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) ||
+          !/^\\+[1-9][0-9]{7,14}$/.test(phone) || !validCountries.includes(countryCode) ||
+          password.length < 8 || password.length > 72) {
+        return json({ error: "Enter a valid name, email, international phone number, country and password (8–72 characters)." }, 400);
+      }
+
+      const { data: phoneMatches, error: phoneError } = await adminClient.from("profiles")
+        .select("user_id").eq("phone", phone).limit(1);
+      if (phoneError) throw phoneError;
+      if (phoneMatches && phoneMatches.length) return json({ error: "This phone number is already linked to an account." }, 409);
+
+      const { data: created, error: createError } = await adminClient.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: fullName, phone, country_code: countryCode }
+      });
+      if (createError) {
+        const duplicate = /already|registered|exists/i.test(createError.message || "");
+        return json({ error: duplicate ? "An account already exists with this email address." : "Could not create the client account. Check the details and try again." }, duplicate ? 409 : 400);
+      }
+      const createdUser = created.user;
+      if (!createdUser) return json({ error: "The authentication account was not returned by the server." }, 500);
+
+      const { data: newProfile, error: profileLookupError } = await adminClient.from("profiles")
+        .select("user_id,full_name,email,phone,status,referral_code")
+        .eq("user_id", createdUser.id).maybeSingle();
+      if (profileLookupError || !newProfile) {
+        await adminClient.auth.admin.deleteUser(createdUser.id);
+        console.error("Admin-created account profile was not created", profileLookupError);
+        return json({ error: "The client profile could not be created. No account was kept; please try again." }, 500);
+      }
+      if (newProfile.phone !== phone || newProfile.email?.toLowerCase() !== email) {
+        await adminClient.auth.admin.deleteUser(createdUser.id);
+        return json({ error: "The client profile details did not match. No account was kept." }, 409);
+      }
+      if (newProfile.status !== "active") {
+        const { error: activateError } = await adminClient.from("profiles")
+          .update({ status: "active", updated_at: new Date().toISOString() }).eq("user_id", createdUser.id);
+        if (activateError) {
+          await adminClient.auth.admin.deleteUser(createdUser.id);
+          throw activateError;
+        }
+      }
+
+      const { error: auditError } = await adminClient.from("audit_events").insert({
+        actor_user_id: user.id,
+        action: "client.account_created_by_admin",
+        entity_type: "profile",
+        entity_id: createdUser.id,
+        reason: "Client account registered by administrator",
+        details: { email, phone, country_code: countryCode, email_confirmed: true, status: "active" }
+      });
+      if (auditError) {
+        console.error("Admin client creation audit failed", auditError);
+        // Keep the already-created account; report its creation clearly rather than retrying.
+      }
+      return json({
+        created: true,
+        user_id: createdUser.id,
+        profile: { full_name: newProfile.full_name, email: newProfile.email, phone: newProfile.phone, status: "active" },
+        email_verified: true,
+        audit_recorded: !auditError
+      }, 201);
+    }
+
     const getBalances = async () => {
       const [ledgerResult, pendingResult, referralCreditsResult, referralTransfersResult] = await Promise.all([
         adminClient.from("ledger_entries").select("entry_type,amount,currency").eq("user_id", user.id).eq("currency", "USD"),
