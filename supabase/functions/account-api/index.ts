@@ -129,7 +129,7 @@ Deno.serve(async (req: Request) => {
     if (!user.email_confirmed_at) return json({ error: "Verify your email before using your account." }, 403);
 
     const { data: profile, error: profileError } = await adminClient.from("profiles")
-      .select("user_id,full_name,email,phone,referral_code,status,country_code,created_at,updated_at")
+      .select("user_id,full_name,email,phone,referral_code,status,country_code,preferred_currency,created_at,updated_at")
       .eq("user_id", user.id).maybeSingle();
     if (profileError) throw profileError;
 
@@ -469,6 +469,19 @@ Deno.serve(async (req: Request) => {
       if (error) console.warn("Referral reward processing deferred; it will be retried on a later account request.", error.message);
       return !error;
     };
+
+    if (req.method === "POST" && path.endsWith("/currency-preference")) {
+      if (!profile) return json({ error: "Complete account registration first." }, 403);
+      const body = await req.json().catch(() => ({}));
+      const currency = clean(body.currency, 3).toUpperCase();
+      const allowedCurrencies = ["USD", "MWK", "TZS", "ZAR", "ZWG", "BWP", "MZN"];
+      if (!allowedCurrencies.includes(currency)) return json({ error: "Choose a supported display currency." }, 400);
+      const { error: preferenceError } = await adminClient.from("profiles")
+        .update({ preferred_currency: currency, updated_at: new Date().toISOString() })
+        .eq("user_id", user.id);
+      if (preferenceError) throw preferenceError;
+      return json({ saved: true, preferred_currency: currency, accounting_currency: "USD" });
+    }
 
     if (req.method === "GET" && path.endsWith("/me")) {
       if (user.email_confirmed_at) await tryReferralReward();
