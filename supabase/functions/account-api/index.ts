@@ -44,7 +44,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "POST" && (requestPath.endsWith("/phone-login") || requestPath.endsWith("/phone-login/"))) {
     try {
       const body = await req.json().catch(() => ({}));
-      const phone = typeof body.phone === "string" ? body.phone.trim().replace(/[^+\\d]/g, "") : "";
+      const phone = typeof body.phone === "string" ? body.phone.trim().replace(/[^+\d]/g, "") : "";
       const password = typeof body.password === "string" ? body.password : "";
       if (!/^\+[1-9]\d{7,14}$/.test(phone) || password.length < 1 || password.length > 256) {
         return json({ error: "Phone number or password is incorrect." }, 401);
@@ -151,12 +151,12 @@ Deno.serve(async (req: Request) => {
 
       const fullName = clean(body.full_name, 100);
       const email = clean(body.email, 254).toLowerCase();
-      const phone = clean(body.phone, 20).replace(/\\s+/g, "");
+      const phone = clean(body.phone, 20).replace(/\s+/g, "");
       const countryCode = clean(body.country_code, 2).toUpperCase();
       const password = typeof body.password === "string" ? body.password : "";
       const validCountries = ["MW", "TZ", "ZA", "ZW", "BW", "MZ"];
-      if (fullName.length < 2 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) ||
-          !/^\\+[1-9][0-9]{7,14}$/.test(phone) || !validCountries.includes(countryCode) ||
+      if (fullName.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+          !/^\+[1-9][0-9]{7,14}$/.test(phone) || !validCountries.includes(countryCode) ||
           password.length < 8 || password.length > 72) {
         return json({ error: "Enter a valid name, email, international phone number, country and password (8–72 characters)." }, 400);
       }
