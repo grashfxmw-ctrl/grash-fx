@@ -79,3 +79,14 @@ test("investment plan display keeps the configured public rates, minimums and se
   assert.match(home, /7-day term · Minimum \$1,000/);
   assert.match(home, /7-day term · Minimum \$5,000/);
 });
+
+test("registration checks hashed IP reuse and flags shared networks for administrator review", () => {
+  assert.match(register, /registration-ip-check/);
+  assert.match(register, /review_required/);
+  assert.match(api, /registration_ip_checks/);
+  assert.match(api, /matched_prior_registration/);
+  assert.match(api, /admin\/registration-ip-review/);
+  assert.match(api, /registration_ip_flags/);
+  assert.match(admin, /Registration IP review/);
+  assert.match(admin, /data-registration-review/);
+});
