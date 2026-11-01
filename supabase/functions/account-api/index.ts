@@ -142,6 +142,8 @@ Deno.serve(async (req: Request) => {
       return (data || []).length > 0;
     };
     if (req.method === "POST" && path.endsWith("/admin/create-client")) {
+      let body: Record<string, unknown>;
+      try { body = await req.json(); } catch { return json({ error: "Invalid registration details. Please check the form and try again." }, 400); }
       // Only a full administrator may create client credentials. Finance operators cannot.
       const { data: adminRole, error: adminRoleError } = await adminClient.from("admin_roles")
         .select("role_name").eq("user_id", user.id).eq("role_name", "administrator")
